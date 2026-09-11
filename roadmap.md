@@ -1,0 +1,3 @@
+- [x] Substituir odômetro por KM ida e KM volta
+- [x] Garantir cache, fila e sincronização offline dos dois campos
+- [x] Validar o build
