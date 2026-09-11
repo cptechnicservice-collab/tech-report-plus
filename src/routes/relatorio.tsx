@@ -92,7 +92,7 @@ function Relatorio() {
           <Button type="button" variant="ghost" size="sm" className="bg-card" onClick={() => shortcut("week")}>Esta semana</Button>
           <Button type="button" variant="ghost" size="sm" onClick={() => shortcut("lastWeek")}>Semana passada</Button>
           <Button type="button" variant="ghost" size="sm" onClick={() => shortcut("month")}>Este mês</Button>
-          <Button type="button" variant="ghost" size="sm">Personalizado</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => document.getElementById("report-start")?.focus()}>Personalizado</Button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5"><Label htmlFor="report-start">De</Label><Input id="report-start" type="date" value={inicio} onChange={(event) => setInicio(event.target.value)} className="h-12 rounded-xl" /></div>

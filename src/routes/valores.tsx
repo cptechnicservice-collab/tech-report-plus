@@ -41,13 +41,14 @@ const numberValue = (value: string) => Number(value.replace(",", ".")) || 0;
 
 function Valores() {
   const [draft, setDraft] = useState<Draft>(blank);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const maisRecente = useMemo(() => valores[0], [valores]);
 
   const salvar = useMutation({
     mutationFn: () => saveValorOffline({
-      id: crypto.randomUUID(),
+      id: editingId ?? crypto.randomUUID(),
       vigencia: draft.vigencia,
       valor_hora_trabalhada: numberValue(draft.valor_hora_trabalhada),
       valor_hora_viagem: numberValue(draft.valor_hora_viagem),
@@ -59,18 +60,22 @@ function Valores() {
       queryClient.invalidateQueries({ queryKey: ["valores"] });
       toast.success(result.queued ? "Salvo no aparelho — será enviado quando houver conexão" : "Novos valores salvos");
       setDraft(blank());
+      setEditingId(null);
     },
     onError: (error) => toast.error(error instanceof Error ? `Não foi possível salvar: ${error.message}` : "Não foi possível salvar"),
   });
 
-  const edit = (valor: ValorVigencia) => setDraft({
-    vigencia: valor.vigencia,
-    valor_hora_trabalhada: String(valor.valor_hora_trabalhada),
-    valor_hora_viagem: String(valor.valor_hora_viagem),
-    valor_km: String(valor.valor_km),
-    valor_diaria_inteira: String(valor.valor_diaria_inteira),
-    valor_meia_diaria: String(valor.valor_meia_diaria),
-  });
+  const edit = (valor: ValorVigencia) => {
+    setEditingId(valor.id);
+    setDraft({
+      vigencia: valor.vigencia,
+      valor_hora_trabalhada: String(valor.valor_hora_trabalhada),
+      valor_hora_viagem: String(valor.valor_hora_viagem),
+      valor_km: String(valor.valor_km),
+      valor_diaria_inteira: String(valor.valor_diaria_inteira),
+      valor_meia_diaria: String(valor.valor_meia_diaria),
+    });
+  };
 
   const fields = [
     ["valor_hora_trabalhada", "Hora trabalhada", "R$/h"],
@@ -94,7 +99,7 @@ function Valores() {
           </div>
         ))}
         <Button className="h-14 w-full rounded-2xl text-base font-semibold" disabled={!draft.vigencia || salvar.isPending} onClick={() => salvar.mutate()}>
-          Salvar novos valores
+          {editingId ? "Salvar alterações" : "Salvar novos valores"}
         </Button>
       </Section>
 
