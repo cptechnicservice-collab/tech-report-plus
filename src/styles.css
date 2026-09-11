@@ -63,36 +63,36 @@
   --color-success-foreground: var(--success-foreground);
   --color-surface: var(--surface);
   --font-sans: var(--font-app);
-  --shadow-card: 0 1px 2px oklch(0.2 0.03 250 / 6%), 0 8px 24px -12px oklch(0.2 0.03 250 / 14%);
-  --shadow-nav: 0 -1px 0 oklch(0.2 0.03 250 / 6%), 0 -8px 30px -18px oklch(0.2 0.03 250 / 25%);
+  --shadow-card: 0 1px 2px oklch(0.24 0.04 258 / 4%);
+  --shadow-nav: 0 -0.5px 0 oklch(0.24 0.04 258 / 8%);
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 1.15rem;
   --font-app:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  --background: oklch(0.975 0.004 250);
-  --foreground: oklch(0.21 0.03 255);
+  --background: oklch(0.968 0.003 255);
+  --foreground: oklch(0.19 0.028 258);
   --surface: oklch(1 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.03 255);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.03 255);
-  --primary: oklch(0.53 0.135 252);
+  --primary: oklch(0.36 0.075 258);
   --primary-foreground: oklch(0.99 0.002 250);
   --secondary: oklch(0.955 0.008 250);
   --secondary-foreground: oklch(0.32 0.035 255);
   --muted: oklch(0.962 0.006 250);
   --muted-foreground: oklch(0.55 0.022 256);
-  --accent: oklch(0.955 0.03 250);
-  --accent-foreground: oklch(0.4 0.09 252);
+  --accent: oklch(0.945 0.022 258);
+  --accent-foreground: oklch(0.34 0.07 258);
   --success: oklch(0.62 0.13 155);
   --success-foreground: oklch(0.99 0.002 250);
   --destructive: oklch(0.585 0.215 22);
   --destructive-foreground: oklch(0.99 0.002 250);
-  --border: oklch(0.918 0.008 250);
-  --input: oklch(0.9 0.01 250);
-  --ring: oklch(0.53 0.135 252);
+  --border: oklch(0.912 0.006 258);
+  --input: oklch(0.895 0.008 258);
+  --ring: oklch(0.36 0.075 258);
   --chart-1: oklch(0.53 0.135 252);
   --chart-2: oklch(0.72 0.15 60);
   --chart-3: oklch(0.62 0.13 155);
@@ -133,8 +133,18 @@
 
 @utility card-surface {
   background-color: var(--color-card);
-  border-radius: var(--radius-2xl);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+@utility press {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  &:active {
+    transform: scale(0.985);
+    opacity: 0.9;
+  }
 }
 
 @utility safe-bottom {
