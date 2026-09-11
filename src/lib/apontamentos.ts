@@ -11,10 +11,6 @@ export type Cliente = {
   telefone: string | null;
   ativo: boolean;
   observacoes: string | null;
-  diaria_tipo: string;
-  pedagio: number | null;
-  outras_despesas: number | null;
-  outras_despesas_descricao: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -35,6 +31,10 @@ export type Apontamento = {
   km_inicial: number | null;
   km_final: number | null;
   observacoes: string | null;
+  diaria_tipo: string;
+  pedagio: number | null;
+  outras_despesas: number | null;
+  outras_despesas_descricao: string | null;
   sync_status: string;
   synced_at: string | null;
   external_row_id: string | null;
