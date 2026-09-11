@@ -4,8 +4,9 @@ import type { PersistedClient } from "@tanstack/react-query-persist-client";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
+import type { ValorVigencia } from "@/lib/financeiro";
 
-type Entity = "clientes" | "apontamentos";
+type Entity = "clientes" | "apontamentos" | "valores_vigencia";
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -27,6 +28,7 @@ interface OfflineDB extends DBSchema {
 const DB_NAME = "cp-technic-horas";
 const CACHE_CLIENTES = "clientes";
 const CACHE_APONTAMENTOS = "apontamentos";
+const CACHE_VALORES = "valores-vigencia";
 const OFFLINE_EVENT = "cp-offline-change";
 
 function database() {
@@ -187,6 +189,40 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
   return { record, queued: true };
 }
 
+type ValorWrite = Omit<ValorVigencia, "created_at" | "updated_at"> &
+  Partial<Pick<ValorVigencia, "created_at" | "updated_at">>;
+
+export async function saveValorOffline(payload: ValorWrite) {
+  const now = new Date().toISOString();
+  const record: ValorVigencia = { created_at: now, updated_at: now, ...payload };
+  const cached = (await readCached<ValorVigencia[]>(CACHE_VALORES)) ?? [];
+  const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
+    `${b.vigencia}${b.created_at}`.localeCompare(`${a.vigencia}${a.created_at}`),
+  );
+  const dbPayload: TablesInsert<"valores_vigencia"> = { ...payload };
+
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase
+        .from("valores_vigencia")
+        .upsert(dbPayload, { onConflict: "id" })
+        .abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_VALORES, nextCache);
+        return { record, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+
+  await enqueue({ entity: "valores_vigencia", action: "upsert", recordId: record.id, payload: dbPayload });
+  await writeCached(CACHE_VALORES, nextCache);
+  return { record, queued: true };
+}
+
 export async function deleteApontamentoOffline(id: string) {
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
   if (!isOffline()) {
@@ -222,7 +258,7 @@ export async function syncOfflineQueue() {
   const db = await database();
   const items = await db.getAll("queue");
   items.sort((a, b) => {
-    const priority = (item: QueueItem) => (item.entity === "clientes" ? 0 : 1);
+    const priority = (item: QueueItem) => item.entity === "valores_vigencia" ? 0 : item.entity === "clientes" ? 1 : 2;
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
@@ -239,10 +275,15 @@ export async function syncOfflineQueue() {
           .from("clientes")
           .upsert((item.payload ?? {}) as TablesInsert<"clientes">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
-      } else {
+      } else if (item.entity === "apontamentos") {
         result = await supabase
           .from("apontamentos")
           .upsert((item.payload ?? {}) as TablesInsert<"apontamentos">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else {
+        result = await supabase
+          .from("valores_vigencia")
+          .upsert((item.payload ?? {}) as TablesInsert<"valores_vigencia">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
       }
       if (result.error) throw result.error;
@@ -264,4 +305,5 @@ export async function syncOfflineQueue() {
 export const offlineCacheKeys = {
   clientes: CACHE_CLIENTES,
   apontamentos: CACHE_APONTAMENTOS,
+  valores: CACHE_VALORES,
 };
