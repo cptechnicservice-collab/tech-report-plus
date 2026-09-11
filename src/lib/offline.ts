@@ -15,6 +15,8 @@ type QueueItem = {
   recordId: string;
   payload?: Record<string, unknown>;
   createdAt: number;
+  attempts?: number;
+  lastError?: string;
 };
 
 interface OfflineDB extends DBSchema {
@@ -64,6 +66,17 @@ export async function pendingCount() {
   return (await database()).count("queue");
 }
 
+export async function getOfflineQueueStatus() {
+  if (typeof indexedDB === "undefined") return { pending: 0, failed: 0, firstError: undefined };
+  const items = await (await database()).getAll("queue");
+  const failedItems = items.filter((item) => item.lastError);
+  return {
+    pending: items.length,
+    failed: failedItems.length,
+    firstError: failedItems[0]?.lastError,
+  };
+}
+
 export function subscribeOfflineStatus(listener: () => void) {
   if (typeof window === "undefined") return () => undefined;
   window.addEventListener(OFFLINE_EVENT, listener);
@@ -89,19 +102,49 @@ function isOffline() {
   return typeof navigator !== "undefined" && !navigator.onLine;
 }
 
+function errorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String(error.message);
+  }
+  return String(error);
+}
+
+export function isNetworkError(error: unknown) {
+  if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")) return true;
+  if (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError")) return true;
+  if (typeof error === "object" && error !== null && "status" in error && Number(error.status) === 0) return true;
+  return /failed to fetch|load failed|networkerror/i.test(errorMessage(error));
+}
+
+function timeoutSignal() {
+  return AbortSignal.timeout(10_000);
+}
+
 export async function saveClienteOffline(
   payload: Omit<Cliente, "created_at" | "updated_at"> & Partial<Pick<Cliente, "created_at" | "updated_at">>,
 ) {
   const now = new Date().toISOString();
   const cliente: Cliente = { created_at: now, updated_at: now, ...payload };
   const cached = (await readCached<Cliente[]>(CACHE_CLIENTES)) ?? [];
-  await writeCached(CACHE_CLIENTES, [...cached.filter((item) => item.id !== cliente.id), cliente]);
-
   if (!isOffline()) {
-    const { error } = await supabase.from("clientes").upsert(payload, { onConflict: "id" });
-    if (!error) return { cliente, queued: false };
+    try {
+      const { error } = await supabase
+        .from("clientes")
+        .upsert(payload, { onConflict: "id" })
+        .abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_CLIENTES, [...cached.filter((item) => item.id !== cliente.id), cliente]);
+        return { cliente, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
   }
   await enqueue({ entity: "clientes", action: "upsert", recordId: cliente.id, payload });
+  await writeCached(CACHE_CLIENTES, [...cached.filter((item) => item.id !== cliente.id), cliente]);
   return { cliente, queued: true };
 }
 
@@ -118,30 +161,53 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
     clientes: clientes.find((cliente) => cliente.id === payload.cliente_id) ?? null,
   };
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
-  await writeCached(
-    CACHE_APONTAMENTOS,
-    [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
-      `${b.data}${b.created_at}`.localeCompare(`${a.data}${a.created_at}`),
-    ),
+  const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
+    `${b.data}${b.created_at}`.localeCompare(`${a.data}${a.created_at}`),
   );
 
   const dbPayload: TablesInsert<"apontamentos"> = { ...payload };
   if (!isOffline()) {
-    const { error } = await supabase.from("apontamentos").upsert(dbPayload, { onConflict: "id" });
-    if (!error) return { record, queued: false };
+    try {
+      const { error } = await supabase
+        .from("apontamentos")
+        .upsert(dbPayload, { onConflict: "id" })
+        .abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_APONTAMENTOS, nextCache);
+        return { record, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
   }
   await enqueue({ entity: "apontamentos", action: "upsert", recordId: record.id, payload: dbPayload });
+  await writeCached(CACHE_APONTAMENTOS, nextCache);
   return { record, queued: true };
 }
 
 export async function deleteApontamentoOffline(id: string) {
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
-  await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
   if (!isOffline()) {
-    const { error } = await supabase.from("apontamentos").delete().eq("id", id);
-    if (!error) return { queued: false };
+    try {
+      const { error } = await supabase
+        .from("apontamentos")
+        .delete()
+        .eq("id", id)
+        .abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
+        return { queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
   }
   await enqueue({ entity: "apontamentos", action: "delete", recordId: id });
+  await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
   return { queued: true };
 }
 
@@ -160,20 +226,37 @@ export async function syncOfflineQueue() {
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
-    let result;
-    if (item.action === "delete") {
-      result = await supabase.from(item.entity).delete().eq("id", item.recordId);
-    } else if (item.entity === "clientes") {
-      result = await supabase
-        .from("clientes")
-        .upsert((item.payload ?? {}) as TablesInsert<"clientes">, { onConflict: "id" });
-    } else {
-      result = await supabase
-        .from("apontamentos")
-        .upsert((item.payload ?? {}) as TablesInsert<"apontamentos">, { onConflict: "id" });
+    try {
+      let result;
+      if (item.action === "delete") {
+        result = await supabase
+          .from(item.entity)
+          .delete()
+          .eq("id", item.recordId)
+          .abortSignal(timeoutSignal());
+      } else if (item.entity === "clientes") {
+        result = await supabase
+          .from("clientes")
+          .upsert((item.payload ?? {}) as TablesInsert<"clientes">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else {
+        result = await supabase
+          .from("apontamentos")
+          .upsert((item.payload ?? {}) as TablesInsert<"apontamentos">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      }
+      if (result.error) throw result.error;
+      if (item.queueId != null) await db.delete("queue", item.queueId);
+    } catch (error) {
+      if (isNetworkError(error)) break;
+      if (item.queueId != null) {
+        await db.put("queue", {
+          ...item,
+          attempts: (item.attempts ?? 0) + 1,
+          lastError: errorMessage(error),
+        });
+      }
     }
-    if (result.error) break;
-    if (item.queueId != null) await db.delete("queue", item.queueId);
   }
   emitChange();
 }
