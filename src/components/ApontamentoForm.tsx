@@ -48,10 +48,8 @@ type FormState = {
   intervalo_fim: string;
   viagem_volta_saida: string;
   viagem_volta_chegada: string;
-  km_inicial: string;
-  km_final: string;
-  km_total: string;
-  km_mode: "direto" | "hodometro";
+  km_ida: string;
+  km_volta: string;
   observacoes: string;
   diaria_tipo: "nenhuma" | "meia" | "inteira";
   pedagio: string;
@@ -72,10 +70,14 @@ function initialState(a?: Apontamento): FormState {
     intervalo_fim: normalizeTime(a?.intervalo_fim),
     viagem_volta_saida: normalizeTime(a?.viagem_volta_saida),
     viagem_volta_chegada: normalizeTime(a?.viagem_volta_chegada),
-    km_inicial: a?.km_inicial != null ? String(a.km_inicial) : "",
-    km_final: a?.km_final != null ? String(a.km_final) : "",
-    km_total: a?.km_total != null ? String(a.km_total) : "",
-    km_mode: a?.km_total != null ? "direto" : "hodometro",
+    km_ida: a?.km_ida != null
+      ? String(a.km_ida)
+      : a?.km_total != null
+        ? String(a.km_total)
+        : a?.km_inicial != null && a?.km_final != null && a.km_final >= a.km_inicial
+          ? String(a.km_final - a.km_inicial)
+          : "",
+    km_volta: a?.km_volta != null ? String(a.km_volta) : "",
     observacoes: a?.observacoes ?? "",
     diaria_tipo: (a?.diaria_tipo as FormState["diaria_tipo"] | undefined) ?? "nenhuma",
     pedagio: a?.pedagio != null ? String(a.pedagio) : "",
@@ -294,9 +296,11 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
       intervalo_fim: t(form.intervalo_fim),
       viagem_volta_saida: t(form.viagem_volta_saida),
       viagem_volta_chegada: t(form.viagem_volta_chegada),
-      km_inicial: form.km_mode === "hodometro" ? n(form.km_inicial) : null,
-      km_final: form.km_mode === "hodometro" ? n(form.km_final) : null,
-      km_total: form.km_mode === "direto" ? n(form.km_total) : null,
+      km_inicial: null,
+      km_final: null,
+      km_total: null,
+      km_ida: n(form.km_ida),
+      km_volta: n(form.km_volta),
       observacoes: form.observacoes.trim() || null,
       diaria_tipo: form.diaria_tipo,
       pedagio: n(form.pedagio),
@@ -485,54 +489,34 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
 
       <OptionalSection
         title="Quilometragem"
-        initiallyOpen={Boolean(form.km_total || form.km_inicial || form.km_final)}
-        hasValue={Boolean(form.km_total || form.km_inicial || form.km_final)}
-        onClear={() => setForm((prev) => ({ ...prev, km_total: "", km_inicial: "", km_final: "" }))}
+        initiallyOpen={Boolean(form.km_ida || form.km_volta)}
+        hasValue={Boolean(form.km_ida || form.km_volta)}
+        onClear={() => setForm((prev) => ({ ...prev, km_ida: "", km_volta: "" }))}
       >
-        <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className={form.km_mode === "direto" ? "bg-card shadow-sm" : ""}
-            onClick={() => set("km_mode", "direto")}
-          >
-            Total direto
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className={form.km_mode === "hodometro" ? "bg-card shadow-sm" : ""}
-            onClick={() => set("km_mode", "hodometro")}
-          >
-            Hodômetro
-          </Button>
-        </div>
-        {form.km_mode === "direto" ? (
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">KM total percorrido</Label>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0 space-y-1.5">
+            <Label htmlFor="km-ida" className="text-xs text-muted-foreground">KM total ida</Label>
             <Input
+              id="km-ida"
               inputMode="decimal"
-              value={form.km_total}
-              onChange={(e) => set("km_total", e.target.value)}
+              value={form.km_ida}
+              onChange={(event) => set("km_ida", event.target.value)}
               className="h-12 rounded-xl"
-              placeholder="Ex.: 530"
+              placeholder="Ex.: 265"
             />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <Label className="text-xs text-muted-foreground">KM inicial</Label>
-              <Input inputMode="decimal" value={form.km_inicial} onChange={(e) => set("km_inicial", e.target.value)} className="h-12 rounded-xl" />
-            </div>
-            <div className="min-w-0 space-y-1.5">
-              <Label className="text-xs text-muted-foreground">KM final</Label>
-              <Input inputMode="decimal" value={form.km_final} onChange={(e) => set("km_final", e.target.value)} className="h-12 rounded-xl" />
-            </div>
+          <div className="min-w-0 space-y-1.5">
+            <Label htmlFor="km-volta" className="text-xs text-muted-foreground">KM total volta</Label>
+            <Input
+              id="km-volta"
+              inputMode="decimal"
+              value={form.km_volta}
+              onChange={(event) => set("km_volta", event.target.value)}
+              className="h-12 rounded-xl"
+              placeholder="Ex.: 265"
+            />
           </div>
-        )}
-        {validacoes.kmInvalido ? <Warning>KM final menor que o inicial</Warning> : null}
+        </div>
       </OptionalSection>
 
       <Section title="Despesas">

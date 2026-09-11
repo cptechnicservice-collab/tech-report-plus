@@ -31,6 +31,8 @@ export type Apontamento = {
   km_inicial: number | null;
   km_final: number | null;
   km_total: number | null;
+  km_ida: number | null;
+  km_volta: number | null;
   observacoes: string | null;
   diaria_tipo: string;
   pedagio: number | null;
@@ -116,8 +118,6 @@ export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamen
       intervaloFim - intervaloInicio > trabalhoBruto;
   }
 
-  const kmInicial = a.km_inicial ?? null;
-  const kmFinal = a.km_final ?? null;
   return {
     trabalhoIncompleto: pairIncomplete(a.trabalho_inicio, a.trabalho_fim),
     viagemIdaIncompleta: pairIncomplete(a.viagem_ida_saida, a.viagem_ida_chegada),
@@ -130,8 +130,7 @@ export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamen
       (toMinutes(a.viagem_volta_saida) ?? -1) >
       (toMinutes(a.viagem_volta_chegada) ?? Number.MAX_SAFE_INTEGER),
     intervaloInvalido,
-    kmInvalido:
-      a.km_total == null && kmInicial !== null && kmFinal !== null && kmFinal < kmInicial,
+    kmInvalido: false,
     jornadaLonga: trabalhoBruto > 16 * 60,
   };
 }
@@ -145,14 +144,18 @@ export function calcularTotais(a: Partial<Apontamento>): Totais {
   const viagem =
     diffMinutes(a.viagem_ida_saida, a.viagem_ida_chegada) +
     diffMinutes(a.viagem_volta_saida, a.viagem_volta_chegada);
-  const kmI = a.km_inicial ?? null;
-  const kmF = a.km_final ?? null;
-  const kmDireto = a.km_total ?? null;
-  const km = kmDireto !== null && kmDireto >= 0
-    ? kmDireto
-    : kmI !== null && kmF !== null && kmF >= kmI
-      ? kmF - kmI
+  const hasDirectionalKm = a.km_ida != null || a.km_volta != null;
+  const directionalKm = Math.max(0, a.km_ida ?? 0) + Math.max(0, a.km_volta ?? 0);
+  const legacyDirectKm = a.km_total ?? null;
+  const legacyOdometerKm =
+    a.km_inicial != null && a.km_final != null && a.km_final >= a.km_inicial
+      ? a.km_final - a.km_inicial
       : 0;
+  const km = hasDirectionalKm
+    ? directionalKm
+    : legacyDirectKm !== null && legacyDirectKm >= 0
+      ? legacyDirectKm
+      : legacyOdometerKm;
   return { trabalho, viagem, km };
 }
 
