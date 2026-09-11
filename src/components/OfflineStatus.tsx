@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { pendingCount, subscribeOfflineStatus, syncOfflineQueue } from "@/lib/offline";
 
 export function OfflineStatus() {
   const [online, setOnline] = useState(true);
   const [pending, setPending] = useState(0);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const refresh = () => {
       setOnline(navigator.onLine);
       void pendingCount().then(setPending);
     };
-    const sync = () => void syncOfflineQueue().finally(refresh);
+    const sync = () => void syncOfflineQueue().then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      void queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
+    }).finally(refresh);
     refresh();
     void syncOfflineQueue().finally(refresh);
     window.addEventListener("online", sync);
@@ -20,7 +25,7 @@ export function OfflineStatus() {
       window.removeEventListener("online", sync);
       unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   if (online && pending === 0) return null;
   return (

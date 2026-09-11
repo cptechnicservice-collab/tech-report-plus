@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   calcularTotais,
+  diffMinutes,
   fetchApontamentos,
   fetchClientes,
   formatMinutes,
@@ -404,7 +405,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           />
         </div>
         {validacoes.viagemIdaIncompleta ? <Warning>Preencha início e fim</Warning> : null}
-        {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(totais.viagem)}</Warning> : null}
+        {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_ida_saida, payload.viagem_ida_chegada))}</Warning> : null}
       </OptionalSection>
 
       <Section title="Trabalho">
@@ -454,7 +455,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           />
         </div>
         {validacoes.viagemVoltaIncompleta ? <Warning>Preencha início e fim</Warning> : null}
-        {validacoes.viagemVoltaDiaSeguinte ? <Warning>Termina no dia seguinte? Confira o total de viagem: {formatMinutes(totais.viagem)}</Warning> : null}
+        {validacoes.viagemVoltaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_volta_saida, payload.viagem_volta_chegada))}</Warning> : null}
       </OptionalSection>
 
       <OptionalSection
