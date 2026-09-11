@@ -80,16 +80,16 @@ function Relatorio() {
       <Section title="Dados do relatório">
         <div className="space-y-1.5">
           <Label htmlFor="report-client">Cliente</Label>
-          <select id="report-client" value={clienteId} onChange={(event) => setClienteId(event.target.value)} className="h-12 w-full rounded-xl border border-input bg-background px-3">
+          <select id="report-client" value={clienteId} onChange={(event) => setClienteId(event.target.value)} className="ios-field h-12 w-full border px-3">
             <option value="">Selecione o cliente</option>
             {clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>)}
           </select>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={() => shortcut("week")}>Esta semana</Button>
-          <Button type="button" variant="secondary" size="sm" onClick={() => shortcut("lastWeek")}>Semana passada</Button>
-          <Button type="button" variant="secondary" size="sm" onClick={() => shortcut("month")}>Este mês</Button>
-          <Button type="button" variant="outline" size="sm">Personalizado</Button>
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-secondary p-1">
+          <Button type="button" variant="ghost" size="sm" className="bg-card" onClick={() => shortcut("week")}>Esta semana</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => shortcut("lastWeek")}>Semana passada</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => shortcut("month")}>Este mês</Button>
+          <Button type="button" variant="ghost" size="sm">Personalizado</Button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5"><Label htmlFor="report-start">De</Label><Input id="report-start" type="date" value={inicio} onChange={(event) => setInicio(event.target.value)} className="h-12 rounded-xl" /></div>

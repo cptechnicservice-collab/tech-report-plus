@@ -18,6 +18,8 @@ export const Route = createFileRoute("/apontamento/$id")({
         property: "og:description",
         content: "Ajuste horários, km e observações de um apontamento existente.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: EditarApontamento,

@@ -26,6 +26,8 @@ export const Route = createFileRoute("/clientes")({
         property: "og:description",
         content: "Cadastro de clientes usado nos apontamentos de horas.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Clientes,
@@ -115,7 +117,7 @@ function Clientes() {
       title="Clientes"
       subtitle={`${clientes.length} cadastrado(s)`}
       action={
-        <Button className="h-11 rounded-xl" onClick={abrirNovo}>
+        <Button className="rounded-full px-4" onClick={abrirNovo}>
           <Plus className="mr-1 h-5 w-5" /> Novo
         </Button>
       }
@@ -209,30 +211,31 @@ function Clientes() {
         </Section>
       ) : null}
 
-      <div className="relative">
+      <div className="relative px-0.5">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Pesquisar cliente"
-          className="h-12 rounded-xl pl-9"
+          className="rounded-full bg-secondary pl-9"
         />
       </div>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="ios-group divide-y divide-border">
           {lista.map((c) => (
             <li key={c.id}>
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 onClick={() => {
                   setDraft(toDraft(c));
                   setEditando(c.id);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className="card-surface flex w-full items-center justify-between gap-3 p-4 text-left"
+                className="h-auto min-h-16 w-full justify-between rounded-none px-4 py-3 text-left font-normal"
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{c.nome}</span>
@@ -249,7 +252,7 @@ function Clientes() {
                 >
                   {c.ativo ? "Ativo" : "Inativo"}
                 </span>
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

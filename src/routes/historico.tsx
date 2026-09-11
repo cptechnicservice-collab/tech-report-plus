@@ -31,6 +31,8 @@ export const Route = createFileRoute("/historico")({
         property: "og:description",
         content: "Busca por cliente e período com totais de horas e quilometragem.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Historico,
@@ -72,7 +74,7 @@ function Historico() {
   const totais = somarTotais(filtrados);
 
   return (
-    <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-xl" aria-label="Abrir relatório"><Link to="/relatorio"><FileText className="h-5 w-5" /></Link></Button>}>
+    <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="rounded-full" aria-label="Abrir relatório"><Link to="/relatorio"><FileText className="h-5 w-5" /></Link></Button>}>
       <Section title="Filtros">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -80,7 +82,7 @@ function Historico() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por cliente ou serviço"
-            className="h-12 rounded-xl pl-9"
+            className="rounded-full bg-secondary pl-9"
           />
         </div>
         <div className="space-y-1.5">
@@ -91,7 +93,7 @@ function Historico() {
             id="cliente-filtro"
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
-            className="h-12 w-full rounded-xl border border-input bg-background px-3"
+            className="ios-field h-12 w-full border px-3"
           >
             <option value="">Todos os clientes</option>
             {clientes.map((c) => (
@@ -121,10 +123,11 @@ function Historico() {
             />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Total: {formatMinutes(totais.trabalho)} trabalhadas · {formatMinutes(totais.viagem)} de
-          viagem · {totais.km} km
-        </p>
+        <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-secondary/70 py-3 text-center">
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{formatMinutes(totais.trabalho)}</strong>Trabalho</p>
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{formatMinutes(totais.viagem)}</strong>Viagem</p>
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{totais.km}</strong>KM</p>
+        </div>
       </Section>
 
       {isLoading ? (
@@ -134,7 +137,7 @@ function Historico() {
           Nenhum apontamento no filtro atual.
         </p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="ios-group divide-y divide-border">
           {filtrados.map((a) => {
             const t = calcularTotais(a);
             return (
@@ -142,7 +145,7 @@ function Historico() {
                 <Link
                   to="/apontamento/$id"
                   params={{ id: a.id }}
-                  className="card-surface flex items-center gap-3 p-4"
+                  className="press flex min-h-[4.5rem] items-center gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">

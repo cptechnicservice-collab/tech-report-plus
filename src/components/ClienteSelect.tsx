@@ -76,19 +76,20 @@ export function ClienteSelect({
   return (
     <div className="space-y-2">
       <Label>Cliente</Label>
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 py-3.5 text-left text-base"
+        className="ios-field min-h-12 w-full justify-between px-4 py-3 text-left text-base font-normal"
       >
         <span className={selecionado ? "min-w-0 truncate" : "text-muted-foreground"}>
           {selecionado ? selecionado.nome : "Selecionar cliente"}
         </span>
         <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md gap-4 rounded-2xl">
+        <DialogContent className="bottom-0 top-auto max-h-[88dvh] max-w-md translate-y-0 gap-4 rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
           <DialogHeader>
             <DialogTitle>Clientes ativos</DialogTitle>
           </DialogHeader>
@@ -110,14 +111,15 @@ export function ClienteSelect({
               </p>
             ) : (
               lista.map((c) => (
-                <button
+                <Button
                   key={c.id}
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     onChange(c.id);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-secondary"
+                  className="h-auto min-h-14 w-full justify-between rounded-xl px-3 py-3 text-left font-normal hover:bg-secondary"
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{c.nome}</span>
@@ -128,7 +130,7 @@ export function ClienteSelect({
                     ) : null}
                   </span>
                   {value === c.id ? <Check className="h-5 w-5 shrink-0 text-primary" /> : null}
-                </button>
+                </Button>
               ))
             )}
           </div>
