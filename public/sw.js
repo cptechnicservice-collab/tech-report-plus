@@ -1,5 +1,5 @@
-const CACHE = "cp-technic-v2";
-const SHELL = ["/", "/novo", "/historico", "/clientes", "/relatorio", "/manifest.webmanifest", "/favicon.ico"];
+const CACHE = "cp-technic-v3";
+const SHELL = ["/", "/novo", "/historico", "/clientes", "/relatorio", "/manifest.webmanifest", "/favicon.png", "/apple-touch-icon.png", "/app-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
