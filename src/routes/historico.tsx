@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, FileText, Search } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { getPendingApontamentoIds, subscribeOfflineStatus } from "@/lib/offline";
 import {
   calcularTotais,
   fetchApontamentos,
@@ -39,6 +41,13 @@ function Historico() {
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
   const [clienteId, setClienteId] = useState("");
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const refresh = () => void getPendingApontamentoIds().then(setPendingIds);
+    refresh();
+    return subscribeOfflineStatus(refresh);
+  }, []);
 
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
@@ -63,7 +72,7 @@ function Historico() {
   const totais = somarTotais(filtrados);
 
   return (
-    <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`}>
+    <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-xl" aria-label="Abrir relatório"><Link to="/relatorio"><FileText className="h-5 w-5" /></Link></Button>}>
       <Section title="Filtros">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -149,6 +158,7 @@ function Historico() {
                       {normalizeTime(a.trabalho_fim) || "--:--"} · {formatMinutes(t.trabalho)}{" "}
                       trabalho · {formatMinutes(t.viagem)} viagem · {t.km} km
                     </p>
+                    {pendingIds.has(a.id) ? <span className="mt-1 inline-block text-xs font-medium text-primary">Pendente de envio</span> : null}
                   </div>
                   <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                 </Link>
