@@ -1,0 +1,12 @@
+{
+  "name": "CP TECHNIC Horas",
+  "short_name": "CP Horas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#f6f7f9",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/app-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

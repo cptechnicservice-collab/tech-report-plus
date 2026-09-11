@@ -10,33 +10,74 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientesRouteImport } from './routes/clientes'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as NovoRouteImport } from './routes/novo'
+import { Route as ApontamentoIdRouteImport } from './routes/apontamento.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesRoute = ClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovoRoute = NovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApontamentoIdRoute = ApontamentoIdRouteImport.update({
+  id: '/apontamento/$id',
+  path: '/apontamento/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
+  '/historico': typeof HistoricoRoute
+  '/novo': typeof NovoRoute
+  '/apontamento/$id': typeof ApontamentoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
+  '/historico': typeof HistoricoRoute
+  '/novo': typeof NovoRoute
+  '/apontamento/$id': typeof ApontamentoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/clientes': typeof ClientesRoute
+  '/historico': typeof HistoricoRoute
+  '/novo': typeof NovoRoute
+  '/apontamento/$id': typeof ApontamentoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/clientes' | '/historico' | '/novo' | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/clientes' | '/historico' | '/novo' | '/apontamento/$id'
+  id:
+    '__root__' | '/' | '/clientes' | '/historico' | '/novo' | '/apontamento/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientesRoute: typeof ClientesRoute
+  HistoricoRoute: typeof HistoricoRoute
+  NovoRoute: typeof NovoRoute
+  ApontamentoIdRoute: typeof ApontamentoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +89,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes': {
+      id: '/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof ClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/novo': {
+      id: '/novo'
+      path: '/novo'
+      fullPath: '/novo'
+      preLoaderRoute: typeof NovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apontamento/$id': {
+      id: '/apontamento/$id'
+      path: '/apontamento/$id'
+      fullPath: '/apontamento/$id'
+      preLoaderRoute: typeof ApontamentoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientesRoute: ClientesRoute,
+  HistoricoRoute: HistoricoRoute,
+  NovoRoute: NovoRoute,
+  ApontamentoIdRoute: ApontamentoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
