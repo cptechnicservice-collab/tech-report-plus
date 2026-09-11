@@ -1,6 +1,8 @@
 import { openDB, type DBSchema } from "idb";
+import type { PersistedClient } from "@tanstack/react-query-persist-client";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
 
 type Entity = "clientes" | "apontamentos";
@@ -50,8 +52,8 @@ export async function writeCached<T>(key: string, value: T) {
 }
 
 export const queryPersister = {
-  persistClient: (client: unknown) => writeCached("react-query", client),
-  restoreClient: () => readCached("react-query"),
+  persistClient: (client: PersistedClient) => writeCached("react-query", client),
+  restoreClient: () => readCached<PersistedClient>("react-query"),
   removeClient: async () => {
     if (typeof indexedDB !== "undefined") await (await database()).delete("cache", "react-query");
   },
@@ -123,7 +125,7 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
     ),
   );
 
-  const dbPayload = { ...payload } as Record<string, unknown>;
+  const dbPayload: TablesInsert<"apontamentos"> = { ...payload };
   if (!isOffline()) {
     const { error } = await supabase.from("apontamentos").upsert(dbPayload, { onConflict: "id" });
     if (!error) return { record, queued: false };
@@ -158,10 +160,18 @@ export async function syncOfflineQueue() {
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
-    const result =
-      item.action === "delete"
-        ? await supabase.from(item.entity).delete().eq("id", item.recordId)
-        : await supabase.from(item.entity).upsert(item.payload ?? {}, { onConflict: "id" });
+    let result;
+    if (item.action === "delete") {
+      result = await supabase.from(item.entity).delete().eq("id", item.recordId);
+    } else if (item.entity === "clientes") {
+      result = await supabase
+        .from("clientes")
+        .upsert((item.payload ?? {}) as TablesInsert<"clientes">, { onConflict: "id" });
+    } else {
+      result = await supabase
+        .from("apontamentos")
+        .upsert((item.payload ?? {}) as TablesInsert<"apontamentos">, { onConflict: "id" });
+    }
     if (result.error) break;
     if (item.queueId != null) await db.delete("queue", item.queueId);
   }
