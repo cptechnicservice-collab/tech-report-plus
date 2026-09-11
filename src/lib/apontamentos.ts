@@ -30,6 +30,7 @@ export type Apontamento = {
   viagem_volta_chegada: string | null;
   km_inicial: number | null;
   km_final: number | null;
+  km_total: number | null;
   observacoes: string | null;
   diaria_tipo: string;
   pedagio: number | null;
@@ -129,7 +130,8 @@ export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamen
       (toMinutes(a.viagem_volta_saida) ?? -1) >
       (toMinutes(a.viagem_volta_chegada) ?? Number.MAX_SAFE_INTEGER),
     intervaloInvalido,
-    kmInvalido: kmInicial !== null && kmFinal !== null && kmFinal < kmInicial,
+    kmInvalido:
+      a.km_total == null && kmInicial !== null && kmFinal !== null && kmFinal < kmInicial,
     jornadaLonga: trabalhoBruto > 16 * 60,
   };
 }
@@ -145,7 +147,12 @@ export function calcularTotais(a: Partial<Apontamento>): Totais {
     diffMinutes(a.viagem_volta_saida, a.viagem_volta_chegada);
   const kmI = a.km_inicial ?? null;
   const kmF = a.km_final ?? null;
-  const km = kmI !== null && kmF !== null && kmF >= kmI ? kmF - kmI : 0;
+  const kmDireto = a.km_total ?? null;
+  const km = kmDireto !== null && kmDireto >= 0
+    ? kmDireto
+    : kmI !== null && kmF !== null && kmF >= kmI
+      ? kmF - kmI
+      : 0;
   return { trabalho, viagem, km };
 }
 
