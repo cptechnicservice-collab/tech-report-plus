@@ -102,9 +102,9 @@ function Relatorio() {
       </Section>
       <Section title="Valores do período">
         <dl className="divide-y divide-border text-sm">
-          <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h`} value={financeiros.valorTrabalho} />
-          <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h`} value={financeiros.valorViagem} />
-          <ValueRow label={`KM · ${financeiros.km}`} value={financeiros.valorKm} />
+          <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
+          <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h × valores vigentes`} value={financeiros.valorViagem} />
+          <ValueRow label={`KM · ${financeiros.km} × valores vigentes`} value={financeiros.valorKm} />
           <ValueRow label={`Diárias · ${financeiros.diariasInteiras} inteira(s), ${financeiros.meiasDiarias} meia(s)`} value={financeiros.valorDiarias} />
           <ValueRow label="Pedágios" value={financeiros.pedagios} />
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />

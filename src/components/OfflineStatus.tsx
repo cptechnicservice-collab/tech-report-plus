@@ -30,6 +30,7 @@ export function OfflineStatus() {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["clientes"] }),
           queryClient.invalidateQueries({ queryKey: ["apontamentos"] }),
+          queryClient.invalidateQueries({ queryKey: ["valores"] }),
         ]);
       } finally {
         syncing.current = false;

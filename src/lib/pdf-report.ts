@@ -74,9 +74,9 @@ export async function generateClientReport(
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
     head: [["Valores do período", "Total"]],
     body: [
-      [`Horas trabalhadas · ${formatDecimalHours(financial.horasTrabalhadas)} h`, formatCurrency(financial.valorTrabalho)],
-      [`Horas de viagem · ${formatDecimalHours(financial.horasViagem)} h`, formatCurrency(financial.valorViagem)],
-      [`KM · ${financial.km}`, formatCurrency(financial.valorKm)],
+      [`Horas trabalhadas · ${formatDecimalHours(financial.horasTrabalhadas)} h × valores vigentes`, formatCurrency(financial.valorTrabalho)],
+      [`Horas de viagem · ${formatDecimalHours(financial.horasViagem)} h × valores vigentes`, formatCurrency(financial.valorViagem)],
+      [`KM · ${financial.km} × valores vigentes`, formatCurrency(financial.valorKm)],
       [`Diárias · ${financial.diariasInteiras} inteira(s), ${financial.meiasDiarias} meia(s)`, formatCurrency(financial.valorDiarias)],
       ["Pedágios", formatCurrency(financial.pedagios)],
       ["Outras despesas", formatCurrency(financial.outrasDespesas)],
