@@ -49,6 +49,10 @@ type FormState = {
   km_inicial: string;
   km_final: string;
   observacoes: string;
+  diaria_tipo: "nenhuma" | "meia" | "inteira";
+  pedagio: string;
+  outras_despesas: string;
+  outras_despesas_descricao: string;
 };
 
 function initialState(a?: Apontamento): FormState {
@@ -67,6 +71,10 @@ function initialState(a?: Apontamento): FormState {
     km_inicial: a?.km_inicial != null ? String(a.km_inicial) : "",
     km_final: a?.km_final != null ? String(a.km_final) : "",
     observacoes: a?.observacoes ?? "",
+    diaria_tipo: (a?.diaria_tipo as FormState["diaria_tipo"] | undefined) ?? "nenhuma",
+    pedagio: a?.pedagio != null ? String(a.pedagio) : "",
+    outras_despesas: a?.outras_despesas != null ? String(a.outras_despesas) : "",
+    outras_despesas_descricao: a?.outras_despesas_descricao ?? "",
   };
 }
 
@@ -282,6 +290,10 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
       km_inicial: n(form.km_inicial),
       km_final: n(form.km_final),
       observacoes: form.observacoes.trim() || null,
+      diaria_tipo: form.diaria_tipo,
+      pedagio: n(form.pedagio),
+      outras_despesas: n(form.outras_despesas),
+      outras_despesas_descricao: form.outras_despesas_descricao.trim() || null,
     };
   }, [form]);
 
@@ -486,6 +498,36 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
         </div>
         {validacoes.kmInvalido ? <Warning>KM final menor que o inicial</Warning> : null}
       </OptionalSection>
+
+      <Section title="Despesas">
+        <div className="space-y-1.5">
+          <Label htmlFor="diaria">Diária</Label>
+          <select
+            id="diaria"
+            value={form.diaria_tipo}
+            onChange={(event) => set("diaria_tipo", event.target.value as FormState["diaria_tipo"])}
+            className="ios-field h-12 w-full border px-3"
+          >
+            <option value="nenhuma">Nenhuma</option>
+            <option value="meia">Meia diária</option>
+            <option value="inteira">Diária inteira</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0 space-y-1.5">
+            <Label htmlFor="pedagio">Pedágio (R$)</Label>
+            <Input id="pedagio" inputMode="decimal" placeholder="0,00" value={form.pedagio} onChange={(event) => set("pedagio", event.target.value)} />
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <Label htmlFor="outras-despesas">Outras despesas (R$)</Label>
+            <Input id="outras-despesas" inputMode="decimal" placeholder="0,00" value={form.outras_despesas} onChange={(event) => set("outras_despesas", event.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="outras-despesas-descricao">Descrição (opcional)</Label>
+          <Input id="outras-despesas-descricao" value={form.outras_despesas_descricao} onChange={(event) => set("outras_despesas_descricao", event.target.value)} placeholder="Ex.: estacionamento" />
+        </div>
+      </Section>
 
       <Section title="Observações" hint="opcional">
         <Textarea

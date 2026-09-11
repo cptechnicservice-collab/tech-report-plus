@@ -8,7 +8,8 @@ import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { fetchApontamentos, fetchClientes, formatMinutes, somarTotais, todayISO } from "@/lib/apontamentos";
+import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTotais, todayISO } from "@/lib/apontamentos";
+import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";
 
 export const Route = createFileRoute("/relatorio")({
@@ -46,11 +47,13 @@ function Relatorio() {
   const [generating, setGenerating] = useState(false);
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
+  const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const filtrados = useMemo(
     () => apontamentos.filter((item) => item.cliente_id === clienteId && item.data >= inicio && item.data <= fim),
     [apontamentos, clienteId, inicio, fim],
   );
   const totais = somarTotais(filtrados);
+  const financeiros = useMemo(() => calcularValoresPeriodo(filtrados, valores), [filtrados, valores]);
 
   const shortcut = (kind: "week" | "lastWeek" | "month") => {
     const [start, end] = getShortcut(kind);
@@ -67,7 +70,7 @@ function Relatorio() {
     }
     setGenerating(true);
     try {
-      await generateClientReport(cliente, filtrados, inicio, fim);
+      await generateClientReport(cliente, filtrados, valores, inicio, fim);
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
     } finally {
@@ -97,9 +100,26 @@ function Relatorio() {
         </div>
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
       </Section>
+      <Section title="Valores do período">
+        <dl className="divide-y divide-border text-sm">
+          <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h`} value={financeiros.valorTrabalho} />
+          <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h`} value={financeiros.valorViagem} />
+          <ValueRow label={`KM · ${financeiros.km}`} value={financeiros.valorKm} />
+          <ValueRow label={`Diárias · ${financeiros.diariasInteiras} inteira(s), ${financeiros.meiasDiarias} meia(s)`} value={financeiros.valorDiarias} />
+          <ValueRow label="Pedágios" value={financeiros.pedagios} />
+          <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
+          <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
+            <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(financeiros.totalGeral)}</dd>
+          </div>
+        </dl>
+      </Section>
       <Button className="h-14 w-full rounded-2xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || generating} onClick={() => void generate()}>
         <FileText className="mr-2 h-5 w-5" /> {generating ? "Gerando..." : "Gerar e compartilhar PDF"}
       </Button>
     </PageShell>
   );
+}
+
+function ValueRow({ label, value }: { label: string; value: number }) {
+  return <div className="flex items-start justify-between gap-3 py-3 first:pt-0"><dt className="text-muted-foreground">{label}</dt><dd className="shrink-0 font-medium tabular-nums">{formatCurrency(value)}</dd></div>;
 }

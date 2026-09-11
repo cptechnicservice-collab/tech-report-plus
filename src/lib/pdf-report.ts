@@ -7,6 +7,7 @@ import {
   type ApontamentoComCliente,
   type Cliente,
 } from "@/lib/apontamentos";
+import { calcularValoresPeriodo, formatCurrency, formatDecimalHours, type ValorVigencia } from "@/lib/financeiro";
 
 const range = (start?: string | null, end?: string | null) =>
   start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "—";
@@ -19,6 +20,7 @@ const fileDate = (value: string) => value.split("-").reverse().join("-");
 export async function generateClientReport(
   cliente: Cliente,
   apontamentos: ApontamentoComCliente[],
+  valores: ValorVigencia[],
   inicio: string,
   fim: string,
 ) {
@@ -38,9 +40,10 @@ export async function generateClientReport(
   doc.text(`Período: ${formatDateBR(inicio)} a ${formatDateBR(fim)}`, 12, details ? 31 : 26);
 
   const totals = somarTotais(apontamentos);
+  const financial = calcularValoresPeriodo(apontamentos, valores);
   autoTable(doc, {
     startY: details ? 36 : 31,
-    margin: { left: 8, right: 8, bottom: 34 },
+    margin: { left: 8, right: 8, bottom: 12 },
     styles: { fontSize: 6.8, cellPadding: 1.5, overflow: "linebreak", valign: "top" },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
     head: [["Data", "Máquina / serviço", "Ida", "Trabalho", "Intervalo", "Retorno", "H. trabalho", "H. viagem", "KM", "Observações"]],
@@ -61,17 +64,36 @@ export async function generateClientReport(
     }),
     foot: [["TOTAIS", "", "", "", "", "", formatMinutes(totals.trabalho), formatMinutes(totals.viagem), String(totals.km), ""]],
     columnStyles: { 0: { cellWidth: 17 }, 1: { cellWidth: 36 }, 2: { cellWidth: 22 }, 3: { cellWidth: 22 }, 4: { cellWidth: 22 }, 5: { cellWidth: 22 }, 6: { cellWidth: 18 }, 7: { cellWidth: 18 }, 8: { cellWidth: 12 }, 9: { cellWidth: 73 } },
-    didDrawPage: () => {
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.setDrawColor(140);
-      doc.line(16, pageHeight - 20, 86, pageHeight - 20);
-      doc.line(164, pageHeight - 20, 234, pageHeight - 20);
-      doc.setFontSize(8);
-      doc.text("Assinatura do técnico", 16, pageHeight - 15);
-      doc.text("Responsável do cliente", 164, pageHeight - 15);
-      doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 248, pageHeight - 10, { align: "right" });
-    },
   });
+
+  const reportTable = doc as typeof doc & { lastAutoTable?: { finalY: number } };
+  autoTable(doc, {
+    startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
+    margin: { left: 110, right: 8, bottom: 32 },
+    styles: { fontSize: 8, cellPadding: 1.8 },
+    headStyles: { fillColor: [39, 54, 78], textColor: 255 },
+    head: [["Valores do período", "Total"]],
+    body: [
+      [`Horas trabalhadas · ${formatDecimalHours(financial.horasTrabalhadas)} h`, formatCurrency(financial.valorTrabalho)],
+      [`Horas de viagem · ${formatDecimalHours(financial.horasViagem)} h`, formatCurrency(financial.valorViagem)],
+      [`KM · ${financial.km}`, formatCurrency(financial.valorKm)],
+      [`Diárias · ${financial.diariasInteiras} inteira(s), ${financial.meiasDiarias} meia(s)`, formatCurrency(financial.valorDiarias)],
+      ["Pedágios", formatCurrency(financial.pedagios)],
+      ["Outras despesas", formatCurrency(financial.outrasDespesas)],
+    ],
+    foot: [["TOTAL GERAL", formatCurrency(financial.totalGeral)]],
+  });
+
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const lastPage = doc.getNumberOfPages();
+  doc.setPage(lastPage);
+  doc.setDrawColor(140);
+  doc.line(16, pageHeight - 20, 86, pageHeight - 20);
+  doc.line(164, pageHeight - 20, 234, pageHeight - 20);
+  doc.setFontSize(8);
+  doc.text("Assinatura do técnico", 16, pageHeight - 15);
+  doc.text("Responsável do cliente", 164, pageHeight - 15);
+  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 248, pageHeight - 10, { align: "right" });
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
   const blob = doc.output("blob");
