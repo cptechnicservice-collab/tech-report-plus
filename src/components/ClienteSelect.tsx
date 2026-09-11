@@ -79,7 +79,7 @@ export function ClienteSelect({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-input bg-background px-4 py-3.5 text-left text-base"
+        className="ios-field press flex min-h-12 w-full items-center justify-between gap-3 border px-4 py-3 text-left text-base"
       >
         <span className={selecionado ? "min-w-0 truncate" : "text-muted-foreground"}>
           {selecionado ? selecionado.nome : "Selecionar cliente"}
@@ -88,7 +88,7 @@ export function ClienteSelect({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md gap-4 rounded-2xl">
+        <DialogContent className="bottom-0 top-auto max-h-[88dvh] max-w-md translate-y-0 gap-4 rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
           <DialogHeader>
             <DialogTitle>Clientes ativos</DialogTitle>
           </DialogHeader>
@@ -117,7 +117,7 @@ export function ClienteSelect({
                     onChange(c.id);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-secondary"
+                  className="press flex min-h-14 w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left hover:bg-secondary"
                 >
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{c.nome}</span>

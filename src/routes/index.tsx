@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, Gauge, MapPin, Timer } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronRight, Gauge, MapPin, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -52,42 +52,48 @@ function Resumo() {
   });
 
   return (
-    <PageShell title="CP TECHNIC Horas" subtitle={`Período: ${nomeMes}`}>
+    <PageShell title="Resumo" subtitle="CP TECHNIC Horas">
+      <div className="ios-group flex items-center justify-between p-4">
+        <div>
+          <p className="text-[0.68rem] font-semibold uppercase text-muted-foreground">Período</p>
+          <p className="mt-0.5 text-base font-medium capitalize">{nomeMes}</p>
+        </div>
+        <span className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-secondary-foreground">
+          <CalendarDays className="h-5 w-5" />
+        </span>
+      </div>
+
       <div className="grid gap-3">
-        <div className="card-surface flex items-center gap-4 p-5">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent text-accent-foreground">
-            <Timer className="h-6 w-6" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Horas trabalhadas
-            </p>
-            <p className="text-2xl font-semibold tabular-nums">{formatMinutes(totais.trabalho)}</p>
+        <div className="ios-group p-5">
+          <div className="flex items-center gap-2 text-primary">
+            <Timer className="h-5 w-5" />
+            <p className="text-xs font-semibold uppercase">Horas trabalhadas</p>
           </div>
+          <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatMinutes(totais.trabalho)}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="card-surface p-5">
+          <div className="ios-group p-4">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
               <MapPin className="h-5 w-5 text-muted-foreground" />
             </span>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="mt-3 text-xs font-medium text-muted-foreground">
               Viagem
             </p>
-            <p className="text-xl font-semibold tabular-nums">{formatMinutes(totais.viagem)}</p>
+            <p className="mt-0.5 text-xl font-bold tabular-nums">{formatMinutes(totais.viagem)}</p>
           </div>
-          <div className="card-surface p-5">
+          <div className="ios-group p-4">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
               <Gauge className="h-5 w-5 text-muted-foreground" />
             </span>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="mt-3 text-xs font-medium text-muted-foreground">
               KM rodados
             </p>
-            <p className="text-xl font-semibold tabular-nums">{totais.km}</p>
+            <p className="mt-0.5 text-xl font-bold tabular-nums">{totais.km}</p>
           </div>
         </div>
       </div>
 
-      <Button asChild className="h-14 w-full rounded-2xl text-base font-semibold">
+      <Button asChild className="h-14 w-full rounded-2xl text-base">
         <Link to="/novo">
           <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
         </Link>
@@ -101,14 +107,17 @@ function Resumo() {
             Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.
           </p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="-my-1 divide-y divide-border">
             {ultimos.map((a) => (
               <li key={a.id}>
                 <Link
                   to="/apontamento/$id"
                   params={{ id: a.id }}
-                  className="flex items-center justify-between gap-3 py-3"
+                  className="press flex min-h-16 items-center gap-3 py-2.5"
                 >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+                    <Timer className="h-5 w-5" />
+                  </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">
                       {a.clientes?.nome ?? "—"}
@@ -117,8 +126,9 @@ function Resumo() {
                       {formatDateBR(a.data)}
                     </span>
                   </span>
-                  <span className="shrink-0 text-sm font-semibold tabular-nums">
-                    {formatMinutes(somarTotais([a]).trabalho)}
+                  <span className="ml-auto shrink-0 text-right">
+                    <span className="block text-sm font-semibold tabular-nums">{formatMinutes(somarTotais([a]).trabalho)}</span>
+                    <ChevronRight className="ml-auto mt-0.5 h-4 w-4 text-muted-foreground" />
                   </span>
                 </Link>
               </li>
