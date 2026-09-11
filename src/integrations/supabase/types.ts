@@ -19,6 +19,7 @@ export type Database = {
           cliente_id: string
           created_at: string
           data: string
+          diaria_tipo: string
           external_row_id: string | null
           id: string
           intervalo_fim: string | null
@@ -27,6 +28,9 @@ export type Database = {
           km_inicial: number | null
           maquina_servico: string | null
           observacoes: string | null
+          outras_despesas: number | null
+          outras_despesas_descricao: string | null
+          pedagio: number | null
           sync_status: string
           synced_at: string | null
           trabalho_fim: string | null
@@ -41,6 +45,7 @@ export type Database = {
           cliente_id: string
           created_at?: string
           data: string
+          diaria_tipo?: string
           external_row_id?: string | null
           id?: string
           intervalo_fim?: string | null
@@ -49,6 +54,9 @@ export type Database = {
           km_inicial?: number | null
           maquina_servico?: string | null
           observacoes?: string | null
+          outras_despesas?: number | null
+          outras_despesas_descricao?: string | null
+          pedagio?: number | null
           sync_status?: string
           synced_at?: string | null
           trabalho_fim?: string | null
@@ -63,6 +71,7 @@ export type Database = {
           cliente_id?: string
           created_at?: string
           data?: string
+          diaria_tipo?: string
           external_row_id?: string | null
           id?: string
           intervalo_fim?: string | null
@@ -71,6 +80,9 @@ export type Database = {
           km_inicial?: number | null
           maquina_servico?: string | null
           observacoes?: string | null
+          outras_despesas?: number | null
+          outras_despesas_descricao?: string | null
+          pedagio?: number | null
           sync_status?: string
           synced_at?: string | null
           trabalho_fim?: string | null
@@ -127,6 +139,42 @@ export type Database = {
           observacoes?: string | null
           telefone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      valores_vigencia: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          valor_diaria_inteira: number
+          valor_hora_trabalhada: number
+          valor_hora_viagem: number
+          valor_km: number
+          valor_meia_diaria: number
+          vigencia: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor_diaria_inteira?: number
+          valor_hora_trabalhada?: number
+          valor_hora_viagem?: number
+          valor_km?: number
+          valor_meia_diaria?: number
+          vigencia: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          valor_diaria_inteira?: number
+          valor_hora_trabalhada?: number
+          valor_hora_viagem?: number
+          valor_km?: number
+          valor_meia_diaria?: number
+          vigencia?: string
         }
         Relationships: []
       }

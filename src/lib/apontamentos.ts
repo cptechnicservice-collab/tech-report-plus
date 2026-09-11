@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
+import type { ValorVigencia } from "@/lib/financeiro";
 
 export type Cliente = {
   id: string;
@@ -30,6 +31,10 @@ export type Apontamento = {
   km_inicial: number | null;
   km_final: number | null;
   observacoes: string | null;
+  diaria_tipo: string;
+  pedagio: number | null;
+  outras_despesas: number | null;
+  outras_despesas_descricao: string | null;
   sync_status: string;
   synced_at: string | null;
   external_row_id: string | null;
@@ -216,4 +221,20 @@ export async function fetchApontamento(id: string): Promise<ApontamentoComClient
     throw new Error("Apontamento não encontrado");
   }
   return data as unknown as ApontamentoComCliente;
+}
+
+export async function fetchValores(): Promise<ValorVigencia[]> {
+  const { data, error } = await supabase
+    .from("valores_vigencia")
+    .select("*")
+    .order("vigencia", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) {
+    const cached = await readCached<ValorVigencia[]>(offlineCacheKeys.valores);
+    if (cached) return cached;
+    throw error;
+  }
+  const result = (data ?? []) as ValorVigencia[];
+  await writeCached(offlineCacheKeys.valores, result);
+  return result;
 }

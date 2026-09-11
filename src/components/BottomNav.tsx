@@ -1,17 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, Clock, LayoutGrid, Users } from "lucide-react";
+import { CalendarPlus, CircleDollarSign, Clock, LayoutGrid, Users } from "lucide-react";
 
 const items = [
   { to: "/", label: "Resumo", icon: LayoutGrid, exact: true },
   { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
   { to: "/clientes", label: "Clientes", icon: Users, exact: false },
+  { to: "/valores", label: "Valores", icon: CircleDollarSign, exact: false },
 ] as const;
 
 export function BottomNav() {
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 pt-2 backdrop-blur-xl [backdrop-filter:saturate(180%)_blur(20px)] [box-shadow:var(--shadow-nav)]">
-      <ul className="mx-auto grid max-w-lg grid-cols-4">
+      <ul className="mx-auto grid max-w-lg grid-cols-5">
         {items.map(({ to, label, icon: Icon, exact }) => (
           <li key={to}>
             <Link
