@@ -8,6 +8,13 @@
       "when": 1789124011897,
       "tag": "0000_create_clientes_apontamentos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789140919422,
+      "tag": "0001_add_values_and_expenses",
+      "breakpoints": true
     }
   ]
 }
