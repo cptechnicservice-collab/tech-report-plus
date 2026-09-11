@@ -50,8 +50,8 @@ type Atendimento = {
 };
 
 function dayNumber(value: string) {
-  const [year, month, day] = value.split("-").map(Number);
-  return Date.UTC(year, month - 1, day) / 86_400_000;
+  const [year, month, day] = value.split("-");
+  return Date.UTC(Number(year), Number(month) - 1, Number(day)) / 86_400_000;
 }
 
 function isContinuous(previous: string, current: string) {
@@ -76,14 +76,18 @@ function groupAtendimentos(items: ApontamentoComCliente[]): Atendimento[] {
 
   return groups
     .map((datesInGroup) => {
+      const inicio = datesInGroup[0];
+      const fim = datesInGroup.at(-1);
+      if (!inicio || !fim) return null;
       const groupItems = datesInGroup.flatMap((date) => byDate.get(date) ?? []);
       return {
-        inicio: datesInGroup[0],
-        fim: datesInGroup[datesInGroup.length - 1],
+        inicio,
+        fim,
         dias: datesInGroup.length,
         minutos: somarTotais(groupItems).trabalho,
       };
     })
+    .filter((atendimento): atendimento is Atendimento => atendimento !== null)
     .reverse()
     .slice(0, 6);
 }
