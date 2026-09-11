@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import type { Cliente } from "@/lib/apontamentos";
+import { saveClienteOffline } from "@/lib/offline";
 
 export function ClienteSelect({
   clientes,
@@ -50,22 +50,25 @@ export function ClienteSelect({
 
   const criar = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .insert({ nome: nome.trim(), cidade: cidade.trim() || null })
-        .select()
-        .single();
-      if (error) throw error;
-      return data as Cliente;
+      return saveClienteOffline({
+        id: crypto.randomUUID(),
+        nome: nome.trim(),
+        cidade: cidade.trim() || null,
+        cnpj: null,
+        contato: null,
+        telefone: null,
+        ativo: true,
+        observacoes: null,
+      });
     },
-    onSuccess: (cliente) => {
+    onSuccess: ({ cliente, queued }) => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
       onChange(cliente.id);
       setNome("");
       setCidade("");
       setNovoAberto(false);
       setOpen(false);
-      toast.success("Cliente cadastrado");
+      toast.success(queued ? "Salvo no aparelho — será enviado quando houver conexão" : "Cliente cadastrado");
     },
     onError: () => toast.error("Não foi possível cadastrar o cliente"),
   });

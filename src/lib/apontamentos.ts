@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 
 export type Cliente = {
   id: string;
@@ -39,7 +40,7 @@ export type Apontamento = {
 export type ApontamentoComCliente = Apontamento & { clientes: Cliente | null };
 
 /** minutos desde 00:00 para "HH:MM" ou "HH:MM:SS" */
-function toMinutes(value?: string | null): number | null {
+export function toMinutes(value?: string | null): number | null {
   if (!value) return null;
   const [h, m] = value.split(":");
   const hh = Number(h);
@@ -70,10 +71,70 @@ export function normalizeTime(value?: string | null): string {
 
 export type Totais = { trabalho: number; viagem: number; km: number };
 
+export type ValidacoesApontamento = {
+  trabalhoIncompleto: boolean;
+  viagemIdaIncompleta: boolean;
+  intervaloIncompleto: boolean;
+  viagemVoltaIncompleta: boolean;
+  trabalhoDiaSeguinte: boolean;
+  viagemIdaDiaSeguinte: boolean;
+  viagemVoltaDiaSeguinte: boolean;
+  intervaloInvalido: boolean;
+  kmInvalido: boolean;
+  jornadaLonga: boolean;
+};
+
+const pairIncomplete = (start?: string | null, end?: string | null) => Boolean(start) !== Boolean(end);
+
+export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamento {
+  const trabalhoBruto = diffMinutes(a.trabalho_inicio, a.trabalho_fim);
+  const trabalhoInicio = toMinutes(a.trabalho_inicio);
+  const trabalhoFimBase = toMinutes(a.trabalho_fim);
+  const intervaloInicioBase = toMinutes(a.intervalo_inicio);
+  const intervaloFimBase = toMinutes(a.intervalo_fim);
+  let intervaloInvalido = false;
+  if (
+    trabalhoInicio !== null &&
+    trabalhoFimBase !== null &&
+    intervaloInicioBase !== null &&
+    intervaloFimBase !== null
+  ) {
+    const trabalhoFim = trabalhoFimBase < trabalhoInicio ? trabalhoFimBase + 1440 : trabalhoFimBase;
+    const intervaloInicio =
+      intervaloInicioBase < trabalhoInicio ? intervaloInicioBase + 1440 : intervaloInicioBase;
+    let intervaloFim = intervaloFimBase < trabalhoInicio ? intervaloFimBase + 1440 : intervaloFimBase;
+    if (intervaloFim < intervaloInicio) intervaloFim += 1440;
+    intervaloInvalido =
+      intervaloInicio < trabalhoInicio ||
+      intervaloFim > trabalhoFim ||
+      intervaloFim - intervaloInicio > trabalhoBruto;
+  }
+
+  const kmInicial = a.km_inicial ?? null;
+  const kmFinal = a.km_final ?? null;
+  return {
+    trabalhoIncompleto: pairIncomplete(a.trabalho_inicio, a.trabalho_fim),
+    viagemIdaIncompleta: pairIncomplete(a.viagem_ida_saida, a.viagem_ida_chegada),
+    intervaloIncompleto: pairIncomplete(a.intervalo_inicio, a.intervalo_fim),
+    viagemVoltaIncompleta: pairIncomplete(a.viagem_volta_saida, a.viagem_volta_chegada),
+    trabalhoDiaSeguinte: trabalhoInicio !== null && trabalhoFimBase !== null && trabalhoFimBase < trabalhoInicio,
+    viagemIdaDiaSeguinte:
+      (toMinutes(a.viagem_ida_saida) ?? -1) > (toMinutes(a.viagem_ida_chegada) ?? Number.MAX_SAFE_INTEGER),
+    viagemVoltaDiaSeguinte:
+      (toMinutes(a.viagem_volta_saida) ?? -1) >
+      (toMinutes(a.viagem_volta_chegada) ?? Number.MAX_SAFE_INTEGER),
+    intervaloInvalido,
+    kmInvalido: kmInicial !== null && kmFinal !== null && kmFinal < kmInicial,
+    jornadaLonga: trabalhoBruto > 16 * 60,
+  };
+}
+
 export function calcularTotais(a: Partial<Apontamento>): Totais {
   const intervalo = diffMinutes(a.intervalo_inicio, a.intervalo_fim);
   const bruto = diffMinutes(a.trabalho_inicio, a.trabalho_fim);
-  const trabalho = bruto > 0 ? Math.max(0, bruto - intervalo) : 0;
+  const validacoes = validarApontamento(a);
+  const desconto = validacoes.intervaloIncompleto || validacoes.intervaloInvalido ? 0 : intervalo;
+  const trabalho = bruto > 0 ? Math.max(0, bruto - desconto) : 0;
   const viagem =
     diffMinutes(a.viagem_ida_saida, a.viagem_ida_chegada) +
     diffMinutes(a.viagem_volta_saida, a.viagem_volta_chegada);
@@ -115,8 +176,14 @@ export async function fetchClientes(): Promise<Cliente[]> {
     .from("clientes")
     .select("*")
     .order("nome", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as Cliente[];
+  if (error) {
+    const cached = await readCached<Cliente[]>(offlineCacheKeys.clientes);
+    if (cached) return cached.sort((a, b) => a.nome.localeCompare(b.nome));
+    throw error;
+  }
+  const result = (data ?? []) as Cliente[];
+  await writeCached(offlineCacheKeys.clientes, result);
+  return result;
 }
 
 export async function fetchApontamentos(): Promise<ApontamentoComCliente[]> {
@@ -125,8 +192,14 @@ export async function fetchApontamentos(): Promise<ApontamentoComCliente[]> {
     .select("*, clientes(*)")
     .order("data", { ascending: false })
     .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as unknown as ApontamentoComCliente[];
+  if (error) {
+    const cached = await readCached<ApontamentoComCliente[]>(offlineCacheKeys.apontamentos);
+    if (cached) return cached;
+    throw error;
+  }
+  const result = (data ?? []) as unknown as ApontamentoComCliente[];
+  await writeCached(offlineCacheKeys.apontamentos, result);
+  return result;
 }
 
 export async function fetchApontamento(id: string): Promise<ApontamentoComCliente> {
@@ -135,7 +208,12 @@ export async function fetchApontamento(id: string): Promise<ApontamentoComClient
     .select("*, clientes(*)")
     .eq("id", id)
     .maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error("Apontamento não encontrado");
+  if (error || !data) {
+    const cached = await readCached<ApontamentoComCliente[]>(offlineCacheKeys.apontamentos);
+    const item = cached?.find((apontamento) => apontamento.id === id);
+    if (item) return item;
+    if (error) throw error;
+    throw new Error("Apontamento não encontrado");
+  }
   return data as unknown as ApontamentoComCliente;
 }

@@ -7,19 +7,32 @@ import { toast } from "sonner";
 import { Section } from "@/components/PageShell";
 import { ClienteSelect } from "@/components/ClienteSelect";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import {
   calcularTotais,
+  diffMinutes,
   fetchApontamentos,
   fetchClientes,
   formatMinutes,
   normalizeTime,
   todayISO,
+  validarApontamento,
   type Apontamento,
 } from "@/lib/apontamentos";
+import { deleteApontamentoOffline, saveApontamentoOffline } from "@/lib/offline";
 
 type FormState = {
   data: string;
@@ -219,6 +232,16 @@ function OptionalSection({
   );
 }
 
+function Warning({ children }: { children: ReactNode }) {
+  return <p className="mt-2 text-xs font-medium text-destructive">{children}</p>;
+}
+
+function errorReason(error: unknown) {
+  if (error instanceof Error && error.message) return `: ${error.message}`;
+  if (error && typeof error === "object" && "message" in error) return `: ${String(error.message)}`;
+  return "";
+}
+
 export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) {
   const [form, setForm] = useState<FormState>(() => initialState(apontamento));
   const navigate = useNavigate();
@@ -263,43 +286,53 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
   }, [form]);
 
   const totais = useMemo(() => calcularTotais(payload), [payload]);
+  const validacoes = useMemo(() => validarApontamento(payload), [payload]);
 
   const salvar = useMutation({
     mutationFn: async () => {
-      if (apontamento) {
-        const { error } = await supabase
-          .from("apontamentos")
-          .update(payload)
-          .eq("id", apontamento.id);
-        if (error) throw error;
-        return;
-      }
-      const { error } = await supabase.from("apontamentos").insert(payload);
-      if (error) throw error;
+      const id = apontamento?.id ?? crypto.randomUUID();
+      return saveApontamentoOffline({
+        ...payload,
+        id,
+        sync_status: "pending",
+        synced_at: null,
+        external_row_id: apontamento?.external_row_id ?? null,
+      });
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
-      toast.success(apontamento ? "Apontamento atualizado" : "Apontamento salvo");
+      toast.success(
+        result.queued
+          ? "Salvo no aparelho — será enviado quando houver conexão"
+          : apontamento
+            ? "Apontamento atualizado"
+            : "Apontamento salvo",
+      );
       navigate({ to: "/historico" });
     },
-    onError: () => toast.error("Não foi possível salvar"),
+    onError: (error) => toast.error(`Não foi possível salvar${errorReason(error)}`),
   });
 
   const excluir = useMutation({
     mutationFn: async () => {
       if (!apontamento) return;
-      const { error } = await supabase.from("apontamentos").delete().eq("id", apontamento.id);
-      if (error) throw error;
+      return deleteApontamentoOffline(apontamento.id);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
-      toast.success("Apontamento excluído");
+      toast.success(result?.queued ? "Exclusão salva no aparelho — será enviada quando houver conexão" : "Apontamento excluído");
       navigate({ to: "/historico" });
     },
-    onError: () => toast.error("Não foi possível excluir"),
+    onError: (error) => toast.error(`Não foi possível excluir${errorReason(error)}`),
   });
 
-  const podeSalvar = Boolean(form.cliente_id && form.data && form.trabalho_inicio && form.trabalho_fim);
+  const podeSalvar = Boolean(
+    form.cliente_id &&
+      form.data &&
+      form.trabalho_inicio &&
+      form.trabalho_fim &&
+      !validacoes.trabalhoIncompleto,
+  );
 
   return (
     <div className="space-y-4">
@@ -348,7 +381,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             value={form.maquina_servico}
             onChange={(e) => set("maquina_servico", e.target.value)}
             className="h-12 rounded-xl"
-            placeholder="Ex.: Serra fita 600 — manutenção"
+            placeholder="Ex.: Seccionadora — troca de rolamento do eixo da serra"
           />
         </div>
       </Section>
@@ -371,6 +404,8 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             onChange={(v) => set("viagem_ida_chegada", v)}
           />
         </div>
+        {validacoes.viagemIdaIncompleta ? <Warning>Preencha início e fim</Warning> : null}
+        {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_ida_saida, payload.viagem_ida_chegada))}</Warning> : null}
       </OptionalSection>
 
       <Section title="Trabalho">
@@ -382,6 +417,9 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           />
           <TimeField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
         </div>
+        {validacoes.trabalhoIncompleto ? <Warning>Preencha início e fim</Warning> : null}
+        {validacoes.trabalhoDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(totais.trabalho)}</Warning> : null}
+        {validacoes.jornadaLonga ? <Warning>Jornada acima de 16h. Confira os horários.</Warning> : null}
       </Section>
 
       <OptionalSection
@@ -394,6 +432,8 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           <TimeField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
           <TimeField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
         </div>
+        {validacoes.intervaloIncompleto ? <Warning>Preencha início e fim</Warning> : null}
+        {validacoes.intervaloInvalido ? <Warning>Intervalo fora da jornada ou maior que o trabalho. Não será descontado.</Warning> : null}
       </OptionalSection>
 
       <OptionalSection
@@ -414,6 +454,8 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             onChange={(v) => set("viagem_volta_chegada", v)}
           />
         </div>
+        {validacoes.viagemVoltaIncompleta ? <Warning>Preencha início e fim</Warning> : null}
+        {validacoes.viagemVoltaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_volta_saida, payload.viagem_volta_chegada))}</Warning> : null}
       </OptionalSection>
 
       <OptionalSection
@@ -442,6 +484,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             />
           </div>
         </div>
+        {validacoes.kmInvalido ? <Warning>KM final menor que o inicial</Warning> : null}
       </OptionalSection>
 
       <Section title="Observações" hint="opcional">
@@ -468,14 +511,25 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           </p>
         ) : null}
         {apontamento ? (
-          <Button
-            variant="ghost"
-            className="h-12 w-full rounded-2xl text-destructive"
-            disabled={excluir.isPending}
-            onClick={() => excluir.mutate()}
-          >
-            Excluir apontamento
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="h-12 w-full rounded-2xl text-destructive" disabled={excluir.isPending}>
+                Excluir apontamento
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="mx-4 w-[calc(100%-2rem)] max-w-sm rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir este apontamento?</AlertDialogTitle>
+                <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => excluir.mutate()}>
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         ) : null}
       </div>
     </div>
