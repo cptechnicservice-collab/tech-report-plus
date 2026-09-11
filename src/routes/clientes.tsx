@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { fetchClientes, type Cliente } from "@/lib/apontamentos";
+import { saveClienteOffline } from "@/lib/offline";
 
 export const Route = createFileRoute("/clientes")({
   head: () => ({
@@ -94,17 +94,11 @@ function Clientes() {
         ativo: draft.ativo,
         observacoes: draft.observacoes.trim() || null,
       };
-      if (editando && editando !== "novo") {
-        const { error } = await supabase.from("clientes").update(payload).eq("id", editando);
-        if (error) throw error;
-        return;
-      }
-      const { error } = await supabase.from("clientes").insert(payload);
-      if (error) throw error;
+      return saveClienteOffline({ ...payload, id: editando && editando !== "novo" ? editando : crypto.randomUUID() });
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      toast.success("Cliente salvo");
+      toast.success(result.queued ? "Salvo no aparelho — será enviado quando houver conexão" : "Cliente salvo");
       setEditando(null);
       setDraft(emptyDraft);
     },

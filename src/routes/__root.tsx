@@ -1,4 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import {
   Outlet,
   Link,
@@ -13,6 +14,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav } from "../components/BottomNav";
 import { Toaster } from "../components/ui/sonner";
+import { OfflineStatus } from "../components/OfflineStatus";
+import { ServiceWorkerRegistration } from "../components/ServiceWorkerRegistration";
+import { queryPersister } from "../lib/offline";
 
 function NotFoundComponent() {
   return (
@@ -128,11 +132,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 30 }}>
+      <ServiceWorkerRegistration />
+      <OfflineStatus />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <BottomNav />
       <Toaster position="top-center" />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
