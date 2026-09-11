@@ -103,7 +103,7 @@ function TimeField({
         <Button
           type="button"
           variant="outline"
-          className="h-12 w-full justify-start rounded-xl px-3 text-base font-normal tabular-nums"
+          className="h-12 w-full justify-start rounded-xl border-input bg-card px-3 text-base font-normal tabular-nums"
           aria-label={`${label}: ${value || "vazio"}`}
           onClick={showPicker}
         >
@@ -137,7 +137,7 @@ function TimeField({
             if (event.target === event.currentTarget) setOpen(false);
           }}
         >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg">
+          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-5 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <p className="font-semibold">{label}</p>
               <Button
@@ -207,12 +207,12 @@ function OptionalSection({
   const [open, setOpen] = useState(initiallyOpen);
 
   return (
-    <section className="card-surface overflow-hidden">
+    <section className="ios-group">
       <div className="flex min-h-14 items-center gap-2 px-4">
         <Button
           type="button"
           variant="ghost"
-          className="h-11 min-w-0 flex-1 justify-start rounded-xl px-0 text-sm font-semibold"
+          className="h-14 min-w-0 flex-1 justify-start rounded-none px-0 text-sm font-semibold"
           aria-expanded={open}
           onClick={() => setOpen((current) => !current)}
         >
@@ -227,7 +227,7 @@ function OptionalSection({
           </Button>
         ) : null}
       </div>
-      {open ? <div className="border-t border-border px-4 pb-4 pt-3">{children}</div> : null}
+      {open ? <div className="border-t border-border px-4 pb-4 pt-4">{children}</div> : null}
     </section>
   );
 }
@@ -336,21 +336,21 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
 
   return (
     <div className="space-y-4">
-      <section className="card-surface grid grid-cols-3 divide-x divide-border p-4 text-center">
+      <section className="ios-group grid grid-cols-3 divide-x divide-border py-4 text-center">
         <div className="px-1">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+           <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
             Trabalho
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums">{formatMinutes(totais.trabalho)}</p>
         </div>
         <div className="px-1">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
             Viagem
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums">{formatMinutes(totais.viagem)}</p>
         </div>
         <div className="px-1">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
             KM
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums">{totais.km}</p>

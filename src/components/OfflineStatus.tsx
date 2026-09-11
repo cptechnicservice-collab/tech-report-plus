@@ -60,7 +60,7 @@ export function OfflineStatus() {
   if (online && pending === 0) return null;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center pt-[env(safe-area-inset-top)]">
-      <div className="pointer-events-auto flex items-center rounded-b-xl border border-t-0 border-border bg-card px-3 py-1 text-xs font-medium shadow-sm">
+      <div className="pointer-events-auto flex min-h-8 items-center rounded-b-xl border border-t-0 border-border bg-card/95 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur-xl">
         {!online ? "Offline" : null}
         {!online && pending > 0 ? " · " : null}
         {pending > 0 ? `${pending} pendente${pending === 1 ? "" : "s"} de envio` : null}
