@@ -1,15 +1,19 @@
-# Ajustes econômicos de horário e interface
+# Confiabilidade do apontamento
 
 ## Implementação
-- Substituir o comportamento direto dos horários por um seletor que só atualiza o formulário após confirmação; cancelar mantém o valor anterior.
-- Exibir um botão “×” em cada horário preenchido para limpar somente esse campo e removê-lo imediatamente dos cálculos.
-- Recolher inicialmente Viagem ida, Intervalo, Viagem retorno e Quilometragem, abrindo automaticamente se já houver dados; ocultar nunca apaga valores.
-- Reforçar discretamente a aba ativa da navegação inferior e adicionar o monograma CP aos cabeçalhos.
+- Adicionar confirmação antes da exclusão e incluir o motivo disponível nas mensagens de falha ao salvar ou excluir.
+- Marcar toda edição de apontamento com `sync_status = 'pending'`, preservando o restante do fluxo.
+- Centralizar a análise dos horários para identificar pares incompletos, viradas para o dia seguinte, jornada acima de 16h e intervalos inválidos.
+- Não descontar intervalos fora da jornada ou maiores que ela; manter os demais totais existentes.
+- Exibir avisos abaixo das respectivas seções e bloquear o salvamento somente quando Trabalho tiver apenas um dos dois horários.
+- Atualizar apenas o placeholder de Máquina / Serviço solicitado.
+- Envolver o botão de exclusão existente em uma confirmação com as ações Cancelar e Excluir.
 
 ## Validação
-- Testar em viewport de iPhone: horário inicialmente vazio, seleção e confirmação, limpeza com “×” e atualização do total.
-- Conferir as telas principais e os diagnósticos sem criar registros permanentes.
+- Testar os cálculos e avisos para pares incompletos, virada de dia, intervalo inválido, KM regressivo e jornada longa.
+- Verificar edição com estado de sincronização pendente, confirmação de exclusão e ausência de erros no app.
+- Não criar registros permanentes durante os testes.
 
 ## Detalhes técnicos
-- Manter rotas, banco, consultas, salvamento e regras de cálculo existentes.
-- Usar controles e tokens visuais já presentes no projeto, sem novas dependências ou redesign amplo.
+- Preservar visual geral, rotas, dados, autenticação atual e demais comportamentos.
+- Reutilizar o componente de confirmação e os tokens visuais existentes.
