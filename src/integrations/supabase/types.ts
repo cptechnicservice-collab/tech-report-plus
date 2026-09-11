@@ -25,8 +25,10 @@ export type Database = {
           intervalo_fim: string | null
           intervalo_inicio: string | null
           km_final: number | null
+          km_ida: number | null
           km_inicial: number | null
           km_total: number | null
+          km_volta: number | null
           maquina_servico: string | null
           observacoes: string | null
           outras_despesas: number | null
@@ -52,8 +54,10 @@ export type Database = {
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
           km_final?: number | null
+          km_ida?: number | null
           km_inicial?: number | null
           km_total?: number | null
+          km_volta?: number | null
           maquina_servico?: string | null
           observacoes?: string | null
           outras_despesas?: number | null
@@ -79,8 +83,10 @@ export type Database = {
           intervalo_fim?: string | null
           intervalo_inicio?: string | null
           km_final?: number | null
+          km_ida?: number | null
           km_inicial?: number | null
           km_total?: number | null
+          km_volta?: number | null
           maquina_servico?: string | null
           observacoes?: string | null
           outras_despesas?: number | null
