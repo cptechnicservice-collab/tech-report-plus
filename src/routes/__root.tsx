@@ -132,7 +132,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 30 }}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
       <ServiceWorkerRegistration />
       <OfflineStatus />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

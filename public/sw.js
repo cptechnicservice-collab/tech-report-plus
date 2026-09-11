@@ -1,4 +1,4 @@
-const CACHE = "cp-technic-v1";
+const CACHE = "cp-technic-v2";
 const SHELL = ["/", "/novo", "/historico", "/clientes", "/relatorio", "/manifest.webmanifest", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {
