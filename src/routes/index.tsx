@@ -27,6 +27,8 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Apontamento diário de horas, viagens e km direto do iPhone.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Resumo,
@@ -50,13 +52,14 @@ function Resumo() {
     month: "long",
     year: "numeric",
   });
+  const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
   return (
     <PageShell title="Resumo" subtitle="CP TECHNIC Horas">
       <div className="ios-group flex items-center justify-between p-4">
         <div>
           <p className="text-[0.68rem] font-semibold uppercase text-muted-foreground">Período</p>
-          <p className="mt-0.5 text-base font-medium capitalize">{nomeMes}</p>
+          <p className="mt-0.5 text-base font-medium">{periodo}</p>
         </div>
         <span className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-secondary-foreground">
           <CalendarDays className="h-5 w-5" />

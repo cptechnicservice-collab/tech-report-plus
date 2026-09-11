@@ -31,6 +31,8 @@ export const Route = createFileRoute("/historico")({
         property: "og:description",
         content: "Busca por cliente e período com totais de horas e quilometragem.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Historico,

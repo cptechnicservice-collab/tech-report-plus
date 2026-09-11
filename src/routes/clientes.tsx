@@ -26,6 +26,8 @@ export const Route = createFileRoute("/clientes")({
         property: "og:description",
         content: "Cadastro de clientes usado nos apontamentos de horas.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Clientes,

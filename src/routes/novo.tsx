@@ -17,6 +17,8 @@ export const Route = createFileRoute("/novo")({
         property: "og:description",
         content: "Apontamento manual de horas e km para técnico de campo.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: NovoApontamento,
