@@ -17,7 +17,7 @@ export function BottomNav() {
             <Link
               to={to}
               activeOptions={{ exact }}
-              className="flex flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[0.68rem] font-medium text-muted-foreground transition-colors data-[status=active]:text-primary"
+              className="mx-1 flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[0.68rem] font-medium text-muted-foreground transition-all duration-200 data-[status=active]:bg-accent data-[status=active]:font-semibold data-[status=active]:text-primary"
             >
               <Icon className="h-6 w-6" strokeWidth={1.8} />
               <span className="truncate">{label}</span>

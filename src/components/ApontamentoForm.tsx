@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Section } from "@/components/PageShell";
@@ -65,16 +66,156 @@ function TimeField({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [draftHour, setDraftHour] = useState("");
+  const [draftMinute, setDraftMinute] = useState("");
+
+  const showPicker = () => {
+    const [hour = "", minute = ""] = value.split(":");
+    setDraftHour(hour);
+    setDraftMinute(minute);
+    setOpen(true);
+  };
+
+  const confirm = () => {
+    if (!draftHour || !draftMinute) return;
+    onChange(`${draftHour}:${draftMinute}`);
+    setOpen(false);
+  };
+
   return (
     <div className="min-w-0 space-y-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input
-        type="time"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-12 rounded-xl"
-      />
+      <div className="relative">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full justify-start rounded-xl px-3 text-base font-normal tabular-nums"
+          aria-label={`${label}: ${value || "vazio"}`}
+          onClick={showPicker}
+        >
+          <span className={value ? "text-foreground" : "text-muted-foreground"}>
+            {value || "--:--"}
+          </span>
+        </Button>
+        {value ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1 h-10 w-10 rounded-lg text-muted-foreground"
+            aria-label={`Limpar ${label.toLowerCase()}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onChange("");
+            }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        ) : null}
+      </div>
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/25 p-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Selecionar ${label.toLowerCase()}`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="font-semibold">{label}</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                aria-label="Cancelar seleção de horário"
+                onClick={() => setOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <select
+                aria-label="Hora"
+                value={draftHour}
+                onChange={(event) => setDraftHour(event.target.value)}
+                className="h-14 rounded-xl border border-input bg-background px-3 text-center text-lg tabular-nums"
+              >
+                <option value="">Hora</option>
+                {Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0")).map(
+                  (hour) => <option key={hour} value={hour}>{hour}</option>,
+                )}
+              </select>
+              <span className="text-xl font-semibold">:</span>
+              <select
+                aria-label="Minuto"
+                value={draftMinute}
+                onChange={(event) => setDraftMinute(event.target.value)}
+                className="h-14 rounded-xl border border-input bg-background px-3 text-center text-lg tabular-nums"
+              >
+                <option value="">Min</option>
+                {Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, "0")).map(
+                  (minute) => <option key={minute} value={minute}>{minute}</option>,
+                )}
+              </select>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button type="button" variant="ghost" className="h-12 rounded-xl" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="button" className="h-12 rounded-xl" disabled={!draftHour || !draftMinute} onClick={confirm}>
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function OptionalSection({
+  title,
+  initiallyOpen,
+  hasValue,
+  onClear,
+  children,
+}: {
+  title: string;
+  initiallyOpen: boolean;
+  hasValue: boolean;
+  onClear: () => void;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
+
+  return (
+    <section className="card-surface overflow-hidden">
+      <div className="flex min-h-14 items-center gap-2 px-4">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 min-w-0 flex-1 justify-start rounded-xl px-0 text-sm font-semibold"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+          <span className="truncate">{title}</span>
+          {!open && hasValue ? <span className="ml-auto text-xs font-normal text-primary">Preenchido</span> : null}
+          {!open && !hasValue ? <span className="ml-auto text-xs font-normal text-muted-foreground">Opcional</span> : null}
+        </Button>
+        {open && hasValue ? (
+          <Button type="button" variant="ghost" className="h-10 rounded-lg px-2 text-xs text-muted-foreground" onClick={onClear}>
+            Limpar
+          </Button>
+        ) : null}
+      </div>
+      {open ? <div className="border-t border-border px-4 pb-4 pt-3">{children}</div> : null}
+    </section>
   );
 }
 
@@ -212,7 +353,12 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
         </div>
       </Section>
 
-      <Section title="Viagem ida" hint="opcional">
+      <OptionalSection
+        title="Viagem ida"
+        initiallyOpen={Boolean(form.viagem_ida_saida || form.viagem_ida_chegada)}
+        hasValue={Boolean(form.viagem_ida_saida || form.viagem_ida_chegada)}
+        onClear={() => setForm((prev) => ({ ...prev, viagem_ida_saida: "", viagem_ida_chegada: "" }))}
+      >
         <div className="grid grid-cols-2 gap-3">
           <TimeField
             label="Saída"
@@ -225,7 +371,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             onChange={(v) => set("viagem_ida_chegada", v)}
           />
         </div>
-      </Section>
+      </OptionalSection>
 
       <Section title="Trabalho">
         <div className="grid grid-cols-2 gap-3">
@@ -236,21 +382,26 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
           />
           <TimeField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <TimeField
-            label="Intervalo início"
-            value={form.intervalo_inicio}
-            onChange={(v) => set("intervalo_inicio", v)}
-          />
-          <TimeField
-            label="Intervalo fim"
-            value={form.intervalo_fim}
-            onChange={(v) => set("intervalo_fim", v)}
-          />
-        </div>
       </Section>
 
-      <Section title="Viagem retorno" hint="opcional">
+      <OptionalSection
+        title="Intervalo"
+        initiallyOpen={Boolean(form.intervalo_inicio || form.intervalo_fim)}
+        hasValue={Boolean(form.intervalo_inicio || form.intervalo_fim)}
+        onClear={() => setForm((prev) => ({ ...prev, intervalo_inicio: "", intervalo_fim: "" }))}
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <TimeField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
+          <TimeField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
+        </div>
+      </OptionalSection>
+
+      <OptionalSection
+        title="Viagem retorno"
+        initiallyOpen={Boolean(form.viagem_volta_saida || form.viagem_volta_chegada)}
+        hasValue={Boolean(form.viagem_volta_saida || form.viagem_volta_chegada)}
+        onClear={() => setForm((prev) => ({ ...prev, viagem_volta_saida: "", viagem_volta_chegada: "" }))}
+      >
         <div className="grid grid-cols-2 gap-3">
           <TimeField
             label="Saída"
@@ -263,9 +414,14 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             onChange={(v) => set("viagem_volta_chegada", v)}
           />
         </div>
-      </Section>
+      </OptionalSection>
 
-      <Section title="Quilometragem" hint="opcional">
+      <OptionalSection
+        title="Quilometragem"
+        initiallyOpen={Boolean(form.km_inicial || form.km_final)}
+        hasValue={Boolean(form.km_inicial || form.km_final)}
+        onClear={() => setForm((prev) => ({ ...prev, km_inicial: "", km_final: "" }))}
+      >
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground">KM inicial</Label>
@@ -286,7 +442,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
             />
           </div>
         </div>
-      </Section>
+      </OptionalSection>
 
       <Section title="Observações" hint="opcional">
         <Textarea

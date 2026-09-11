@@ -14,11 +14,16 @@ export function PageShell({
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-28">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4">
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
-          {subtitle ? (
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>
-          ) : null}
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary text-xs font-bold text-primary-foreground shadow-sm">
+            CP
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold">{title}</h1>
+            {subtitle ? (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+            ) : null}
+          </div>
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
       </header>
