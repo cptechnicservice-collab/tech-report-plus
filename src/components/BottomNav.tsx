@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { CalendarPlus, CircleDollarSign, Clock, LayoutGrid, Users } from "lucide-react";
 
 const items = [
-  { to: "/", label: "Resumo", icon: LayoutGrid, exact: true },
+  { to: "/painel", label: "Painel", icon: LayoutGrid, exact: true },
   { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
   { to: "/clientes", label: "Clientes", icon: Users, exact: false },

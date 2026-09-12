@@ -10,6 +10,7 @@ export type ValorVigencia = {
   valor_meia_diaria: number;
   created_at: string;
   updated_at: string;
+  user_id: string | null;
 };
 
 export type TotaisFinanceiros = {

@@ -9,126 +9,187 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
-  id: '/_authenticated/clientes',
-  path: '/clientes',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
-  id: '/_authenticated/historico',
+  id: '/historico',
   path: '/historico',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNovoRoute = AuthenticatedNovoRouteImport.update({
-  id: '/_authenticated/novo',
+  id: '/novo',
   path: '/novo',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
-  id: '/_authenticated/relatorio',
+  id: '/relatorio',
   path: '/relatorio',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
-  id: '/_authenticated/valores',
+  id: '/valores',
   path: '/valores',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedApontamentoIdRoute =
   AuthenticatedApontamentoIdRouteImport.update({
-    id: '/_authenticated/apontamento/$id',
+    id: '/apontamento/$id',
     path: '/apontamento/$id',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/novo': typeof AuthenticatedNovoRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/valores': typeof AuthenticatedValoresRoute
-  '/': typeof AuthenticatedIndexRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/novo': typeof AuthenticatedNovoRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/valores': typeof AuthenticatedValoresRoute
-  '/': typeof AuthenticatedIndexRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/novo': typeof AuthenticatedNovoRoute
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
     | '/clientes'
     | '/historico'
     | '/novo'
+    | '/painel'
     | '/relatorio'
     | '/valores'
-    | '/'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
     | '/clientes'
     | '/historico'
     | '/novo'
+    | '/painel'
     | '/relatorio'
     | '/valores'
-    | '/'
     | '/apontamento/$id'
   id:
     | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
     | '/_authenticated/clientes'
     | '/_authenticated/historico'
     | '/_authenticated/novo'
+    | '/_authenticated/painel'
     | '/_authenticated/relatorio'
     | '/_authenticated/valores'
-    | '/_authenticated/'
     | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
-  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
-  AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
-  AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
-  AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
+  IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/clientes': {
@@ -136,54 +197,81 @@ declare module '@tanstack/react-router' {
       path: '/clientes'
       fullPath: '/clientes'
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/historico': {
       id: '/_authenticated/historico'
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/novo': {
       id: '/_authenticated/novo'
       path: '/novo'
       fullPath: '/novo'
       preLoaderRoute: typeof AuthenticatedNovoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/relatorio': {
       id: '/_authenticated/relatorio'
       path: '/relatorio'
       fullPath: '/relatorio'
       preLoaderRoute: typeof AuthenticatedRelatorioRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/valores': {
       id: '/_authenticated/valores'
       path: '/valores'
       fullPath: '/valores'
       preLoaderRoute: typeof AuthenticatedValoresRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/apontamento/$id': {
       id: '/_authenticated/apontamento/$id'
       path: '/apontamento/$id'
       fullPath: '/apontamento/$id'
       preLoaderRoute: typeof AuthenticatedApontamentoIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
+  AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
+  AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedNovoRoute: AuthenticatedNovoRoute,
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,28 +1,30 @@
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CalendarPlus, ChevronRight, Gauge, MapPin, Timer } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronRight, CircleDollarSign, Gauge, MapPin, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import {
   fetchApontamentos,
+  fetchValores,
   formatDateBR,
   formatMinutes,
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
+import { calcularValoresPeriodo, formatCurrency } from "@/lib/financeiro";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
-      { title: "CP TECHNIC Horas — resumo do mês" },
+      { title: "Painel mensal — CP TECHNIC Horas" },
       {
         name: "description",
         content:
           "Resumo mensal de horas trabalhadas, horas de viagem e quilometragem do técnico de campo.",
       },
-      { property: "og:title", content: "CP TECHNIC Horas — resumo do mês" },
+      { property: "og:title", content: "Painel mensal — CP TECHNIC Horas" },
       {
         property: "og:description",
         content: "Apontamento diário de horas, viagens e km direto do iPhone.",
@@ -39,6 +41,7 @@ function Resumo() {
     queryKey: ["apontamentos"],
     queryFn: fetchApontamentos,
   });
+  const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
 
   const mes = todayISO().slice(0, 7);
   const doMes = useMemo(
@@ -46,6 +49,7 @@ function Resumo() {
     [apontamentos, mes],
   );
   const totais = somarTotais(doMes);
+  const financeiro = calcularValoresPeriodo(doMes, valores);
   const ultimos = apontamentos.slice(0, 5);
 
   const nomeMes = new Date(`${mes}-01T12:00:00`).toLocaleDateString("pt-BR", {
@@ -55,7 +59,7 @@ function Resumo() {
   const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
   return (
-    <PageShell title="Resumo" subtitle="CP TECHNIC Horas">
+    <PageShell title="Painel" subtitle="CP TECHNIC Horas">
       <div className="ios-group flex items-center justify-between p-4">
         <div>
           <p className="text-[0.68rem] font-semibold uppercase text-muted-foreground">Período</p>
@@ -67,6 +71,14 @@ function Resumo() {
       </div>
 
       <div className="grid gap-3">
+        <div className="ios-group p-5">
+          <div className="flex items-center gap-2 text-primary">
+            <CircleDollarSign className="h-5 w-5" />
+            <p className="text-xs font-semibold uppercase">Valor acumulado</p>
+          </div>
+          <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(financeiro.totalGeral)}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Atualizado com os dados disponíveis, inclusive offline</p>
+        </div>
         <div className="ios-group p-5">
           <div className="flex items-center gap-2 text-primary">
             <Timer className="h-5 w-5" />
