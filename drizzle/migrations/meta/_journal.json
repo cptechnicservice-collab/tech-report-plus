@@ -29,6 +29,13 @@
       "when": 1789145262728,
       "tag": "0003_add_outbound_return_km",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789232235587,
+      "tag": "0004_add_user_ownership_and_profiles",
+      "breakpoints": true
     }
   ]
 }

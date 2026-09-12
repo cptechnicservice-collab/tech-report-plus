@@ -39,6 +39,7 @@ export type Database = {
           trabalho_fim: string | null
           trabalho_inicio: string | null
           updated_at: string
+          user_id: string | null
           viagem_ida_chegada: string | null
           viagem_ida_saida: string | null
           viagem_volta_chegada: string | null
@@ -68,6 +69,7 @@ export type Database = {
           trabalho_fim?: string | null
           trabalho_inicio?: string | null
           updated_at?: string
+          user_id?: string | null
           viagem_ida_chegada?: string | null
           viagem_ida_saida?: string | null
           viagem_volta_chegada?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           trabalho_fim?: string | null
           trabalho_inicio?: string | null
           updated_at?: string
+          user_id?: string | null
           viagem_ida_chegada?: string | null
           viagem_ida_saida?: string | null
           viagem_volta_chegada?: string | null
@@ -124,6 +127,7 @@ export type Database = {
           observacoes: string | null
           telefone: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           ativo?: boolean
@@ -136,6 +140,7 @@ export type Database = {
           observacoes?: string | null
           telefone?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           ativo?: boolean
@@ -148,6 +153,28 @@ export type Database = {
           observacoes?: string | null
           telefone?: string | null
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -156,6 +183,7 @@ export type Database = {
           created_at: string
           id: string
           updated_at: string
+          user_id: string | null
           valor_diaria_inteira: number
           valor_hora_trabalhada: number
           valor_hora_viagem: number
@@ -167,6 +195,7 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
           valor_diaria_inteira?: number
           valor_hora_trabalhada?: number
           valor_hora_viagem?: number
@@ -178,6 +207,7 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
           valor_diaria_inteira?: number
           valor_hora_trabalhada?: number
           valor_hora_viagem?: number
