@@ -77,6 +77,14 @@ export function normalizeTime(value?: string | null): string {
   return value.slice(0, 5);
 }
 
+export function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .trim();
+}
+
 export type Totais = { trabalho: number; viagem: number; km: number };
 
 export type ValidacoesApontamento = {

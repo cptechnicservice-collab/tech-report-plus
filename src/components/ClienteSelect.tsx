@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Cliente } from "@/lib/apontamentos";
+import { normalizeSearchText, type Cliente } from "@/lib/apontamentos";
 import { saveClienteOffline } from "@/lib/offline";
 
 export function ClienteSelect({
@@ -31,12 +31,12 @@ export function ClienteSelect({
   const ativos = useMemo(() => clientes.filter((c) => c.ativo), [clientes]);
 
   const lista = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
+    const termo = normalizeSearchText(busca);
     const filtrados = termo
       ? ativos.filter(
           (c) =>
-            c.nome.toLowerCase().includes(termo) ||
-            (c.cidade ?? "").toLowerCase().includes(termo),
+            normalizeSearchText(c.nome).includes(termo) ||
+            normalizeSearchText(c.cidade ?? "").includes(termo),
         )
       : ativos;
     const rank = (id: string) => {

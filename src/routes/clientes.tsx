@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchClientes, type Cliente } from "@/lib/apontamentos";
+import { fetchClientes, normalizeSearchText, type Cliente } from "@/lib/apontamentos";
 import { saveClienteOffline } from "@/lib/offline";
 
 export const Route = createFileRoute("/clientes")({
@@ -77,11 +77,12 @@ function Clientes() {
   });
 
   const lista = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
+    const termo = normalizeSearchText(busca);
     if (!termo) return clientes;
     return clientes.filter(
       (c) =>
-        c.nome.toLowerCase().includes(termo) || (c.cidade ?? "").toLowerCase().includes(termo),
+        normalizeSearchText(c.nome).includes(termo) ||
+        normalizeSearchText(c.cidade ?? "").includes(termo),
     );
   }, [clientes, busca]);
 
