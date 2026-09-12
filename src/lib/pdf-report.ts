@@ -7,7 +7,7 @@ import {
   type ApontamentoComCliente,
   type Cliente,
 } from "@/lib/apontamentos";
-import { calcularValoresPeriodo, formatCurrency, formatDecimalHours, type ValorVigencia } from "@/lib/financeiro";
+import { calcularValoresPeriodo, formatCurrency, type ValorVigencia } from "@/lib/financeiro";
 
 const range = (start?: string | null, end?: string | null) =>
   start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "—";
@@ -67,21 +67,57 @@ export async function generateClientReport(
   });
 
   const reportTable = doc as typeof doc & { lastAutoTable?: { finalY: number } };
+  const unitValue = (total: number, quantity: number, suffix = "") =>
+    quantity > 0 ? `${formatCurrency(total / quantity)}${suffix}` : "—";
+  const financialRows = [
+    [
+      "Horas trabalhadas",
+      formatMinutes(financial.horasTrabalhadas),
+      unitValue(financial.valorTrabalho, financial.horasTrabalhadas / 60, "/h"),
+      formatCurrency(financial.valorTrabalho),
+    ],
+    [
+      "Horas de viagem",
+      formatMinutes(financial.horasViagem),
+      unitValue(financial.valorViagem, financial.horasViagem / 60, "/h"),
+      formatCurrency(financial.valorViagem),
+    ],
+    [
+      "Deslocamento",
+      `${financial.km} km`,
+      unitValue(financial.valorKm, financial.km, "/km"),
+      formatCurrency(financial.valorKm),
+    ],
+    ...(financial.diariasInteiras > 0 ? [[
+      "Diária inteira",
+      String(financial.diariasInteiras),
+      unitValue(financial.valorDiariasInteiras, financial.diariasInteiras),
+      formatCurrency(financial.valorDiariasInteiras),
+    ]] : []),
+    ...(financial.meiasDiarias > 0 ? [[
+      "Meia diária",
+      String(financial.meiasDiarias),
+      unitValue(financial.valorMeiasDiarias, financial.meiasDiarias),
+      formatCurrency(financial.valorMeiasDiarias),
+    ]] : []),
+    ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
+    ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
+  ];
   autoTable(doc, {
     startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
     margin: { left: 110, right: 8, bottom: 32 },
     styles: { fontSize: 8, cellPadding: 1.8 },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-    head: [["Valores do período", "Total"]],
-    body: [
-      [`Horas trabalhadas · ${formatDecimalHours(financial.horasTrabalhadas)} h × valores vigentes`, formatCurrency(financial.valorTrabalho)],
-      [`Horas de viagem · ${formatDecimalHours(financial.horasViagem)} h × valores vigentes`, formatCurrency(financial.valorViagem)],
-      [`KM · ${financial.km} × valores vigentes`, formatCurrency(financial.valorKm)],
-      [`Diárias · ${financial.diariasInteiras} inteira(s), ${financial.meiasDiarias} meia(s)`, formatCurrency(financial.valorDiarias)],
-      ["Pedágios", formatCurrency(financial.pedagios)],
-      ["Outras despesas", formatCurrency(financial.outrasDespesas)],
-    ],
-    foot: [["TOTAL GERAL", formatCurrency(financial.totalGeral)]],
+    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold" },
+    head: [["Descrição", "Qtd.", "Valor unit.", "Total"]],
+    body: financialRows,
+    foot: [["TOTAL GERAL", "", "", formatCurrency(financial.totalGeral)]],
+    columnStyles: {
+      0: { cellWidth: 55 },
+      1: { cellWidth: 29, halign: "right" },
+      2: { cellWidth: 43, halign: "right" },
+      3: { cellWidth: 44, halign: "right" },
+    },
   });
 
   const pageHeight = doc.internal.pageSize.getHeight();

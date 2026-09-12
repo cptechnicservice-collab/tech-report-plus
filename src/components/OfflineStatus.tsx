@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -13,30 +13,32 @@ export function OfflineStatus() {
   const syncing = useRef(false);
   const queryClient = useQueryClient();
 
+  const refresh = useCallback(() => {
+    setOnline(navigator.onLine);
+    void getOfflineQueueStatus().then((status) => {
+      setPending(status.pending);
+      setFailed(status.failed);
+      setFirstError(status.firstError);
+    });
+  }, []);
+
+  const sync = useCallback(async () => {
+    if (syncing.current) return;
+    syncing.current = true;
+    try {
+      await syncOfflineQueue();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["clientes"] }),
+        queryClient.invalidateQueries({ queryKey: ["apontamentos"] }),
+        queryClient.invalidateQueries({ queryKey: ["valores"] }),
+      ]);
+    } finally {
+      syncing.current = false;
+      refresh();
+    }
+  }, [queryClient, refresh]);
+
   useEffect(() => {
-    const refresh = () => {
-      setOnline(navigator.onLine);
-      void getOfflineQueueStatus().then((status) => {
-        setPending(status.pending);
-        setFailed(status.failed);
-        setFirstError(status.firstError);
-      });
-    };
-    const sync = async () => {
-      if (syncing.current) return;
-      syncing.current = true;
-      try {
-        await syncOfflineQueue();
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["clientes"] }),
-          queryClient.invalidateQueries({ queryKey: ["apontamentos"] }),
-          queryClient.invalidateQueries({ queryKey: ["valores"] }),
-        ]);
-      } finally {
-        syncing.current = false;
-        refresh();
-      }
-    };
     const syncWhenVisible = () => {
       if (document.visibilityState === "visible") void sync();
     };
@@ -56,7 +58,7 @@ export function OfflineStatus() {
       window.clearInterval(interval);
       unsubscribe();
     };
-  }, [queryClient]);
+  }, [refresh, sync]);
 
   if (online && pending === 0) return null;
   return (
@@ -72,7 +74,11 @@ export function OfflineStatus() {
               type="button"
               variant="link"
               className="h-auto p-0 text-xs font-semibold text-destructive"
-              onClick={() => toast.error(firstError ?? "Não foi possível enviar um item.")}
+              onClick={() => {
+                toast.error(firstError ?? "Não foi possível enviar um item.", {
+                  action: online ? { label: "Tentar novamente", onClick: () => void sync() } : undefined,
+                });
+              }}
             >
               {failed} com erro
             </Button>

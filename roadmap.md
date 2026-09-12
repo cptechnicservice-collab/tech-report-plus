@@ -1,3 +1,5 @@
 - [x] Substituir odômetro por KM ida e KM volta
 - [x] Garantir cache, fila e sincronização offline dos dois campos
 - [x] Validar o build
+- [x] Ajustar a tabela “Valores do período” no PDF
+- [x] Revisar o app e aplicar melhorias úteis de experiência, sem comprometer o offline

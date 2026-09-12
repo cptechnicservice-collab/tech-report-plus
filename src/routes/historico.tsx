@@ -72,6 +72,13 @@ function Historico() {
   }, [apontamentos, busca, de, ate, clienteId]);
 
   const totais = somarTotais(filtrados);
+  const hasFilters = Boolean(busca || de || ate || clienteId);
+  const clearFilters = () => {
+    setBusca("");
+    setDe("");
+    setAte("");
+    setClienteId("");
+  };
 
   return (
     <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="rounded-full" aria-label="Abrir relatório"><Link to="/relatorio"><FileText className="h-5 w-5" /></Link></Button>}>
@@ -133,9 +140,12 @@ function Historico() {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : filtrados.length === 0 ? (
-        <p className="card-surface p-6 text-center text-sm text-muted-foreground">
-          Nenhum apontamento no filtro atual.
-        </p>
+        <div className="card-surface space-y-3 p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {hasFilters ? "Nenhum apontamento no filtro atual." : "Nenhum apontamento salvo."}
+          </p>
+          {hasFilters ? <Button type="button" variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button> : null}
+        </div>
       ) : (
         <ul className="ios-group divide-y divide-border">
           {filtrados.map((a) => {
