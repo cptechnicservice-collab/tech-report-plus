@@ -12,7 +12,7 @@ import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTot
 import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";
 
-export const Route = createFileRoute("/relatorio")({
+export const Route = createFileRoute("/_authenticated/relatorio")({
   head: () => ({ meta: [
     { title: "Relatório por cliente — CP TECHNIC Horas" },
     { name: "description", content: "Gere e compartilhe relatórios de horas, viagens e quilometragem por cliente e período." },

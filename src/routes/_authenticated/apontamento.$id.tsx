@@ -5,7 +5,7 @@ import { ApontamentoForm } from "@/components/ApontamentoForm";
 import { PageShell } from "@/components/PageShell";
 import { fetchApontamento, formatDateBR } from "@/lib/apontamentos";
 
-export const Route = createFileRoute("/apontamento/$id")({
+export const Route = createFileRoute("/_authenticated/apontamento/$id")({
   head: () => ({
     meta: [
       { title: "Editar apontamento — CP TECHNIC Horas" },

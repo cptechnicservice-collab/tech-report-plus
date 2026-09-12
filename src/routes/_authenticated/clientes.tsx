@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fetchClientes, normalizeSearchText, type Cliente } from "@/lib/apontamentos";
 import { saveClienteOffline } from "@/lib/offline";
 
-export const Route = createFileRoute("/clientes")({
+export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
       { title: "Clientes — CP TECHNIC Horas" },
