@@ -7,7 +7,7 @@ import {
   type ApontamentoComCliente,
   type Cliente,
 } from "@/lib/apontamentos";
-import { calcularValoresPeriodo, formatCurrency, formatDecimalHours, type ValorVigencia } from "@/lib/financeiro";
+import { calcularValoresPeriodo, formatCurrency, type ValorVigencia } from "@/lib/financeiro";
 
 const range = (start?: string | null, end?: string | null) =>
   start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "—";

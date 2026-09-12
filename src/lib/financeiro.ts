@@ -21,6 +21,8 @@ export type TotaisFinanceiros = {
   valorTrabalho: number;
   valorViagem: number;
   valorKm: number;
+  valorDiariasInteiras: number;
+  valorMeiasDiarias: number;
   valorDiarias: number;
   pedagios: number;
   outrasDespesas: number;
@@ -61,6 +63,8 @@ export function calcularValoresPeriodo(
     acc.valorTrabalho += (quantidades.trabalho / 60) * (tarifa?.valor_hora_trabalhada ?? 0);
     acc.valorViagem += (quantidades.viagem / 60) * (tarifa?.valor_hora_viagem ?? 0);
     acc.valorKm += quantidades.km * (tarifa?.valor_km ?? 0);
+    acc.valorDiariasInteiras += diariaTipo === "inteira" ? valorDiaria : 0;
+    acc.valorMeiasDiarias += diariaTipo === "meia" ? valorDiaria : 0;
     acc.valorDiarias += valorDiaria;
     acc.pedagios += apontamento.pedagio ?? 0;
     acc.outrasDespesas += apontamento.outras_despesas ?? 0;
@@ -74,6 +78,8 @@ export function calcularValoresPeriodo(
     valorTrabalho: 0,
     valorViagem: 0,
     valorKm: 0,
+    valorDiariasInteiras: 0,
+    valorMeiasDiarias: 0,
     valorDiarias: 0,
     pedagios: 0,
     outrasDespesas: 0,
