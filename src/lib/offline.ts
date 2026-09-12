@@ -159,7 +159,7 @@ export async function saveClienteOffline(payload: ClienteWrite) {
   const userId = await requireUserId();
   payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
-  const cliente: Cliente = { created_at: now, updated_at: now, ...payload };
+  const cliente: Cliente = { created_at: now, updated_at: now, ...payload, user_id: userId };
   const cached = (await readCached<Cliente[]>(CACHE_CLIENTES)) ?? [];
   if (!isOffline()) {
     try {
@@ -194,6 +194,7 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
     created_at: now,
     updated_at: now,
     ...payload,
+    user_id: userId,
     clientes: clientes.find((cliente) => cliente.id === payload.cliente_id) ?? null,
   };
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
@@ -230,7 +231,7 @@ export async function saveValorOffline(payload: ValorWrite) {
   const userId = await requireUserId();
   payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
-  const record: ValorVigencia = { created_at: now, updated_at: now, ...payload };
+  const record: ValorVigencia = { created_at: now, updated_at: now, ...payload, user_id: userId };
   const cached = (await readCached<ValorVigencia[]>(CACHE_VALORES)) ?? [];
   const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
     `${b.vigencia}${b.created_at}`.localeCompare(`${a.vigencia}${a.created_at}`),
