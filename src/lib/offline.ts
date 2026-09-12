@@ -76,12 +76,16 @@ export const queryPersister = {
 
 export async function pendingCount() {
   if (typeof indexedDB === "undefined") return 0;
-  return (await database()).count("queue");
+  const userId = await activeUserId();
+  if (!userId) return 0;
+  return (await (await database()).getAll("queue")).filter((item) => item.userId === userId).length;
 }
 
 export async function getOfflineQueueStatus() {
   if (typeof indexedDB === "undefined") return { pending: 0, failed: 0, firstError: undefined };
-  const items = await (await database()).getAll("queue");
+  const userId = await activeUserId();
+  if (!userId) return { pending: 0, failed: 0, firstError: undefined };
+  const items = (await (await database()).getAll("queue")).filter((item) => item.userId === userId);
   const failedItems = items.filter((item) => item.lastError);
   return {
     pending: items.length,
@@ -281,7 +285,10 @@ export async function deleteApontamentoOffline(id: string) {
 
 export async function getPendingApontamentoIds() {
   if (typeof indexedDB === "undefined") return new Set<string>();
-  const items = await (await database()).getAllFromIndex("queue", "entity", "apontamentos");
+  const userId = await activeUserId();
+  if (!userId) return new Set<string>();
+  const items = (await (await database()).getAllFromIndex("queue", "entity", "apontamentos"))
+    .filter((item) => item.userId === userId);
   return new Set(items.map((item) => item.recordId));
 }
 

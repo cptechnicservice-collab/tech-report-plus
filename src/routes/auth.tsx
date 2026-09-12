@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LockKeyhole, Mail } from "lucide-react";
 import { toast } from "sonner";
@@ -36,10 +36,10 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (signedIn) {
-    void navigate({ to: "/painel", replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (signedIn) void navigate({ to: "/painel", replace: true });
+  }, [navigate, signedIn]);
+  if (signedIn) return null;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
