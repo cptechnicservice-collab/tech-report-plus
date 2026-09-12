@@ -323,6 +323,7 @@ export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) 
         sync_status: "pending",
         synced_at: null,
         external_row_id: apontamento?.external_row_id ?? null,
+        user_id: apontamento?.user_id ?? null,
       });
     },
     onSuccess: (result) => {

@@ -18,6 +18,7 @@ type QueueItem = {
   createdAt: number;
   attempts?: number;
   lastError?: string;
+  userId: string;
 };
 
 interface OfflineDB extends DBSchema {
@@ -41,25 +42,35 @@ function database() {
   });
 }
 
+async function activeUserId() {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id ?? null;
+}
+
+async function scopedKey(key: string) {
+  const userId = await activeUserId();
+  return userId ? `${userId}:${key}` : `signed-out:${key}`;
+}
+
 function emitChange() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(OFFLINE_EVENT));
 }
 
 export async function readCached<T>(key: string): Promise<T | undefined> {
   if (typeof indexedDB === "undefined") return undefined;
-  return (await (await database()).get("cache", key)) as T | undefined;
+  return (await (await database()).get("cache", await scopedKey(key))) as T | undefined;
 }
 
 export async function writeCached<T>(key: string, value: T) {
   if (typeof indexedDB === "undefined") return;
-  await (await database()).put("cache", value, key);
+  await (await database()).put("cache", value, await scopedKey(key));
 }
 
 export const queryPersister = {
   persistClient: (client: PersistedClient) => writeCached("react-query", client),
   restoreClient: () => readCached<PersistedClient>("react-query"),
   removeClient: async () => {
-    if (typeof indexedDB !== "undefined") await (await database()).delete("cache", "react-query");
+    if (typeof indexedDB !== "undefined") await (await database()).delete("cache", await scopedKey("react-query"));
   },
 };
 
@@ -100,6 +111,20 @@ async function enqueue(item: Omit<QueueItem, "queueId" | "createdAt">) {
   emitChange();
 }
 
+async function requireUserId() {
+  const userId = await activeUserId();
+  if (!userId) throw new Error("Entre novamente para salvar seus dados.");
+  return userId;
+}
+
+export async function clearOfflineUserData() {
+  if (typeof indexedDB === "undefined") return;
+  const db = await database();
+  await db.clear("cache");
+  await db.clear("queue");
+  emitChange();
+}
+
 function isOffline() {
   return typeof navigator !== "undefined" && !navigator.onLine;
 }
@@ -126,6 +151,8 @@ function timeoutSignal() {
 export async function saveClienteOffline(
   payload: Omit<Cliente, "created_at" | "updated_at"> & Partial<Pick<Cliente, "created_at" | "updated_at">>,
 ) {
+  const userId = await requireUserId();
+  payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
   const cliente: Cliente = { created_at: now, updated_at: now, ...payload };
   const cached = (await readCached<Cliente[]>(CACHE_CLIENTES)) ?? [];
@@ -145,7 +172,7 @@ export async function saveClienteOffline(
       if (!isNetworkError(error)) throw error;
     }
   }
-  await enqueue({ entity: "clientes", action: "upsert", recordId: cliente.id, payload });
+  await enqueue({ entity: "clientes", action: "upsert", recordId: cliente.id, payload, userId });
   await writeCached(CACHE_CLIENTES, [...cached.filter((item) => item.id !== cliente.id), cliente]);
   return { cliente, queued: true };
 }
@@ -154,6 +181,8 @@ type ApontamentoWrite = Omit<ApontamentoComCliente, "clientes" | "created_at" | 
   Partial<Pick<ApontamentoComCliente, "created_at" | "updated_at">>;
 
 export async function saveApontamentoOffline(payload: ApontamentoWrite) {
+  const userId = await requireUserId();
+  payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
   const clientes = (await readCached<Cliente[]>(CACHE_CLIENTES)) ?? [];
   const record: ApontamentoComCliente = {
@@ -184,7 +213,7 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
       if (!isNetworkError(error)) throw error;
     }
   }
-  await enqueue({ entity: "apontamentos", action: "upsert", recordId: record.id, payload: dbPayload });
+  await enqueue({ entity: "apontamentos", action: "upsert", recordId: record.id, payload: dbPayload, userId });
   await writeCached(CACHE_APONTAMENTOS, nextCache);
   return { record, queued: true };
 }
@@ -193,6 +222,8 @@ type ValorWrite = Omit<ValorVigencia, "created_at" | "updated_at"> &
   Partial<Pick<ValorVigencia, "created_at" | "updated_at">>;
 
 export async function saveValorOffline(payload: ValorWrite) {
+  const userId = await requireUserId();
+  payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
   const record: ValorVigencia = { created_at: now, updated_at: now, ...payload };
   const cached = (await readCached<ValorVigencia[]>(CACHE_VALORES)) ?? [];
@@ -218,12 +249,13 @@ export async function saveValorOffline(payload: ValorWrite) {
     }
   }
 
-  await enqueue({ entity: "valores_vigencia", action: "upsert", recordId: record.id, payload: dbPayload });
+  await enqueue({ entity: "valores_vigencia", action: "upsert", recordId: record.id, payload: dbPayload, userId });
   await writeCached(CACHE_VALORES, nextCache);
   return { record, queued: true };
 }
 
 export async function deleteApontamentoOffline(id: string) {
+  const userId = await requireUserId();
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
   if (!isOffline()) {
     try {
@@ -242,7 +274,7 @@ export async function deleteApontamentoOffline(id: string) {
       if (!isNetworkError(error)) throw error;
     }
   }
-  await enqueue({ entity: "apontamentos", action: "delete", recordId: id });
+  await enqueue({ entity: "apontamentos", action: "delete", recordId: id, userId });
   await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
   return { queued: true };
 }
@@ -255,6 +287,8 @@ export async function getPendingApontamentoIds() {
 
 export async function syncOfflineQueue() {
   if (isOffline() || typeof indexedDB === "undefined") return;
+  const userId = await activeUserId();
+  if (!userId) return;
   const db = await database();
   const items = await db.getAll("queue");
   items.sort((a, b) => {
@@ -262,6 +296,7 @@ export async function syncOfflineQueue() {
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
+    if (item.userId !== userId) continue;
     try {
       let result;
       if (item.action === "delete") {

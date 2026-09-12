@@ -1,4 +1,4 @@
-const CACHE = "cp-technic-v4";
+const CACHE = "cp-technic-v5";
 const SHELL = ["/", "/novo", "/historico", "/clientes", "/valores", "/relatorio", "/manifest.webmanifest", "/favicon.png", "/apple-touch-icon.png", "/app-icon.png"];
 
 self.addEventListener("install", (event) => {
@@ -16,6 +16,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/~oauth") || url.pathname === "/auth" || url.pathname === "/reset-password") return;
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request)

@@ -55,6 +55,7 @@ function Valores() {
       valor_km: numberValue(draft.valor_km),
       valor_diaria_inteira: numberValue(draft.valor_diaria_inteira),
       valor_meia_diaria: numberValue(draft.valor_meia_diaria),
+      user_id: null,
     }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["valores"] });
