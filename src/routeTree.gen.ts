@@ -10,115 +10,156 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ClientesRouteImport } from './routes/clientes'
-import { Route as HistoricoRouteImport } from './routes/historico'
-import { Route as NovoRouteImport } from './routes/novo'
-import { Route as RelatorioRouteImport } from './routes/relatorio'
-import { Route as ValoresRouteImport } from './routes/valores'
-import { Route as ApontamentoIdRouteImport } from './routes/apontamento.$id'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
+import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
+import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientesRoute = ClientesRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const HistoricoRoute = HistoricoRouteImport.update({
+const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const NovoRoute = NovoRouteImport.update({
+const AuthenticatedNovoRoute = AuthenticatedNovoRouteImport.update({
   id: '/novo',
   path: '/novo',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const RelatorioRoute = RelatorioRouteImport.update({
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
   id: '/relatorio',
   path: '/relatorio',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ValoresRoute = ValoresRouteImport.update({
+const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApontamentoIdRoute = ApontamentoIdRouteImport.update({
-  id: '/apontamento/$id',
-  path: '/apontamento/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedApontamentoIdRoute =
+  AuthenticatedApontamentoIdRouteImport.update({
+    id: '/apontamento/$id',
+    path: '/apontamento/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/historico': typeof HistoricoRoute
-  '/novo': typeof NovoRoute
-  '/relatorio': typeof RelatorioRoute
-  '/valores': typeof ValoresRoute
-  '/apontamento/$id': typeof ApontamentoIdRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/historico': typeof AuthenticatedHistoricoRoute
+  '/novo': typeof AuthenticatedNovoRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/valores': typeof AuthenticatedValoresRoute
+  '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/historico': typeof HistoricoRoute
-  '/novo': typeof NovoRoute
-  '/relatorio': typeof RelatorioRoute
-  '/valores': typeof ValoresRoute
-  '/apontamento/$id': typeof ApontamentoIdRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/historico': typeof AuthenticatedHistoricoRoute
+  '/novo': typeof AuthenticatedNovoRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/valores': typeof AuthenticatedValoresRoute
+  '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/historico': typeof HistoricoRoute
-  '/novo': typeof NovoRoute
-  '/relatorio': typeof RelatorioRoute
-  '/valores': typeof ValoresRoute
-  '/apontamento/$id': typeof ApontamentoIdRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/_authenticated/novo': typeof AuthenticatedNovoRoute
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
+  '/_authenticated/valores': typeof AuthenticatedValoresRoute
+  '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/reset-password'
     | '/clientes'
     | '/historico'
     | '/novo'
+    | '/painel'
     | '/relatorio'
     | '/valores'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/reset-password'
     | '/clientes'
     | '/historico'
     | '/novo'
+    | '/painel'
     | '/relatorio'
     | '/valores'
     | '/apontamento/$id'
   id:
     | '__root__'
     | '/'
-    | '/clientes'
-    | '/historico'
-    | '/novo'
-    | '/relatorio'
-    | '/valores'
-    | '/apontamento/$id'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/clientes'
+    | '/_authenticated/historico'
+    | '/_authenticated/novo'
+    | '/_authenticated/painel'
+    | '/_authenticated/relatorio'
+    | '/_authenticated/valores'
+    | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ClientesRoute: typeof ClientesRoute
-  HistoricoRoute: typeof HistoricoRoute
-  NovoRoute: typeof NovoRoute
-  RelatorioRoute: typeof RelatorioRoute
-  ValoresRoute: typeof ValoresRoute
-  ApontamentoIdRoute: typeof ApontamentoIdRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -130,59 +171,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/clientes': {
-      id: '/clientes'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
       path: '/clientes'
       fullPath: '/clientes'
-      preLoaderRoute: typeof ClientesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/historico': {
-      id: '/historico'
+    '/_authenticated/historico': {
+      id: '/_authenticated/historico'
       path: '/historico'
       fullPath: '/historico'
-      preLoaderRoute: typeof HistoricoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/novo': {
-      id: '/novo'
+    '/_authenticated/novo': {
+      id: '/_authenticated/novo'
       path: '/novo'
       fullPath: '/novo'
-      preLoaderRoute: typeof NovoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedNovoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/relatorio': {
-      id: '/relatorio'
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorio': {
+      id: '/_authenticated/relatorio'
       path: '/relatorio'
       fullPath: '/relatorio'
-      preLoaderRoute: typeof RelatorioRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRelatorioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/valores': {
-      id: '/valores'
+    '/_authenticated/valores': {
+      id: '/_authenticated/valores'
       path: '/valores'
       fullPath: '/valores'
-      preLoaderRoute: typeof ValoresRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedValoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/apontamento/$id': {
-      id: '/apontamento/$id'
+    '/_authenticated/apontamento/$id': {
+      id: '/_authenticated/apontamento/$id'
       path: '/apontamento/$id'
       fullPath: '/apontamento/$id'
-      preLoaderRoute: typeof ApontamentoIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedApontamentoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
+  AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
+  AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+  AuthenticatedNovoRoute: AuthenticatedNovoRoute,
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
+  AuthenticatedValoresRoute: AuthenticatedValoresRoute,
+  AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ClientesRoute: ClientesRoute,
-  HistoricoRoute: HistoricoRoute,
-  NovoRoute: NovoRoute,
-  RelatorioRoute: RelatorioRoute,
-  ValoresRoute: ValoresRoute,
-  ApontamentoIdRoute: ApontamentoIdRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

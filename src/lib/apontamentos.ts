@@ -13,6 +13,7 @@ export type Cliente = {
   observacoes: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string | null;
 };
 
 export type Apontamento = {
@@ -43,6 +44,7 @@ export type Apontamento = {
   external_row_id: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string | null;
 };
 
 export type ApontamentoComCliente = Apontamento & { clientes: Cliente | null };

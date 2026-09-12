@@ -1,4 +1,11 @@
 import type { ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { LogOut } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { clearOfflineUserData } from "@/lib/offline";
 
 export function PageShell({
   title,
@@ -11,6 +18,15 @@ export function PageShell({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await clearOfflineUserData();
+    await supabase.auth.signOut();
+    await navigate({ to: "/auth", replace: true });
+  };
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-28">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 px-1 pb-5 pt-4">
@@ -19,7 +35,12 @@ export function PageShell({
           <h1 className="truncate text-[2rem] font-bold leading-none">{title}</h1>
           {subtitle ? <p className="mt-2 truncate text-sm text-muted-foreground">{subtitle}</p> : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        <div className="flex shrink-0 items-center gap-1">
+          {action}
+          <Button type="button" variant="ghost" size="icon" aria-label="Sair" title="Sair" onClick={signOut}>
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
       <main className="space-y-5">{children}</main>
     </div>

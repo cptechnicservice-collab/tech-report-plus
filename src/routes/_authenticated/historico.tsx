@@ -19,7 +19,7 @@ import {
   somarTotais,
 } from "@/lib/apontamentos";
 
-export const Route = createFileRoute("/historico")({
+export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({
     meta: [
       { title: "Histórico de apontamentos — CP TECHNIC Horas" },

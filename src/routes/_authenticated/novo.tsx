@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ApontamentoForm } from "@/components/ApontamentoForm";
 import { PageShell } from "@/components/PageShell";
 
-export const Route = createFileRoute("/novo")({
+export const Route = createFileRoute("/_authenticated/novo")({
   head: () => ({
     meta: [
       { title: "Novo apontamento — CP TECHNIC Horas" },

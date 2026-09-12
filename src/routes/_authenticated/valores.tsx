@@ -11,7 +11,7 @@ import { fetchValores, formatDateBR, todayISO } from "@/lib/apontamentos";
 import { formatCurrency, type ValorVigencia } from "@/lib/financeiro";
 import { saveValorOffline } from "@/lib/offline";
 
-export const Route = createFileRoute("/valores")({
+export const Route = createFileRoute("/_authenticated/valores")({
   head: () => ({ meta: [
     { title: "Valores — CP TECHNIC Horas" },
     { name: "description", content: "Cadastre os valores de horas, viagens, quilometragem e diárias por data de vigência." },

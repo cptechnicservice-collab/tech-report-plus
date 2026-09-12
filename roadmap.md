@@ -1,5 +1,8 @@
-- [x] Substituir odômetro por KM ida e KM volta
-- [x] Garantir cache, fila e sincronização offline dos dois campos
-- [x] Validar o build
-- [x] Ajustar a tabela “Valores do período” no PDF
-- [x] Revisar o app e aplicar melhorias úteis de experiência, sem comprometer o offline
+# Roadmap
+
+- [ ] Concluir login persistente por e-mail e Google
+- [ ] Restringir clientes, apontamentos e valores ao usuário conectado
+- [ ] Isolar cache e fila offline por usuário
+- [ ] Criar painel mensal com totais acumulados de horas, km e valores, atualizado offline
+- [ ] Validar autenticação, privacidade, modo offline e experiência no iPhone
+- [ ] Marcar somente os dois alertas de segurança selecionados como corrigidos
