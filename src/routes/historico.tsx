@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, FileText, Search } from "lucide-react";
+import { Check, ChevronRight, FileText, Search, X } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   fetchClientes,
   formatDateBR,
   formatMinutes,
+  normalizeSearchText,
   normalizeTime,
   somarTotais,
 } from "@/lib/apontamentos";
@@ -43,6 +44,8 @@ function Historico() {
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
   const [clienteId, setClienteId] = useState("");
+  const [clienteBusca, setClienteBusca] = useState("");
+  const [clienteFiltroAberto, setClienteFiltroAberto] = useState(false);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -58,18 +61,23 @@ function Historico() {
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
 
   const filtrados = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
+    const termo = normalizeSearchText(busca);
     return apontamentos.filter((a) => {
       if (clienteId && a.cliente_id !== clienteId) return false;
       if (de && a.data < de) return false;
       if (ate && a.data > ate) return false;
       if (!termo) return true;
       return (
-        (a.clientes?.nome ?? "").toLowerCase().includes(termo) ||
-        (a.maquina_servico ?? "").toLowerCase().includes(termo)
+        normalizeSearchText(a.clientes?.nome ?? "").includes(termo) ||
+        normalizeSearchText(a.maquina_servico ?? "").includes(termo)
       );
     });
   }, [apontamentos, busca, de, ate, clienteId]);
+
+  const clientesEncontrados = useMemo(() => {
+    const termo = normalizeSearchText(clienteBusca);
+    return clientes.filter((cliente) => !termo || normalizeSearchText(cliente.nome).includes(termo));
+  }, [clientes, clienteBusca]);
 
   const totais = somarTotais(filtrados);
   const hasFilters = Boolean(busca || de || ate || clienteId);
@@ -78,6 +86,7 @@ function Historico() {
     setDe("");
     setAte("");
     setClienteId("");
+    setClienteBusca("");
   };
 
   return (
@@ -92,23 +101,69 @@ function Historico() {
             className="rounded-full bg-secondary pl-9"
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="relative space-y-1.5">
           <Label htmlFor="cliente-filtro" className="text-xs text-muted-foreground">
             Cliente
           </Label>
-          <select
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
             id="cliente-filtro"
-            value={clienteId}
-            onChange={(e) => setClienteId(e.target.value)}
-            className="ios-field h-12 w-full border px-3"
-          >
-            <option value="">Todos os clientes</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
+              value={clienteBusca}
+              onFocus={() => setClienteFiltroAberto(true)}
+              onBlur={() => window.setTimeout(() => setClienteFiltroAberto(false), 120)}
+              onChange={(event) => {
+                setClienteBusca(event.target.value);
+                setClienteId("");
+                setClienteFiltroAberto(true);
+              }}
+              placeholder="Todos os clientes"
+              autoComplete="off"
+              className="h-12 rounded-xl pl-9 pr-10"
+            />
+            {clienteBusca ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Limpar filtro de cliente"
+                className="absolute right-1 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setClienteBusca("");
+                  setClienteId("");
+                  setClienteFiltroAberto(true);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+          {clienteFiltroAberto ? (
+            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-xl border bg-card p-1 shadow-sm">
+              {clientesEncontrados.length ? (
+                clientesEncontrados.map((cliente) => (
+                  <Button
+                    key={cliente.id}
+                    type="button"
+                    variant="ghost"
+                    className="h-11 w-full justify-between rounded-lg px-3 font-normal"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      setClienteId(cliente.id);
+                      setClienteBusca(cliente.nome);
+                      setClienteFiltroAberto(false);
+                    }}
+                  >
+                    <span className="truncate">{cliente.nome}</span>
+                    {clienteId === cliente.id ? <Check className="h-4 w-4 shrink-0 text-primary" /> : null}
+                  </Button>
+                ))
+              ) : (
+                <p className="px-3 py-4 text-center text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
+              )}
+            </div>
+          ) : null}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0 space-y-1.5">
