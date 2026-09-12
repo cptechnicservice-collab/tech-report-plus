@@ -97,7 +97,7 @@ function Clientes() {
         ativo: draft.ativo,
         observacoes: draft.observacoes.trim() || null,
       };
-      return saveClienteOffline({ ...payload, id: editando && editando !== "novo" ? editando : crypto.randomUUID(), user_id: null });
+      return saveClienteOffline({ ...payload, id: editando && editando !== "novo" ? editando : crypto.randomUUID() });
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["clientes"] });

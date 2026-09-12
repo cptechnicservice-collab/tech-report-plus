@@ -11,11 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) return { signedIn: true };
-    return { signedIn: false };
-  },
   head: () => ({ meta: [
     { title: "Entrar — CP TECHNIC Horas" },
     { name: "description", content: "Entre com segurança para acessar seus apontamentos." },
@@ -29,7 +24,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { signedIn } = Route.useRouteContext();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,9 +31,10 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (signedIn) void navigate({ to: "/painel", replace: true });
-  }, [navigate, signedIn]);
-  if (signedIn) return null;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user) void navigate({ to: "/painel", replace: true });
+    });
+  }, [navigate]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();

@@ -152,9 +152,10 @@ function timeoutSignal() {
   return AbortSignal.timeout(10_000);
 }
 
-export async function saveClienteOffline(
-  payload: Omit<Cliente, "created_at" | "updated_at"> & Partial<Pick<Cliente, "created_at" | "updated_at">>,
-) {
+type ClienteWrite = Omit<Cliente, "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<Cliente, "created_at" | "updated_at" | "user_id">>;
+
+export async function saveClienteOffline(payload: ClienteWrite) {
   const userId = await requireUserId();
   payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
@@ -181,8 +182,8 @@ export async function saveClienteOffline(
   return { cliente, queued: true };
 }
 
-type ApontamentoWrite = Omit<ApontamentoComCliente, "clientes" | "created_at" | "updated_at"> &
-  Partial<Pick<ApontamentoComCliente, "created_at" | "updated_at">>;
+type ApontamentoWrite = Omit<ApontamentoComCliente, "clientes" | "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<ApontamentoComCliente, "created_at" | "updated_at" | "user_id">>;
 
 export async function saveApontamentoOffline(payload: ApontamentoWrite) {
   const userId = await requireUserId();
@@ -222,8 +223,8 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
   return { record, queued: true };
 }
 
-type ValorWrite = Omit<ValorVigencia, "created_at" | "updated_at"> &
-  Partial<Pick<ValorVigencia, "created_at" | "updated_at">>;
+type ValorWrite = Omit<ValorVigencia, "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<ValorVigencia, "created_at" | "updated_at" | "user_id">>;
 
 export async function saveValorOffline(payload: ValorWrite) {
   const userId = await requireUserId();
