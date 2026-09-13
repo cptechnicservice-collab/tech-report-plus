@@ -50,6 +50,13 @@
       "when": 1789308076497,
       "tag": "0006_add_agendamento_data_fim",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789308595212,
+      "tag": "0007_create_pecas",
+      "breakpoints": true
     }
   ]
 }

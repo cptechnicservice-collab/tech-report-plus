@@ -207,6 +207,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pecas: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          descricao: string
+          id: string
+          observacoes: string | null
+          preco: number
+          unidade: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          preco?: number
+          unidade?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          preco?: number
+          unidade?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

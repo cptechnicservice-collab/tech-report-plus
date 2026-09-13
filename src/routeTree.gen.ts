@@ -18,6 +18,7 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
@@ -66,6 +67,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   path: '/painel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPecasRoute = AuthenticatedPecasRouteImport.update({
+  id: '/pecas',
+  path: '/pecas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
   id: '/relatorio',
   path: '/relatorio',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/historico': typeof AuthenticatedHistoricoRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/novo': typeof AuthenticatedNovoRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/novo'
     | '/painel'
+    | '/pecas'
     | '/relatorio'
     | '/valores'
     | '/apontamento/$id'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/novo'
     | '/painel'
+    | '/pecas'
     | '/relatorio'
     | '/valores'
     | '/apontamento/$id'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/historico'
     | '/_authenticated/novo'
     | '/_authenticated/painel'
+    | '/_authenticated/pecas'
     | '/_authenticated/relatorio'
     | '/_authenticated/valores'
     | '/_authenticated/apontamento/$id'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPainelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pecas': {
+      id: '/_authenticated/pecas'
+      path: '/pecas'
+      fullPath: '/pecas'
+      preLoaderRoute: typeof AuthenticatedPecasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/relatorio': {
       id: '/_authenticated/relatorio'
       path: '/relatorio'
@@ -269,6 +288,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
   AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
   AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
@@ -280,6 +300,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedNovoRoute: AuthenticatedNovoRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
