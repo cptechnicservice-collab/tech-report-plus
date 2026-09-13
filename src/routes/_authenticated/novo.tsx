@@ -4,6 +4,11 @@ import { ApontamentoForm } from "@/components/ApontamentoForm";
 import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/novo")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    data: typeof search["data"] === "string" ? search["data"] : undefined,
+    cliente: typeof search["cliente"] === "string" ? search["cliente"] : undefined,
+    servico: typeof search["servico"] === "string" ? search["servico"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Novo apontamento — CP TECHNIC Horas" },
@@ -25,9 +30,10 @@ export const Route = createFileRoute("/_authenticated/novo")({
 });
 
 function NovoApontamento() {
+  const search = Route.useSearch();
   return (
     <PageShell title="Novo apontamento" subtitle="Horários preenchidos manualmente">
-      <ApontamentoForm />
+      <ApontamentoForm draft={{ data: search.data, clienteId: search.cliente, servico: search.servico }} />
     </PageShell>
   );
 }

@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarPlus, CircleDollarSign, Clock, LayoutGrid, Users } from "lucide-react";
+import { CalendarDays, CalendarPlus, CircleDollarSign, Clock, LayoutGrid, Users } from "lucide-react";
 
 const items = [
   { to: "/painel", label: "Painel", icon: LayoutGrid, exact: true },
+  { to: "/agenda", label: "Agenda", icon: CalendarDays, exact: false },
   { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
   { to: "/clientes", label: "Clientes", icon: Users, exact: false },
@@ -12,7 +13,7 @@ const items = [
 export function BottomNav() {
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 pt-2 backdrop-blur-xl [backdrop-filter:saturate(180%)_blur(20px)] [box-shadow:var(--shadow-nav)]">
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
+      <ul className="mx-auto grid max-w-lg grid-cols-6">
         {items.map(({ to, label, icon: Icon, exact }) => (
           <li key={to}>
             <Link

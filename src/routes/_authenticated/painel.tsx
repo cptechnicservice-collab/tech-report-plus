@@ -109,7 +109,7 @@ function Resumo() {
       </div>
 
       <Button asChild className="h-14 w-full rounded-2xl text-base">
-        <Link to="/novo">
+        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined }}>
           <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
         </Link>
       </Button>

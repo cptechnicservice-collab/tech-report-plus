@@ -57,11 +57,17 @@ type FormState = {
   outras_despesas_descricao: string;
 };
 
-function initialState(a?: Apontamento): FormState {
+type ApontamentoDraft = {
+  data?: string | undefined;
+  clienteId?: string | undefined;
+  servico?: string | undefined;
+};
+
+function initialState(a?: Apontamento, draft?: ApontamentoDraft): FormState {
   return {
-    data: a?.data ?? todayISO(),
-    cliente_id: a?.cliente_id ?? null,
-    maquina_servico: a?.maquina_servico ?? "",
+    data: a?.data ?? draft?.data ?? todayISO(),
+    cliente_id: a?.cliente_id ?? draft?.clienteId ?? null,
+    maquina_servico: a?.maquina_servico ?? draft?.servico ?? "",
     viagem_ida_saida: normalizeTime(a?.viagem_ida_saida),
     viagem_ida_chegada: normalizeTime(a?.viagem_ida_chegada),
     trabalho_inicio: normalizeTime(a?.trabalho_inicio),
@@ -258,8 +264,8 @@ function errorReason(error: unknown) {
   return "";
 }
 
-export function ApontamentoForm({ apontamento }: { apontamento?: Apontamento }) {
-  const [form, setForm] = useState<FormState>(() => initialState(apontamento));
+export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontamento; draft?: ApontamentoDraft }) {
+  const [form, setForm] = useState<FormState>(() => initialState(apontamento, draft));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
