@@ -9,6 +9,15 @@ import {
 } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, type ValorVigencia } from "@/lib/financeiro";
 
+export type ReportPartItem = {
+  id: string;
+  descricao: string;
+  codigo: string | null;
+  unidade: string;
+  preco: number;
+  quantidade: number;
+};
+
 const range = (start?: string | null, end?: string | null) =>
   start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "—";
 
@@ -21,6 +30,7 @@ export async function generateClientReport(
   cliente: Cliente,
   apontamentos: ApontamentoComCliente[],
   valores: ValorVigencia[],
+  pecas: ReportPartItem[],
   inicio: string,
   fim: string,
 ) {
@@ -41,6 +51,8 @@ export async function generateClientReport(
 
   const totals = somarTotais(apontamentos);
   const financial = calcularValoresPeriodo(apontamentos, valores);
+  const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
+  const totalComPecas = financial.totalGeral + totalPecas;
   autoTable(doc, {
     startY: details ? 36 : 31,
     margin: { left: 8, right: 8, bottom: 12 },
@@ -67,6 +79,29 @@ export async function generateClientReport(
   });
 
   const reportTable = doc as typeof doc & { lastAutoTable?: { finalY: number } };
+  if (pecas.length > 0) {
+    autoTable(doc, {
+      startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
+      margin: { left: 76, right: 8, bottom: 32 },
+      styles: { fontSize: 8, cellPadding: 1.8 },
+      headStyles: { fillColor: [39, 54, 78], textColor: 255 },
+      footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
+      head: [["Peças utilizadas", "Qtd.", "Valor unit.", "Total"]],
+      body: pecas.map((peca) => [
+        `${peca.descricao}${peca.codigo ? ` · ${peca.codigo}` : ""}`,
+        `${peca.quantidade} ${peca.unidade}`,
+        formatCurrency(peca.preco),
+        formatCurrency(peca.preco * peca.quantidade),
+      ]),
+      foot: [["SUBTOTAL PEÇAS", "", "", formatCurrency(totalPecas)]],
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 35, halign: "right" },
+        2: { cellWidth: 43, halign: "right" },
+        3: { cellWidth: 44, halign: "right" },
+      },
+    });
+  }
   const unitValue = (total: number, quantity: number, suffix = "") =>
     quantity > 0 ? `${formatCurrency(total / quantity)}${suffix}` : "—";
   const financialRows = [
@@ -102,6 +137,7 @@ export async function generateClientReport(
     ]] : []),
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
+    ...(totalPecas > 0 ? [["Peças utilizadas", String(pecas.length), "—", formatCurrency(totalPecas)]] : []),
   ];
   autoTable(doc, {
     startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
@@ -111,7 +147,7 @@ export async function generateClientReport(
     footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold" },
     head: [["Descrição", "Qtd.", "Valor unit.", "Total"]],
     body: financialRows,
-    foot: [["TOTAL GERAL", "", "", formatCurrency(financial.totalGeral)]],
+    foot: [["TOTAL GERAL", "", "", formatCurrency(totalComPecas)]],
     columnStyles: {
       0: { cellWidth: 55 },
       1: { cellWidth: 29, halign: "right" },
