@@ -10,4 +10,4 @@
 - [x] Permitir iniciar apontamento a partir do agendamento
 - [x] Validar agenda e navegação no iPhone
 - [x] Permitir agendamentos com data de início e data de fim
-- [ ] Validar períodos de vários dias no iPhone
+- [x] Validar períodos de vários dias no iPhone
