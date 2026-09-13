@@ -6,6 +6,6 @@
 - [x] Criar painel mensal com totais acumulados de horas, km e valores, atualizado offline
 - [x] Validar autenticação, privacidade, modo offline e experiência no iPhone
 - [x] Marcar somente os dois alertas de segurança selecionados como corrigidos
-- [ ] Criar Agenda ligada aos clientes, com funcionamento offline
-- [ ] Permitir iniciar apontamento a partir do agendamento
+- [x] Criar Agenda ligada aos clientes, com funcionamento offline
+- [x] Permitir iniciar apontamento a partir do agendamento
 - [ ] Validar agenda e navegação no iPhone
