@@ -6,8 +6,9 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
 import type { AgendamentoComCliente } from "@/lib/agenda";
 import type { ValorVigencia } from "@/lib/financeiro";
+import type { Peca } from "@/lib/pecas";
 
-type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos";
+type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas";
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -32,6 +33,7 @@ const CACHE_CLIENTES = "clientes";
 const CACHE_APONTAMENTOS = "apontamentos";
 const CACHE_VALORES = "valores-vigencia";
 const CACHE_AGENDAMENTOS = "agendamentos";
+const CACHE_PECAS = "pecas";
 const OFFLINE_EVENT = "cp-offline-change";
 
 function database() {
@@ -330,6 +332,62 @@ export async function deleteAgendamentoOffline(id: string) {
   return { queued: true };
 }
 
+type PecaWrite = Omit<Peca, "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<Peca, "created_at" | "updated_at" | "user_id">>;
+
+export async function savePecaOffline(payload: PecaWrite) {
+  const userId = await requireUserId();
+  const dbPayload: TablesInsert<"pecas"> = { ...payload, user_id: userId };
+  const now = new Date().toISOString();
+  const record: Peca = { created_at: now, updated_at: now, ...payload, user_id: userId };
+  const cached = (await readCached<Peca[]>(CACHE_PECAS)) ?? [];
+  const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
+    a.descricao.localeCompare(b.descricao, "pt-BR"),
+  );
+
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase
+        .from("pecas")
+        .upsert(dbPayload, { onConflict: "id" })
+        .abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_PECAS, nextCache);
+        return { record, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+
+  await enqueue({ entity: "pecas", action: "upsert", recordId: record.id, payload: dbPayload, userId });
+  await writeCached(CACHE_PECAS, nextCache);
+  return { record, queued: true };
+}
+
+export async function deletePecaOffline(id: string) {
+  const userId = await requireUserId();
+  const cached = (await readCached<Peca[]>(CACHE_PECAS)) ?? [];
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase.from("pecas").delete().eq("id", id).abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_PECAS, cached.filter((item) => item.id !== id));
+        return { queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  await enqueue({ entity: "pecas", action: "delete", recordId: id, userId });
+  await writeCached(CACHE_PECAS, cached.filter((item) => item.id !== id));
+  return { queued: true };
+}
+
 export async function deleteApontamentoOffline(id: string) {
   const userId = await requireUserId();
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
@@ -399,10 +457,15 @@ export async function syncOfflineQueue() {
           .from("valores_vigencia")
           .upsert((item.payload ?? {}) as TablesInsert<"valores_vigencia">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
-      } else {
+      } else if (item.entity === "agendamentos") {
         result = await supabase
           .from("agendamentos")
           .upsert((item.payload ?? {}) as TablesInsert<"agendamentos">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else {
+        result = await supabase
+          .from("pecas")
+          .upsert((item.payload ?? {}) as TablesInsert<"pecas">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
       }
       if (result.error) throw result.error;
@@ -426,4 +489,5 @@ export const offlineCacheKeys = {
   apontamentos: CACHE_APONTAMENTOS,
   valores: CACHE_VALORES,
   agendamentos: CACHE_AGENDAMENTOS,
+  pecas: CACHE_PECAS,
 };
