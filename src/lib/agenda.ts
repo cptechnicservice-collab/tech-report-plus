@@ -7,6 +7,7 @@ export type Agendamento = {
   user_id: string;
   cliente_id: string;
   data: string;
+  data_fim: string | null;
   horario: string | null;
   maquina_servico: string | null;
   observacoes: string | null;

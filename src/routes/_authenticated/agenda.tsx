@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck, Check, Clock3, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CalendarCheck, CalendarIcon, Check, Clock3, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ClienteSelect } from "@/components/ClienteSelect";
@@ -18,9 +20,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchAgendamentos, type AgendamentoComCliente } from "@/lib/agenda";
 import { fetchClientes, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
@@ -43,6 +47,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 type Draft = {
   clienteId: string | null;
   data: string;
+  dataFim: string;
   horario: string;
   servico: string;
   observacoes: string;
@@ -51,6 +56,7 @@ type Draft = {
 const emptyDraft = (): Draft => ({
   clienteId: null,
   data: todayISO(),
+  dataFim: todayISO(),
   horario: "",
   servico: "",
   observacoes: "",
@@ -60,10 +66,59 @@ function draftFrom(item: AgendamentoComCliente): Draft {
   return {
     clienteId: item.cliente_id,
     data: item.data,
+    dataFim: item.data_fim ?? item.data,
     horario: normalizeTime(item.horario),
     servico: item.maquina_servico ?? "",
     observacoes: item.observacoes ?? "",
   };
+}
+
+function toISODate(date: Date) {
+  return format(date, "yyyy-MM-dd");
+}
+
+function DateField({
+  label,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: (date: Date) => boolean;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="outline" className="ios-field h-12 w-full justify-start px-3 text-left font-normal">
+            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+            {format(parseISO(value), "dd/MM/yyyy")}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={parseISO(value)}
+            onSelect={(date) => { if (date) onChange(toISODate(date)); }}
+            disabled={disabled}
+            locale={ptBR}
+            initialFocus
+            className="pointer-events-auto p-3"
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function periodLabel(item: AgendamentoComCliente) {
+  const end = item.data_fim ?? item.data;
+  return end === item.data
+    ? formatDateBR(item.data)
+    : `${formatDateBR(item.data)} até ${formatDateBR(end)}`;
 }
 
 function errorReason(error: unknown) {
@@ -89,12 +144,14 @@ function Agenda() {
     for (const item of visible) grouped.set(item.data, [...(grouped.get(item.data) ?? []), item]);
     return [...grouped.entries()];
   }, [visible]);
+  const invalidPeriod = draft.dataFim < draft.data;
 
   const save = useMutation({
     mutationFn: () => saveAgendamentoOffline({
       id: editing && editing !== "new" ? editing.id : crypto.randomUUID(),
       cliente_id: draft.clienteId as string,
       data: draft.data,
+      data_fim: draft.dataFim,
       horario: draft.horario || null,
       maquina_servico: draft.servico.trim() || null,
       observacoes: draft.observacoes.trim() || null,
@@ -113,6 +170,7 @@ function Agenda() {
       id: item.id,
       cliente_id: item.cliente_id,
       data: item.data,
+      data_fim: item.data_fim ?? item.data,
       horario: item.horario,
       maquina_servico: item.maquina_servico,
       observacoes: item.observacoes,
@@ -194,6 +252,7 @@ function Agenda() {
                         </AlertDialog>
                       </div>
                     </div>
+                    {item.data_fim && item.data_fim !== item.data ? <p className="mt-1 text-xs font-medium text-primary">{periodLabel(item)}</p> : null}
                     {item.maquina_servico ? <p className="mt-2 text-sm text-muted-foreground">{item.maquina_servico}</p> : null}
                     {item.observacoes ? <p className="mt-1 text-xs text-muted-foreground">{item.observacoes}</p> : null}
                     {!item.concluido ? (
@@ -217,14 +276,25 @@ function Agenda() {
           <div className="space-y-4">
             <ClienteSelect clientes={clientes} value={draft.clienteId} onChange={(clienteId) => setDraft((current) => ({ ...current, clienteId }))} />
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label htmlFor="agenda-data">Data</Label><Input id="agenda-data" type="date" value={draft.data} onChange={(event) => setDraft((current) => ({ ...current, data: event.target.value }))} className="h-12 rounded-xl" /></div>
-              <div className="space-y-1.5"><Label htmlFor="agenda-hora">Horário (opcional)</Label><Input id="agenda-hora" type="time" value={draft.horario} onChange={(event) => setDraft((current) => ({ ...current, horario: event.target.value }))} className="h-12 rounded-xl" /></div>
+              <DateField
+                label="Início"
+                value={draft.data}
+                onChange={(data) => setDraft((current) => ({ ...current, data, dataFim: current.dataFim < data ? data : current.dataFim }))}
+              />
+              <DateField
+                label="Fim"
+                value={draft.dataFim}
+                disabled={(date) => toISODate(date) < draft.data}
+                onChange={(dataFim) => setDraft((current) => ({ ...current, dataFim }))}
+              />
             </div>
+            <div className="space-y-1.5"><Label htmlFor="agenda-hora">Horário (opcional)</Label><Input id="agenda-hora" type="time" value={draft.horario} onChange={(event) => setDraft((current) => ({ ...current, horario: event.target.value }))} className="h-12 rounded-xl" /></div>
+            {invalidPeriod ? <p role="alert" className="text-sm font-medium text-destructive">A data final não pode ser anterior à data de início.</p> : null}
             <div className="space-y-1.5"><Label htmlFor="agenda-servico">Máquina / Serviço</Label><Input id="agenda-servico" value={draft.servico} onChange={(event) => setDraft((current) => ({ ...current, servico: event.target.value }))} placeholder="Ex.: Revisão da seccionadora" className="h-12 rounded-xl" /></div>
             <div className="space-y-1.5"><Label htmlFor="agenda-obs">Observações</Label><Textarea id="agenda-obs" value={draft.observacoes} onChange={(event) => setDraft((current) => ({ ...current, observacoes: event.target.value }))} rows={3} className="rounded-xl" /></div>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="ghost" className="h-12 rounded-xl" onClick={() => setEditing(null)}>Cancelar</Button>
-              <Button className="h-12 rounded-xl" disabled={!draft.clienteId || !draft.data || save.isPending} onClick={() => save.mutate()}>Salvar</Button>
+              <Button className="h-12 rounded-xl" disabled={!draft.clienteId || !draft.data || !draft.dataFim || invalidPeriod || save.isPending} onClick={() => save.mutate()}>Salvar</Button>
             </div>
           </div>
         </DialogContent>
