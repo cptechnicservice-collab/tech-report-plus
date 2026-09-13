@@ -6,3 +6,4 @@
 - [x] Permitir selecionar peças e quantidades no Relatório.
 - [x] Incluir peças abaixo das horas no PDF e somá-las ao total geral.
 - [x] Validar a tela no iPhone e inspecionar visualmente o PDF gerado.
+- [x] Separar no PDF os totais de peças, serviços e o total geral.

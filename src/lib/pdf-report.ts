@@ -137,8 +137,8 @@ export async function generateClientReport(
     ]] : []),
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
+    ["TOTAL DAS PEÇAS", "", "", formatCurrency(totalPecas)],
     ["TOTAL DOS SERVIÇOS", "", "", formatCurrency(financial.totalGeral)],
-    ["TOTAL DAS PEÇAS", totalPecas > 0 ? String(pecas.length) : "0", "", formatCurrency(totalPecas)],
   ];
   autoTable(doc, {
     startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
