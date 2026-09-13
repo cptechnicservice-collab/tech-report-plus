@@ -57,7 +57,11 @@ type FormState = {
   outras_despesas_descricao: string;
 };
 
-type ApontamentoDraft = { data?: string; clienteId?: string; servico?: string };
+type ApontamentoDraft = {
+  data?: string | undefined;
+  clienteId?: string | undefined;
+  servico?: string | undefined;
+};
 
 function initialState(a?: Apontamento, draft?: ApontamentoDraft): FormState {
   return {

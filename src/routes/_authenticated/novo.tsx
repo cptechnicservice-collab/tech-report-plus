@@ -5,9 +5,9 @@ import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/novo")({
   validateSearch: (search: Record<string, unknown>) => ({
-    data: typeof search.data === "string" ? search.data : undefined,
-    cliente: typeof search.cliente === "string" ? search.cliente : undefined,
-    servico: typeof search.servico === "string" ? search.servico : undefined,
+    data: typeof search["data"] === "string" ? search["data"] : undefined,
+    cliente: typeof search["cliente"] === "string" ? search["cliente"] : undefined,
+    servico: typeof search["servico"] === "string" ? search["servico"] : undefined,
   }),
   head: () => ({
     meta: [
