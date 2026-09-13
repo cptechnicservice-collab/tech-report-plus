@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileText } from "lucide-react";
+import { FileText, PackagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTotais, todayISO, type ApontamentoComCliente } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";
+import type { ReportPartItem } from "@/lib/pdf-report";
+import { fetchPecas } from "@/lib/pecas";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   head: () => ({ meta: [
@@ -108,9 +110,12 @@ function Relatorio() {
   const [fim, setFim] = useState(() => getShortcut("month")[1]);
   const [activePeriod, setActivePeriod] = useState<PeriodKind>("month");
   const [generating, setGenerating] = useState(false);
+  const [pecaId, setPecaId] = useState("");
+  const [pecasSelecionadas, setPecasSelecionadas] = useState<ReportPartItem[]>([]);
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
+  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const atendimentos = useMemo(
     () => groupAtendimentos(apontamentos.filter((item) => item.cliente_id === clienteId)),
     [apontamentos, clienteId],
@@ -121,6 +126,11 @@ function Relatorio() {
   );
   const totais = somarTotais(filtrados);
   const financeiros = useMemo(() => calcularValoresPeriodo(filtrados, valores), [filtrados, valores]);
+  const totalPecas = useMemo(
+    () => pecasSelecionadas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0),
+    [pecasSelecionadas],
+  );
+  const totalRelatorio = financeiros.totalGeral + totalPecas;
   const invalidPeriod = Boolean(inicio && fim && inicio > fim);
 
   const shortcut = (kind: "week" | "lastWeek" | "month") => {
@@ -142,6 +152,22 @@ function Relatorio() {
     if (latest) selectAtendimento(latest);
   };
 
+  const addPeca = () => {
+    const peca = pecas.find((item) => item.id === pecaId);
+    if (!peca) return;
+    setPecasSelecionadas((current) => {
+      const existing = current.find((item) => item.id === peca.id);
+      if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: item.quantidade + 1 } : item);
+      return [...current, { id: peca.id, descricao: peca.descricao, codigo: peca.codigo, unidade: peca.unidade, preco: peca.preco, quantidade: 1 }];
+    });
+    setPecaId("");
+  };
+
+  const setPecaQuantidade = (id: string, quantidade: number) => {
+    if (!Number.isFinite(quantidade) || quantidade <= 0) return;
+    setPecasSelecionadas((current) => current.map((item) => item.id === id ? { ...item, quantidade } : item));
+  };
+
   const generate = async () => {
     const cliente = clientes.find((item) => item.id === clienteId);
     if (!cliente || !inicio || !fim || invalidPeriod) return;
@@ -151,7 +177,7 @@ function Relatorio() {
     }
     setGenerating(true);
     try {
-      await generateClientReport(cliente, filtrados, valores, inicio, fim);
+      await generateClientReport(cliente, filtrados, valores, pecasSelecionadas, inicio, fim);
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
     } finally {
@@ -207,6 +233,28 @@ function Relatorio() {
         {invalidPeriod && <p className="text-sm font-medium text-destructive">A data “De” deve ser anterior ou igual à data “Até”.</p>}
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
       </Section>
+      <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3" aria-label="Selecionar peça">
+            <option value="">Selecione uma peça</option>
+            {pecas.map((peca) => <option key={peca.id} value={peca.id}>{peca.descricao} · {formatCurrency(peca.preco)}</option>)}
+          </select>
+          <Button type="button" size="icon" className="h-12 w-12 rounded-xl" aria-label="Adicionar peça" disabled={!pecaId} onClick={addPeca}><PackagePlus className="h-5 w-5" /></Button>
+        </div>
+        {pecasSelecionadas.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma peça adicionada a este relatório.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {pecasSelecionadas.map((peca) => (
+              <li key={peca.id} className="grid grid-cols-[minmax(0,1fr)_5rem_2.5rem] items-center gap-2 py-3 first:pt-0 last:pb-0">
+                <div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * peca.quantidade)}</p></div>
+                <Input type="number" min="0.01" step="0.01" value={peca.quantidade} onChange={(event) => setPecaQuantidade(peca.id, Number(event.target.value))} className="h-10 rounded-lg text-right tabular-nums" aria-label={`Quantidade de ${peca.descricao}`} />
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive" aria-label={`Remover ${peca.descricao}`} onClick={() => setPecasSelecionadas((current) => current.filter((item) => item.id !== peca.id))}><Trash2 className="h-4 w-4" /></Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
       <Section title="Valores do período">
         <dl className="divide-y divide-border text-sm">
           <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
@@ -215,8 +263,9 @@ function Relatorio() {
           <ValueRow label={`Diárias · ${financeiros.diariasInteiras} inteira(s), ${financeiros.meiasDiarias} meia(s)`} value={financeiros.valorDiarias} />
           <ValueRow label="Pedágios" value={financeiros.pedagios} />
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
+          {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasSelecionadas.length} item(ns)`} value={totalPecas} /> : null}
           <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
-            <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(financeiros.totalGeral)}</dd>
+            <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(totalRelatorio)}</dd>
           </div>
         </dl>
       </Section>
