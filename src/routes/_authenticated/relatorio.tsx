@@ -233,7 +233,7 @@ function Relatorio() {
         {invalidPeriod && <p className="text-sm font-medium text-destructive">A data “De” deve ser anterior ou igual à data “Até”.</p>}
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
       </Section>
-      <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : undefined}>
+      <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3" aria-label="Selecionar peça">
             <option value="">Selecione uma peça</option>
