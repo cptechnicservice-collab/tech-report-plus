@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          cliente_id: string
+          concluido: boolean
+          created_at: string
+          data: string
+          horario: string | null
+          id: string
+          maquina_servico: string | null
+          observacoes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          concluido?: boolean
+          created_at?: string
+          data: string
+          horario?: string | null
+          id?: string
+          maquina_servico?: string | null
+          observacoes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          concluido?: boolean
+          created_at?: string
+          data?: string
+          horario?: string | null
+          id?: string
+          maquina_servico?: string | null
+          observacoes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apontamentos: {
         Row: {
           cliente_id: string
