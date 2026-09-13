@@ -8,4 +8,4 @@
 - [x] Marcar somente os dois alertas de segurança selecionados como corrigidos
 - [x] Criar Agenda ligada aos clientes, com funcionamento offline
 - [x] Permitir iniciar apontamento a partir do agendamento
-- [ ] Validar agenda e navegação no iPhone
+- [x] Validar agenda e navegação no iPhone
