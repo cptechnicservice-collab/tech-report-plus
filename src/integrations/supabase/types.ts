@@ -20,6 +20,7 @@ export type Database = {
           concluido: boolean
           created_at: string
           data: string
+          data_fim: string | null
           horario: string | null
           id: string
           maquina_servico: string | null
@@ -32,6 +33,7 @@ export type Database = {
           concluido?: boolean
           created_at?: string
           data: string
+          data_fim?: string | null
           horario?: string | null
           id?: string
           maquina_servico?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           concluido?: boolean
           created_at?: string
           data?: string
+          data_fim?: string | null
           horario?: string | null
           id?: string
           maquina_servico?: string | null

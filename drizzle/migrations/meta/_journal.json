@@ -43,6 +43,13 @@
       "when": 1789306605442,
       "tag": "0005_create_agendamentos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789308076497,
+      "tag": "0006_add_agendamento_data_fim",
+      "breakpoints": true
     }
   ]
 }
