@@ -59,7 +59,7 @@ export async function generateClientReport(
     styles: { fontSize: 6.8, cellPadding: 1.5, overflow: "linebreak", valign: "top" },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
     head: [["Data", "Máquina / serviço", "Ida", "Trabalho", "Intervalo", "Retorno", "H. trabalho", "H. viagem", "KM", "Observações"]],
-    body: apontamentos.map((item) => {
+    body: [...apontamentos].sort((a, b) => a.data.localeCompare(b.data)).map((item) => {
       const itemTotals = calcularTotais(item);
       return [
         formatDateBR(item.data),
