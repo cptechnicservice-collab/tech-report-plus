@@ -7,4 +7,4 @@
 - [x] Incluir peças abaixo das horas no PDF e somá-las ao total geral.
 - [x] Validar a tela no iPhone e inspecionar visualmente o PDF gerado.
 - [x] Separar no PDF os totais de peças, serviços e o total geral.
-- [ ] Orientar sobre travamentos do aplicativo/editor Lovable no iPhone, sem alterar o CP TECHNIC.
+- [x] Orientar sobre travamentos do aplicativo/editor Lovable no iPhone, sem alterar o CP TECHNIC.
