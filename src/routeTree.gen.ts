@@ -21,6 +21,7 @@ import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/n
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
+import { Route as AuthenticatedRelatoriosSalvosRouteImport } from './routes/_authenticated/relatorios-salvos'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
@@ -83,6 +84,12 @@ const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
   path: '/relatorio',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRelatoriosSalvosRoute =
+  AuthenticatedRelatoriosSalvosRouteImport.update({
+    id: '/relatorios-salvos',
+    path: '/relatorios-salvos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -139,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
+  '/_authenticated/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/pecas'
     | '/relatorio'
+    | '/relatorios-salvos'
     | '/valores'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/pecas'
     | '/relatorio'
+    | '/relatorios-salvos'
     | '/valores'
     | '/apontamento/$id'
   id:
@@ -187,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
     | '/_authenticated/relatorio'
+    | '/_authenticated/relatorios-salvos'
     | '/_authenticated/valores'
     | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatorioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/relatorios-salvos': {
+      id: '/_authenticated/relatorios-salvos'
+      path: '/relatorios-salvos'
+      fullPath: '/relatorios-salvos'
+      preLoaderRoute: typeof AuthenticatedRelatoriosSalvosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/valores': {
       id: '/_authenticated/valores'
       path: '/valores'
@@ -310,6 +330,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
+  AuthenticatedRelatoriosSalvosRoute: typeof AuthenticatedRelatoriosSalvosRoute
   AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
   AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
 }
@@ -323,6 +344,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
+  AuthenticatedRelatoriosSalvosRoute: AuthenticatedRelatoriosSalvosRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
 }
