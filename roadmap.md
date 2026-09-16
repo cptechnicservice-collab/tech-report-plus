@@ -8,3 +8,7 @@
 - [x] Validar a tela no iPhone e inspecionar visualmente o PDF gerado.
 - [x] Separar no PDF os totais de peças, serviços e o total geral.
 - [x] Orientar sobre travamentos do aplicativo/editor Lovable no iPhone, sem alterar o CP TECHNIC.
+- [ ] Reunir Clientes, Peças e Valores na nova tela Mais.
+- [ ] Salvar relatórios completos com peças e valores congelados, inclusive offline.
+- [ ] Criar histórico de relatórios por cliente com reabertura, PDF e exclusão.
+- [ ] Validar o fluxo no iPhone e confirmar compilação sem erros.
