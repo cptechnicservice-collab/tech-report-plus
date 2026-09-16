@@ -7,8 +7,9 @@ import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
 import type { AgendamentoComCliente } from "@/lib/agenda";
 import type { ValorVigencia } from "@/lib/financeiro";
 import type { Peca } from "@/lib/pecas";
+import type { RelatorioSalvo } from "@/lib/relatorios";
 
-type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas";
+type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos";
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -34,6 +35,7 @@ const CACHE_APONTAMENTOS = "apontamentos";
 const CACHE_VALORES = "valores-vigencia";
 const CACHE_AGENDAMENTOS = "agendamentos";
 const CACHE_PECAS = "pecas";
+const CACHE_RELATORIOS = "relatorios-salvos";
 const OFFLINE_EVENT = "cp-offline-change";
 
 function database() {
@@ -388,6 +390,77 @@ export async function deletePecaOffline(id: string) {
   return { queued: true };
 }
 
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id">>;
+
+function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
+  return {
+    id: payload.id,
+    user_id: userId,
+    cliente_id: payload.cliente_id,
+    cliente_nome: payload.cliente_nome,
+    inicio: payload.inicio,
+    fim: payload.fim,
+    total_servicos: payload.total_servicos,
+    total_pecas: payload.total_pecas,
+    total_geral: payload.total_geral,
+    cliente_snapshot: payload.cliente_snapshot as unknown as TablesInsert<"relatorios_salvos">["cliente_snapshot"],
+    apontamentos_snapshot: payload.apontamentos_snapshot as unknown as TablesInsert<"relatorios_salvos">["apontamentos_snapshot"],
+    valores_snapshot: payload.valores_snapshot as unknown as TablesInsert<"relatorios_salvos">["valores_snapshot"],
+    pecas_snapshot: payload.pecas_snapshot as unknown as TablesInsert<"relatorios_salvos">["pecas_snapshot"],
+    financeiro_snapshot: payload.financeiro_snapshot as unknown as TablesInsert<"relatorios_salvos">["financeiro_snapshot"],
+  };
+}
+
+export async function saveRelatorioOffline(payload: RelatorioWrite) {
+  const userId = await requireUserId();
+  const dbPayload = relatorioPayload(payload, userId);
+  const now = new Date().toISOString();
+  const record: RelatorioSalvo = { created_at: now, updated_at: now, ...payload, user_id: userId };
+  const cached = (await readCached<RelatorioSalvo[]>(CACHE_RELATORIOS)) ?? [];
+  const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  );
+
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase.from("relatorios_salvos").upsert(dbPayload, { onConflict: "id" }).abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_RELATORIOS, nextCache);
+        return { record, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  await enqueue({ entity: "relatorios_salvos", action: "upsert", recordId: record.id, payload: dbPayload, userId });
+  await writeCached(CACHE_RELATORIOS, nextCache);
+  return { record, queued: true };
+}
+
+export async function deleteRelatorioOffline(id: string) {
+  const userId = await requireUserId();
+  const cached = (await readCached<RelatorioSalvo[]>(CACHE_RELATORIOS)) ?? [];
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase.from("relatorios_salvos").delete().eq("id", id).abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_RELATORIOS, cached.filter((item) => item.id !== id));
+        return { queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  await enqueue({ entity: "relatorios_salvos", action: "delete", recordId: id, userId });
+  await writeCached(CACHE_RELATORIOS, cached.filter((item) => item.id !== id));
+  return { queued: true };
+}
+
 export async function deleteApontamentoOffline(id: string) {
   const userId = await requireUserId();
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
@@ -462,10 +535,15 @@ export async function syncOfflineQueue() {
           .from("agendamentos")
           .upsert((item.payload ?? {}) as TablesInsert<"agendamentos">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
-      } else {
+      } else if (item.entity === "pecas") {
         result = await supabase
           .from("pecas")
           .upsert((item.payload ?? {}) as TablesInsert<"pecas">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else {
+        result = await supabase
+          .from("relatorios_salvos")
+          .upsert((item.payload ?? {}) as TablesInsert<"relatorios_salvos">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
       }
       if (result.error) throw result.error;
@@ -490,4 +568,5 @@ export const offlineCacheKeys = {
   valores: CACHE_VALORES,
   agendamentos: CACHE_AGENDAMENTOS,
   pecas: CACHE_PECAS,
+  relatorios: CACHE_RELATORIOS,
 };
