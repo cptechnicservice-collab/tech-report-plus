@@ -264,6 +264,68 @@ export type Database = {
         }
         Relationships: []
       }
+      relatorios_salvos: {
+        Row: {
+          apontamentos_snapshot: Json
+          cliente_id: string | null
+          cliente_nome: string
+          cliente_snapshot: Json
+          created_at: string
+          fim: string
+          id: string
+          inicio: string
+          pecas_snapshot: Json
+          total_geral: number
+          total_pecas: number
+          total_servicos: number
+          updated_at: string
+          user_id: string
+          valores_snapshot: Json
+        }
+        Insert: {
+          apontamentos_snapshot?: Json
+          cliente_id?: string | null
+          cliente_nome: string
+          cliente_snapshot: Json
+          created_at?: string
+          fim: string
+          id?: string
+          inicio: string
+          pecas_snapshot?: Json
+          total_geral?: number
+          total_pecas?: number
+          total_servicos?: number
+          updated_at?: string
+          user_id: string
+          valores_snapshot?: Json
+        }
+        Update: {
+          apontamentos_snapshot?: Json
+          cliente_id?: string | null
+          cliente_nome?: string
+          cliente_snapshot?: Json
+          created_at?: string
+          fim?: string
+          id?: string
+          inicio?: string
+          pecas_snapshot?: Json
+          total_geral?: number
+          total_pecas?: number
+          total_servicos?: number
+          updated_at?: string
+          user_id?: string
+          valores_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_salvos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       valores_vigencia: {
         Row: {
           created_at: string
