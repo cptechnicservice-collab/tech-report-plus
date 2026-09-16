@@ -2,7 +2,7 @@ import { openDB, type DBSchema } from "idb";
 import type { PersistedClient } from "@tanstack/react-query-persist-client";
 
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Json, TablesInsert } from "@/integrations/supabase/types";
 import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
 import type { AgendamentoComCliente } from "@/lib/agenda";
 import type { ValorVigencia } from "@/lib/financeiro";
@@ -404,11 +404,11 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     total_servicos: payload.total_servicos,
     total_pecas: payload.total_pecas,
     total_geral: payload.total_geral,
-    cliente_snapshot: payload.cliente_snapshot as unknown as TablesInsert<"relatorios_salvos">["cliente_snapshot"],
-    apontamentos_snapshot: payload.apontamentos_snapshot as unknown as TablesInsert<"relatorios_salvos">["apontamentos_snapshot"],
-    valores_snapshot: payload.valores_snapshot as unknown as TablesInsert<"relatorios_salvos">["valores_snapshot"],
-    pecas_snapshot: payload.pecas_snapshot as unknown as TablesInsert<"relatorios_salvos">["pecas_snapshot"],
-    financeiro_snapshot: payload.financeiro_snapshot as unknown as TablesInsert<"relatorios_salvos">["financeiro_snapshot"],
+    cliente_snapshot: payload.cliente_snapshot as unknown as Json,
+    apontamentos_snapshot: payload.apontamentos_snapshot as unknown as Json,
+    valores_snapshot: payload.valores_snapshot as unknown as Json,
+    pecas_snapshot: payload.pecas_snapshot as unknown as Json,
+    financeiro_snapshot: payload.financeiro_snapshot as unknown as Json,
   };
 }
 
