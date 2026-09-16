@@ -64,6 +64,20 @@
       "when": 1789395673067,
       "tag": "0008_restrict_handle_new_user_execution",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789600894808,
+      "tag": "0009_create_relatorios_salvos",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789600917412,
+      "tag": "0010_add_relatorio_financeiro_snapshot",
+      "breakpoints": true
     }
   ]
 }

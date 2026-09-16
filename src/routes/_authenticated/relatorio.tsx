@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { FileText, PackagePlus, Trash2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileText, PackagePlus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -13,6 +13,7 @@ import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/li
 import { generateClientReport } from "@/lib/pdf-report";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
+import { saveRelatorioOffline } from "@/lib/offline";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   head: () => ({ meta: [
@@ -112,6 +113,7 @@ function Relatorio() {
   const [generating, setGenerating] = useState(false);
   const [pecaId, setPecaId] = useState("");
   const [pecasSelecionadas, setPecasSelecionadas] = useState<ReportPartItem[]>([]);
+  const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
@@ -167,6 +169,33 @@ function Relatorio() {
     if (!Number.isFinite(quantidade) || quantidade <= 0) return;
     setPecasSelecionadas((current) => current.map((item) => item.id === id ? { ...item, quantidade } : item));
   };
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const cliente = clientes.find((item) => item.id === clienteId);
+      if (!cliente || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
+      return saveRelatorioOffline({
+        id: crypto.randomUUID(),
+        cliente_id: cliente.id,
+        cliente_nome: cliente.nome,
+        inicio,
+        fim,
+        total_servicos: financeiros.totalGeral,
+        total_pecas: totalPecas,
+        total_geral: totalRelatorio,
+        cliente_snapshot: structuredClone(cliente),
+        apontamentos_snapshot: structuredClone(filtrados),
+        valores_snapshot: structuredClone(valores),
+        pecas_snapshot: structuredClone(pecasSelecionadas),
+        financeiro_snapshot: structuredClone(financeiros),
+      });
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
+      toast.success(result.queued ? "Relatório salvo no aparelho — será enviado quando houver conexão" : "Relatório salvo");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar o relatório"),
+  });
 
   const generate = async () => {
     const cliente = clientes.find((item) => item.id === clienteId);
@@ -269,9 +298,14 @@ function Relatorio() {
           </div>
         </dl>
       </Section>
-      <Button className="h-14 w-full rounded-2xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || generating} onClick={() => void generate()}>
-        <FileText className="mr-2 h-5 w-5" /> {generating ? "Gerando..." : "Gerar e compartilhar PDF"}
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || filtrados.length === 0 || save.isPending} onClick={() => save.mutate()}>
+          <Save className="mr-2 h-5 w-5" /> {save.isPending ? "Salvando..." : "Salvar relatório"}
+        </Button>
+        <Button className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || generating} onClick={() => void generate()}>
+          <FileText className="mr-2 h-5 w-5" /> {generating ? "Gerando..." : "Gerar PDF"}
+        </Button>
+      </div>
     </PageShell>
   );
 }

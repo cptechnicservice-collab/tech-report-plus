@@ -7,7 +7,7 @@ import {
   type ApontamentoComCliente,
   type Cliente,
 } from "@/lib/apontamentos";
-import { calcularValoresPeriodo, formatCurrency, type ValorVigencia } from "@/lib/financeiro";
+import { calcularValoresPeriodo, formatCurrency, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
 
 export type ReportPartItem = {
   id: string;
@@ -33,6 +33,7 @@ export async function generateClientReport(
   pecas: ReportPartItem[],
   inicio: string,
   fim: string,
+  financeiroSalvo?: TotaisFinanceiros,
 ) {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -50,7 +51,7 @@ export async function generateClientReport(
   doc.text(`Período: ${formatDateBR(inicio)} a ${formatDateBR(fim)}`, 12, details ? 31 : 26);
 
   const totals = somarTotais(apontamentos);
-  const financial = calcularValoresPeriodo(apontamentos, valores);
+  const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
   const totalComPecas = financial.totalGeral + totalPecas;
   autoTable(doc, {

@@ -16,10 +16,12 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+import { Route as AuthenticatedMaisRouteImport } from './routes/_authenticated/mais'
 import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
+import { Route as AuthenticatedRelatoriosSalvosRouteImport } from './routes/_authenticated/relatorios-salvos'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
@@ -57,6 +59,11 @@ const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMaisRoute = AuthenticatedMaisRouteImport.update({
+  id: '/mais',
+  path: '/mais',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNovoRoute = AuthenticatedNovoRouteImport.update({
   id: '/novo',
   path: '/novo',
@@ -77,6 +84,12 @@ const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
   path: '/relatorio',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRelatoriosSalvosRoute =
+  AuthenticatedRelatoriosSalvosRouteImport.update({
+    id: '/relatorios-salvos',
+    path: '/relatorios-salvos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
@@ -96,10 +109,12 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -110,10 +125,12 @@ export interface FileRoutesByTo {
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/historico': typeof AuthenticatedHistoricoRoute
+  '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
+  '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -126,10 +143,12 @@ export interface FileRoutesById {
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+  '/_authenticated/mais': typeof AuthenticatedMaisRoute
   '/_authenticated/novo': typeof AuthenticatedNovoRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
+  '/_authenticated/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -142,10 +161,12 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/clientes'
     | '/historico'
+    | '/mais'
     | '/novo'
     | '/painel'
     | '/pecas'
     | '/relatorio'
+    | '/relatorios-salvos'
     | '/valores'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -156,10 +177,12 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/clientes'
     | '/historico'
+    | '/mais'
     | '/novo'
     | '/painel'
     | '/pecas'
     | '/relatorio'
+    | '/relatorios-salvos'
     | '/valores'
     | '/apontamento/$id'
   id:
@@ -171,10 +194,12 @@ export interface FileRouteTypes {
     | '/_authenticated/agenda'
     | '/_authenticated/clientes'
     | '/_authenticated/historico'
+    | '/_authenticated/mais'
     | '/_authenticated/novo'
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
     | '/_authenticated/relatorio'
+    | '/_authenticated/relatorios-salvos'
     | '/_authenticated/valores'
     | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
@@ -237,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mais': {
+      id: '/_authenticated/mais'
+      path: '/mais'
+      fullPath: '/mais'
+      preLoaderRoute: typeof AuthenticatedMaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/novo': {
       id: '/_authenticated/novo'
       path: '/novo'
@@ -265,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatorioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/relatorios-salvos': {
+      id: '/_authenticated/relatorios-salvos'
+      path: '/relatorios-salvos'
+      fullPath: '/relatorios-salvos'
+      preLoaderRoute: typeof AuthenticatedRelatoriosSalvosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/valores': {
       id: '/_authenticated/valores'
       path: '/valores'
@@ -286,10 +325,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+  AuthenticatedMaisRoute: typeof AuthenticatedMaisRoute
   AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
+  AuthenticatedRelatoriosSalvosRoute: typeof AuthenticatedRelatoriosSalvosRoute
   AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
   AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
 }
@@ -298,10 +339,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+  AuthenticatedMaisRoute: AuthenticatedMaisRoute,
   AuthenticatedNovoRoute: AuthenticatedNovoRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
+  AuthenticatedRelatoriosSalvosRoute: AuthenticatedRelatoriosSalvosRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
 }
