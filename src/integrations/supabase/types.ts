@@ -272,6 +272,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at: string
           fim: string
+          financeiro_snapshot: Json
           id: string
           inicio: string
           pecas_snapshot: Json
@@ -289,6 +290,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at?: string
           fim: string
+          financeiro_snapshot?: Json
           id?: string
           inicio: string
           pecas_snapshot?: Json
@@ -306,6 +308,7 @@ export type Database = {
           cliente_snapshot?: Json
           created_at?: string
           fim?: string
+          financeiro_snapshot?: Json
           id?: string
           inicio?: string
           pecas_snapshot?: Json
