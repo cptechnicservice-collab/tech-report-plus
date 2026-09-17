@@ -214,6 +214,10 @@ function Relatorio() {
         valores_snapshot: structuredClone(valoresDisponiveis),
         pecas_snapshot: structuredClone(pecasParaSalvar()),
         financeiro_snapshot: structuredClone(financeiros),
+        pagamento_status: relatorioEmEdicao?.pagamento_status ?? "pendente" as const,
+        valor_recebido: relatorioEmEdicao?.valor_recebido ?? 0,
+        data_recebimento: relatorioEmEdicao?.data_recebimento ?? null,
+        forma_pagamento: relatorioEmEdicao?.forma_pagamento ?? null,
       };
       return saveRelatorioOffline(relatorioEmEdicao ? { ...report, created_at: relatorioEmEdicao.created_at } : report);
     },

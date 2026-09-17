@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BriefcaseBusiness, CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, MapPin, Timer, Users } from "lucide-react";
+import { BriefcaseBusiness, CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer, Users } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   todayISO,
 } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency } from "@/lib/financeiro";
+import { fetchRelatoriosSalvos, saldoRelatorio } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -43,6 +44,7 @@ function Resumo() {
     queryFn: fetchApontamentos,
   });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
+  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
 
   const doMes = useMemo(
     () => apontamentos.filter((a) => a.data.startsWith(mes)),
@@ -53,6 +55,8 @@ function Resumo() {
   const ultimos = doMes.slice(0, 5);
   const clientesAtendidos = new Set(doMes.map((item) => item.cliente_id)).size;
   const servicosInformados = doMes.filter((item) => Boolean(item.maquina_servico?.trim())).length;
+  const relatoriosAbertos = relatorios.filter((item) => saldoRelatorio(item) > 0);
+  const totalAReceber = relatoriosAbertos.reduce((total, item) => total + saldoRelatorio(item), 0);
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
@@ -96,6 +100,12 @@ function Resumo() {
           </Button>
         </div>
       </section>
+
+      <Link to="/relatorios-salvos" search={{ status: "pendente" }} className="press ios-group flex items-center gap-4 p-5">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-warning/15 text-warning-foreground"><HandCoins className="h-6 w-6" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-muted-foreground">A receber</span><span className="mt-0.5 block text-2xl font-bold tabular-nums">{formatCurrency(totalAReceber)}</span><span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} relatório(s) em aberto</span></span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </Link>
 
       <section className="ios-group overflow-hidden">
         <div className="px-5 py-6 text-center">
