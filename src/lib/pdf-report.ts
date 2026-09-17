@@ -10,6 +10,7 @@ import {
 import { calcularValoresPeriodo, formatCurrency, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
 import { ensureEmpresa, type DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento } from "@/lib/orcamentos";
+import type jsPDF from "jspdf";
 
 export type ReportPartItem = {
   id: string;
@@ -77,21 +78,7 @@ export function valorPorExtenso(value: number) {
   return centavos ? `${realText} e ${inteiroPorExtenso(centavos)} ${centavos === 1 ? "centavo" : "centavos"}` : realText;
 }
 
-type PdfDoc = {
-  internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
-  addImage: (...args: unknown[]) => void;
-  setFont: (family: string, style: string) => void;
-  setFontSize: (size: number) => void;
-  setTextColor: (...color: number[]) => void;
-  setFillColor: (...color: number[]) => void;
-  setDrawColor: (...color: number[]) => void;
-  setLineWidth: (width: number) => void;
-  rect: (x: number, y: number, w: number, h: number, style?: string) => void;
-  line: (x1: number, y1: number, x2: number, y2: number) => void;
-  text: (text: string | string[], x: number, y: number, options?: Record<string, unknown>) => void;
-  getNumberOfPages: () => number;
-  setPage: (page: number) => void;
-};
+type PdfDoc = jsPDF;
 
 async function fallbackLogo() {
   const response = await fetch("/app-icon.png");

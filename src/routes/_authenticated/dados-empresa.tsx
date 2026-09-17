@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/dados-empresa")({
   component: DadosEmpresaPage,
 });
 
-type Draft = typeof empresaPadrao & { telefone: string | null; logo_data_url: string | null };
+type Draft = { nome_fantasia: string; cnpj: string; email: string; contato: string; telefone: string | null; logo_data_url: string | null };
 
 function DadosEmpresaPage() {
   const queryClient = useQueryClient();
@@ -38,7 +38,7 @@ function DadosEmpresaPage() {
   });
   const selectLogo = async (file?: File) => {
     if (!file) return;
-    try { setDraft((current) => ({ ...current, logo_data_url: await resizeImage(file) })); }
+    try { const logo = await resizeImage(file); setDraft((current) => ({ ...current, logo_data_url: logo })); }
     catch { toast.error("Não foi possível usar essa imagem"); }
   };
   return (
