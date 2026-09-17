@@ -18,3 +18,4 @@
 - [x] Corrigir definitivamente a digitação da quantidade de peças no iPhone.
 - [x] Permitir salvar apontamentos somente de viagem, sem horário de trabalho.
 - [x] Melhorar a leitura e os filtros da lista de relatórios salvos no iPhone.
+- [x] Reorganizar o Painel mensal com troca de mês, indicadores e composição do valor.
