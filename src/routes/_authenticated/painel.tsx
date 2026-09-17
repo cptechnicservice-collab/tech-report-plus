@@ -60,6 +60,7 @@ function Resumo() {
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
+    if (!ano || !numeroMes) return;
     const data = new Date(ano, numeroMes - 1 + diferenca, 1);
     setMes(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`);
   };

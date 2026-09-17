@@ -44,7 +44,18 @@ export function statusPagamento(total: number, recebido: number): PagamentoStatu
 }
 
 export function saldoRelatorio(relatorio: Pick<RelatorioSalvo, "total_geral" | "valor_recebido">) {
-  return Math.max(0, relatorio.total_geral - relatorio.valor_recebido);
+  return Math.max(0, relatorio.total_geral - (relatorio.valor_recebido ?? 0));
+}
+
+function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
+  const recebido = Number(item.valor_recebido ?? 0);
+  return {
+    ...item,
+    pagamento_status: statusPagamento(item.total_geral, recebido),
+    valor_recebido: recebido,
+    data_recebimento: item.data_recebimento ?? null,
+    forma_pagamento: item.forma_pagamento ?? null,
+  };
 }
 
 export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
@@ -54,10 +65,10 @@ export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
     .order("created_at", { ascending: false });
   if (error) {
     const cached = await readCached<RelatorioSalvo[]>(offlineCacheKeys.relatorios);
-    if (cached) return cached;
+    if (cached) return cached.map(normalizeRelatorio);
     throw error;
   }
-  const result = (data ?? []) as unknown as RelatorioSalvo[];
+  const result = ((data ?? []) as unknown as RelatorioSalvo[]).map(normalizeRelatorio);
   await writeCached(offlineCacheKeys.relatorios, result);
   return result;
 }

@@ -21,9 +21,10 @@ import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    status: search["status"] === "pendente" || search["status"] === "parcial" || search["status"] === "pago" ? search["status"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus } => {
+    const value = search["status"];
+    return { status: value === "pendente" || value === "parcial" || value === "pago" ? value : undefined };
+  },
   head: () => ({ meta: [
     { title: "Relatórios salvos — CP TECHNIC Horas" },
     { name: "description", content: "Consulte relatórios finais salvos por cliente, com peças e valores congelados." },
@@ -102,7 +103,9 @@ function RelatoriosSalvos() {
   const openRecebimento = (item: RelatorioSalvo) => {
     setRecebimento(item);
     setValorRecebido(String(item.valor_recebido > 0 ? item.valor_recebido : item.total_geral).replace(".", ","));
-    setDataRecebimento(item.data_recebimento ?? new Date().toLocaleDateString("en-CA"));
+    const today = new Date();
+    const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+    setDataRecebimento(item.data_recebimento ?? localToday);
     setFormaPagamento(item.forma_pagamento ?? "pix");
   };
 

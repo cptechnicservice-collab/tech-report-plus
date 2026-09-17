@@ -390,8 +390,8 @@ export async function deletePecaOffline(id: string) {
   return { queued: true };
 }
 
-type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id"> &
-  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id">>;
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento">>;
 
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
@@ -409,10 +409,10 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     valores_snapshot: payload.valores_snapshot as unknown as Json,
     pecas_snapshot: payload.pecas_snapshot as unknown as Json,
     financeiro_snapshot: payload.financeiro_snapshot as unknown as Json,
-    pagamento_status: payload.pagamento_status,
-    valor_recebido: payload.valor_recebido,
-    data_recebimento: payload.data_recebimento,
-    forma_pagamento: payload.forma_pagamento,
+    pagamento_status: payload.pagamento_status ?? "pendente",
+    valor_recebido: payload.valor_recebido ?? 0,
+    data_recebimento: payload.data_recebimento ?? null,
+    forma_pagamento: payload.forma_pagamento ?? null,
   };
 }
 
@@ -422,6 +422,10 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
   const now = new Date().toISOString();
   const record: RelatorioSalvo = {
     ...payload,
+    pagamento_status: payload.pagamento_status ?? "pendente",
+    valor_recebido: payload.valor_recebido ?? 0,
+    data_recebimento: payload.data_recebimento ?? null,
+    forma_pagamento: payload.forma_pagamento ?? null,
     created_at: payload.created_at ?? now,
     updated_at: now,
     user_id: userId,
