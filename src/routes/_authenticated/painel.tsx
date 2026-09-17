@@ -102,7 +102,7 @@ function Resumo() {
         </div>
       </section>
 
-      <Link to="/relatorios-salvos" search={{ status: "pendente" }} className="press ios-group flex items-center gap-4 p-5">
+      <Link to="/relatorios-salvos" search={{ status: "aberto" }} className="press ios-group flex items-center gap-4 p-5">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-warning/15 text-warning-foreground"><HandCoins className="h-6 w-6" /></span>
         <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-muted-foreground">A receber</span><span className="mt-0.5 block text-2xl font-bold tabular-nums">{formatCurrency(totalAReceber)}</span><span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} relatório(s) em aberto</span></span>
         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />

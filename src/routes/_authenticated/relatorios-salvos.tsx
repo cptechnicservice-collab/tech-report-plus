@@ -21,9 +21,9 @@ import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
-  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus } => {
+  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" } => {
     const value = search["status"];
-    return value === "pendente" || value === "parcial" || value === "pago" ? { status: value } : {};
+    return value === "aberto" || value === "pendente" || value === "parcial" || value === "pago" ? { status: value } : {};
   },
   head: () => ({ meta: [
     { title: "Relatórios salvos — CP TECHNIC Horas" },
@@ -41,7 +41,7 @@ function RelatoriosSalvos() {
   const [busca, setBusca] = useState("");
   const [periodo, setPeriodo] = useState<"ultimos" | "30" | "60" | "todos">("ultimos");
   const [generatingId, setGeneratingId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"todos" | PagamentoStatus>(search.status ?? "todos");
+  const [status, setStatus] = useState<"todos" | "aberto" | PagamentoStatus>(search.status ?? "todos");
   const [recebimento, setRecebimento] = useState<RelatorioSalvo | null>(null);
   const [valorRecebido, setValorRecebido] = useState("");
   const [dataRecebimento, setDataRecebimento] = useState("");
@@ -55,7 +55,8 @@ function RelatoriosSalvos() {
     return [...relatorios]
       .filter((item) => {
         if (term && !normalizeSearchText(item.cliente_nome).includes(term)) return false;
-        if (status !== "todos" && item.pagamento_status !== status) return false;
+        if (status === "aberto" && item.pagamento_status === "pago") return false;
+        if (status !== "todos" && status !== "aberto" && item.pagamento_status !== status) return false;
         if (limiteDias == null) return true;
         const limite = new Date(agora);
         limite.setDate(limite.getDate() - limiteDias);
@@ -184,9 +185,9 @@ function RelatoriosSalvos() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Status do pagamento">
-        {(["todos", "pendente", "parcial", "pago"] as const).map((value) => (
+        {(["todos", "aberto", "pendente", "parcial", "pago"] as const).map((value) => (
           <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={status === value} onClick={() => setStatus(value)}>
-            {value === "todos" ? "Todos" : statusInfo[value].label}
+            {value === "todos" ? "Todos" : value === "aberto" ? "Em aberto" : statusInfo[value].label}
           </Button>
         ))}
       </div>
