@@ -464,6 +464,11 @@ export async function saveOrcamentoOffline(payload: OrcamentoWrite) {
       if (!isNetworkError(error)) throw error;
     }
   }
+  const previous = cached.find((item) => item.id === record.id);
+  const nextItemIds = new Set(itemPayloads.map((item) => item.id));
+  for (const oldItem of previous?.itens ?? []) {
+    if (!nextItemIds.has(oldItem.id)) await enqueue({ entity: "orcamento_itens", action: "delete", recordId: oldItem.id, userId });
+  }
   await enqueue({ entity: "orcamentos", action: "upsert", recordId: record.id, payload: dbPayload, userId });
   for (const item of itemPayloads) await enqueue({ entity: "orcamento_itens", action: "upsert", recordId: item.id ?? crypto.randomUUID(), payload: item, userId });
   await writeCached(CACHE_ORCAMENTOS, nextCache);
