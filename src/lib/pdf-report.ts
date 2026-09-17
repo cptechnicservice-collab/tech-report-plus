@@ -222,23 +222,45 @@ export async function generateClientReport(
     ]] : []),
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
-    ["TOTAL DAS PEÇAS", "", "", formatCurrency(totalPecas)],
-    ["TOTAL DOS SERVIÇOS", "", "", formatCurrency(financial.totalGeral)],
   ];
   autoTable(doc, {
     startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
     margin: { left: 110, right: 8, bottom: 32 },
     styles: { fontSize: 8, cellPadding: 1.8 },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold" },
-    head: [["Descrição", "Qtd.", "Valor unit.", "Total"]],
+    footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
+    head: [["Valores dos serviços", "Qtd.", "Valor unit.", "Total"]],
     body: financialRows,
-    foot: [["TOTAL GERAL", "", "", formatCurrency(totalComPecas)]],
+    foot: [["TOTAL DOS SERVIÇOS", "", "", formatCurrency(financial.totalGeral)]],
     columnStyles: {
       0: { cellWidth: 55 },
       1: { cellWidth: 29, halign: "right" },
       2: { cellWidth: 43, halign: "right" },
       3: { cellWidth: 44, halign: "right" },
+    },
+  });
+
+  autoTable(doc, {
+    startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
+    margin: { left: 153, right: 8, bottom: 32 },
+    theme: "plain",
+    styles: { fontSize: 9, cellPadding: 2.2 },
+    headStyles: { fillColor: [74, 82, 94], textColor: 255, fontStyle: "bold" },
+    head: [["RESUMO DOS VALORES", ""]],
+    body: [
+      ["Serviços", formatCurrency(financial.totalGeral)],
+      ["Peças", formatCurrency(totalPecas)],
+    ],
+    foot: [["TOTAL GERAL", formatCurrency(totalComPecas)]],
+    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 10 },
+    columnStyles: {
+      0: { cellWidth: 72 },
+      1: { cellWidth: 64, halign: "right", fontStyle: "bold" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body") {
+        data.cell.styles.fillColor = data.row.index % 2 === 0 ? [245, 247, 250] : [255, 255, 255];
+      }
     },
   });
 
