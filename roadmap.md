@@ -31,3 +31,6 @@
 - [x] Integrar Orçamentos ao catálogo, clientes, apontamentos, cache e fila offline.
 - [x] Gerar, compartilhar e inspecionar visualmente um orçamento PDF de teste.
 - [x] Validar todo o fluxo no tamanho do iPhone e confirmar compilação sem erros.
+- [x] Compactar o relatório de serviço em A4 vertical, com quebra organizada quando precisar de mais páginas.
+- [x] Incluir horas trabalhadas, horas de viagem, diária inteira e meia diária entre os itens disponíveis do orçamento.
+- [x] Validar o novo PDF e o orçamento no iPhone e confirmar compilação sem erros.
