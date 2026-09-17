@@ -17,3 +17,4 @@
 - [x] Validar a edição no tamanho de tela do iPhone.
 - [x] Corrigir definitivamente a digitação da quantidade de peças no iPhone.
 - [x] Permitir salvar apontamentos somente de viagem, sem horário de trabalho.
+- [x] Melhorar a leitura e os filtros da lista de relatórios salvos no iPhone.
