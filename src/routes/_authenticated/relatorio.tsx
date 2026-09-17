@@ -182,7 +182,7 @@ function Relatorio() {
     if (!peca) return;
     setPecasSelecionadas((current) => {
       const existing = current.find((item) => item.id === peca.id);
-      if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: item.quantidade + 1 } : item);
+      if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: (item.quantidade === "" ? 0 : item.quantidade) + 1 } : item);
       return [...current, { id: peca.id, descricao: peca.descricao, codigo: peca.codigo, unidade: peca.unidade, preco: peca.preco, quantidade: 1 }];
     });
     setPecaId("");
@@ -200,9 +200,8 @@ function Relatorio() {
       const cliente = relatorioEmEdicao?.cliente_snapshot ?? clientes.find((item) => item.id === clienteId);
       if (!cliente || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
       if (!pecasValidas) throw new Error("Informe uma quantidade maior que zero para cada peça.");
-      return saveRelatorioOffline({
+      const report = {
         id: relatorioEmEdicao?.id ?? crypto.randomUUID(),
-        created_at: relatorioEmEdicao?.created_at,
         cliente_id: cliente.id,
         cliente_nome: cliente.nome,
         inicio,
@@ -215,7 +214,8 @@ function Relatorio() {
         valores_snapshot: structuredClone(valoresDisponiveis),
         pecas_snapshot: structuredClone(pecasParaSalvar()),
         financeiro_snapshot: structuredClone(financeiros),
-      });
+      };
+      return saveRelatorioOffline(relatorioEmEdicao ? { ...report, created_at: relatorioEmEdicao.created_at } : report);
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
