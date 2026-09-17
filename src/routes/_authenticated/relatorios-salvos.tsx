@@ -23,7 +23,7 @@ import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
   validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus } => {
     const value = search["status"];
-    return { status: value === "pendente" || value === "parcial" || value === "pago" ? value : undefined };
+    return value === "pendente" || value === "parcial" || value === "pago" ? { status: value } : {};
   },
   head: () => ({ meta: [
     { title: "Relatórios salvos — CP TECHNIC Horas" },
