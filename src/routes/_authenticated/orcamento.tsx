@@ -11,8 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchClientes, todayISO, type Cliente } from "@/lib/apontamentos";
-import { formatCurrency } from "@/lib/financeiro";
+import { fetchClientes, fetchValores, todayISO, type Cliente } from "@/lib/apontamentos";
+import { formatCurrency, valorVigente } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
 import { saveOrcamentoOffline } from "@/lib/offline";
 import { calcularTotaisOrcamento, fetchOrcamentos, formasPagamentoOrcamento, proximoNumeroOrcamento, type DescontoTipo, type FormaPagamentoOrcamento, type OrcamentoItem, type OrcamentoItemTipo, type OrcamentoStatus, type UnidadeOrcamento } from "@/lib/orcamentos";
@@ -43,6 +43,7 @@ function OrcamentoPage() {
   const { data: orcamentos = [] } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
+  const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const source = orcamentos.find((entry) => entry.id === search.id);
   const idRef = useRef(search.id ?? crypto.randomUUID());
   const initialized = useRef<string | null>(null);
@@ -76,6 +77,16 @@ function OrcamentoPage() {
   };
   const save = useMutation({ mutationFn: () => saveOrcamentoOffline(payload()), onSuccess: (result) => { void queryClient.invalidateQueries({ queryKey: ["orcamentos"] }); toast.success(result.queued ? "Orçamento salvo no aparelho" : "Orçamento salvo"); void navigate({ to: "/orcamentos" }); }, onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar") });
   const addCatalogItem = () => { const part = pecas.find((entry) => entry.id === pecaId); if (!part) return; setItens((current) => [...current, { ...newItem(idRef.current), peca_id: part.id, nome: part.descricao, codigo: part.codigo, unidade: part.unidade === "unidade" ? "un" : (part.unidade as UnidadeOrcamento), valor_unitario: part.preco, valorTexto: String(part.preco).replace(".", ",") }]); setPecaId(""); };
+  const addServiceItem = (nome: string, unidade: UnidadeOrcamento, valor: number) => {
+    setItens((current) => [...current, { ...newItem(idRef.current), tipo: "servico", nome, unidade, valor_unitario: valor, valorTexto: String(valor).replace(".", ",") }]);
+  };
+  const tarifa = valorVigente(data, valores);
+  const servicosRapidos = [
+    ["Hora trabalhada", "h", tarifa?.valor_hora_trabalhada ?? 0],
+    ["Hora de viagem", "h", tarifa?.valor_hora_viagem ?? 0],
+    ["Diária inteira", "un", tarifa?.valor_diaria_inteira ?? 0],
+    ["Meia diária", "un", tarifa?.valor_meia_diaria ?? 0],
+  ] as const;
   const patchItem = (itemId: string, patch: Partial<DraftItem>) => setItens((current) => current.map((item) => item.id === itemId ? { ...item, ...patch } : item));
   const selectPhoto = async (itemId: string, file?: File) => { if (!file) return; try { patchItem(itemId, { foto_data_url: await resizeImage(file) }); } catch { toast.error("Não foi possível usar essa foto"); } };
   const generate = async () => { if (!valid) return; try { await generateQuotePdf({ ...payload(), user_id: "", created_at: source?.created_at ?? new Date().toISOString(), updated_at: new Date().toISOString(), itens: numericItems.map(({ quantidadeTexto: _q, valorTexto: _v, ...item }) => ({ ...item, user_id: "", created_at: "", updated_at: "" })) }); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível gerar o PDF"); } };
@@ -88,6 +99,7 @@ function OrcamentoPage() {
     </Section>
     <Section title="Itens" hint={`${itens.length} item(ns)`}>
       <div className="grid grid-cols-[minmax(0,1fr)_3rem] gap-2"><select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3"><option value="">Adicionar do catálogo</option>{pecas.map((part) => <option key={part.id} value={part.id}>{part.descricao}</option>)}</select><Button size="icon" className="h-12 w-12 rounded-xl" disabled={!pecaId} onClick={addCatalogItem}><PackagePlus className="h-5 w-5" /></Button></div>
+      <div className="grid grid-cols-2 gap-2">{servicosRapidos.map(([nome, unidade, valor]) => <Button key={nome} type="button" variant="outline" className="h-auto min-h-12 justify-start rounded-xl px-3 py-2 text-left" onClick={() => addServiceItem(nome, unidade, valor)}><span><span className="block text-sm font-medium">{nome}</span><span className="block text-xs text-muted-foreground">{formatCurrency(valor)}{unidade === "h" ? "/h" : ""}</span></span></Button>)}</div>
       <Button variant="outline" className="h-11 w-full rounded-xl" onClick={() => setItens((current) => [...current, newItem(idRef.current)])}><Plus className="mr-2 h-4 w-4" />Item livre</Button>
       <div className="space-y-3">{itens.map((item, index) => <div key={item.id} className="space-y-3 border-t pt-3 first:border-0 first:pt-0"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Item {index + 1}</p><Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setItens((current) => current.filter((entry) => entry.id !== item.id))}><Trash2 className="h-4 w-4" /></Button></div><div className="grid grid-cols-2 gap-2"><select value={item.tipo} onChange={(event) => patchItem(item.id, { tipo: event.target.value as OrcamentoItemTipo })} className="ios-field h-11 border px-3"><option value="produto">Produto</option><option value="servico">Serviço</option></select><select value={item.unidade} onChange={(event) => patchItem(item.id, { unidade: event.target.value as UnidadeOrcamento })} className="ios-field h-11 border px-3">{["un", "h", "km", "pç", "cj"].map((unit) => <option key={unit}>{unit}</option>)}</select></div><Input value={item.nome} onChange={(event) => patchItem(item.id, { nome: event.target.value })} placeholder="Nome do produto ou serviço" className="h-11 rounded-xl" /><Input value={item.codigo ?? ""} onChange={(event) => patchItem(item.id, { codigo: event.target.value || null })} placeholder="Código (opcional)" className="h-11 rounded-xl" /><div className="grid grid-cols-2 gap-2"><Field label="Quantidade" value={item.quantidadeTexto} onChange={(value) => patchItem(item.id, { quantidadeTexto: value })} inputMode="decimal" /><Field label="Valor unitário" value={item.valorTexto} onChange={(value) => patchItem(item.id, { valorTexto: value })} inputMode="decimal" /></div><div className="flex items-center gap-2">{item.foto_data_url ? <img src={item.foto_data_url} alt="Foto do item" className="h-14 w-14 rounded-lg border object-cover" /> : null}<Button asChild variant="ghost" className="h-10 rounded-xl"><label><Camera className="mr-2 h-4 w-4" />{item.foto_data_url ? "Trocar foto" : "Adicionar foto"}<input type="file" accept="image/*" className="sr-only" onChange={(event) => void selectPhoto(item.id, event.target.files?.[0])} /></label></Button>{item.foto_data_url ? <Button size="icon" variant="ghost" className="text-destructive" onClick={() => patchItem(item.id, { foto_data_url: null })}><Trash2 className="h-4 w-4" /></Button> : null}</div><p className="text-right text-sm font-semibold tabular-nums">{formatCurrency(numberValue(item.quantidadeTexto) * numberValue(item.valorTexto))}</p></div>)}</div>
     </Section>
