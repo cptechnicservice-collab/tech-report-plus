@@ -15,9 +15,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedDadosEmpresaRouteImport } from './routes/_authenticated/dados-empresa'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedMaisRouteImport } from './routes/_authenticated/mais'
 import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
+import { Route as AuthenticatedOrcamentoRouteImport } from './routes/_authenticated/orcamento'
+import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
@@ -54,6 +57,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDadosEmpresaRoute =
+  AuthenticatedDadosEmpresaRouteImport.update({
+    id: '/dados-empresa',
+    path: '/dados-empresa',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
@@ -67,6 +76,16 @@ const AuthenticatedMaisRoute = AuthenticatedMaisRouteImport.update({
 const AuthenticatedNovoRoute = AuthenticatedNovoRouteImport.update({
   id: '/novo',
   path: '/novo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrcamentoRoute = AuthenticatedOrcamentoRouteImport.update({
+  id: '/orcamento',
+  path: '/orcamento',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
@@ -108,9 +127,12 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/dados-empresa': typeof AuthenticatedDadosEmpresaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
+  '/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
@@ -124,9 +146,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/dados-empresa': typeof AuthenticatedDadosEmpresaRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
+  '/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
@@ -142,9 +167,12 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/dados-empresa': typeof AuthenticatedDadosEmpresaRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/mais': typeof AuthenticatedMaisRoute
   '/_authenticated/novo': typeof AuthenticatedNovoRoute
+  '/_authenticated/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/_authenticated/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
@@ -160,9 +188,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/agenda'
     | '/clientes'
+    | '/dados-empresa'
     | '/historico'
     | '/mais'
     | '/novo'
+    | '/orcamento'
+    | '/orcamentos'
     | '/painel'
     | '/pecas'
     | '/relatorio'
@@ -176,9 +207,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/agenda'
     | '/clientes'
+    | '/dados-empresa'
     | '/historico'
     | '/mais'
     | '/novo'
+    | '/orcamento'
+    | '/orcamentos'
     | '/painel'
     | '/pecas'
     | '/relatorio'
@@ -193,9 +227,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/agenda'
     | '/_authenticated/clientes'
+    | '/_authenticated/dados-empresa'
     | '/_authenticated/historico'
     | '/_authenticated/mais'
     | '/_authenticated/novo'
+    | '/_authenticated/orcamento'
+    | '/_authenticated/orcamentos'
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
     | '/_authenticated/relatorio'
@@ -255,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dados-empresa': {
+      id: '/_authenticated/dados-empresa'
+      path: '/dados-empresa'
+      fullPath: '/dados-empresa'
+      preLoaderRoute: typeof AuthenticatedDadosEmpresaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/historico': {
       id: '/_authenticated/historico'
       path: '/historico'
@@ -274,6 +318,20 @@ declare module '@tanstack/react-router' {
       path: '/novo'
       fullPath: '/novo'
       preLoaderRoute: typeof AuthenticatedNovoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orcamento': {
+      id: '/_authenticated/orcamento'
+      path: '/orcamento'
+      fullPath: '/orcamento'
+      preLoaderRoute: typeof AuthenticatedOrcamentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orcamentos': {
+      id: '/_authenticated/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof AuthenticatedOrcamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/painel': {
@@ -324,9 +382,12 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedDadosEmpresaRoute: typeof AuthenticatedDadosEmpresaRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedMaisRoute: typeof AuthenticatedMaisRoute
   AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
+  AuthenticatedOrcamentoRoute: typeof AuthenticatedOrcamentoRoute
+  AuthenticatedOrcamentosRoute: typeof AuthenticatedOrcamentosRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
@@ -338,9 +399,12 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedDadosEmpresaRoute: AuthenticatedDadosEmpresaRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedMaisRoute: AuthenticatedMaisRoute,
   AuthenticatedNovoRoute: AuthenticatedNovoRoute,
+  AuthenticatedOrcamentoRoute: AuthenticatedOrcamentoRoute,
+  AuthenticatedOrcamentosRoute: AuthenticatedOrcamentosRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
