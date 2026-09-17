@@ -24,3 +24,10 @@
 - [x] Mostrar o total a receber no Painel com acesso aos relatórios pendentes.
 - [x] Gerar e compartilhar relatório e recibo em PDF no iPhone.
 - [x] Validar o fluxo no tamanho do iPhone e confirmar compilação sem erros.
+- [ ] Criar Dados da Empresa com logo redimensionada e disponibilidade offline.
+- [ ] Padronizar cabeçalho e rodapé de relatório, recibo e orçamento em PDF.
+- [ ] Corrigir e validar valores por extenso nos casos solicitados.
+- [ ] Criar Orçamentos com itens, fotos, totais, status, duplicação e numeração anual.
+- [ ] Integrar Orçamentos ao catálogo, clientes, apontamentos, cache e fila offline.
+- [ ] Gerar, compartilhar e inspecionar visualmente um orçamento PDF de teste.
+- [ ] Validar todo o fluxo no tamanho do iPhone e confirmar compilação sem erros.
