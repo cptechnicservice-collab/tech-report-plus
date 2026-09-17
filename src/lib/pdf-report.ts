@@ -8,6 +8,9 @@ import {
   type Cliente,
 } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
+import { ensureEmpresa, type DadosEmpresa } from "@/lib/empresa";
+import type { Orcamento } from "@/lib/orcamentos";
+import type jsPDF from "jspdf";
 
 export type ReportPartItem = {
   id: string;
@@ -63,15 +66,48 @@ function inteiroPorExtenso(value: number) {
   if (milhoes) parts.push(milhoes === 1 ? "um milhão" : `${ate999(milhoes)} milhões`);
   if (milhares) parts.push(milhares === 1 ? "mil" : `${ate999(milhares)} mil`);
   if (resto) parts.push(ate999(resto));
-  return parts.join(resto > 0 && resto < 100 ? " e " : " ");
+  const joinWithE = resto > 0 && (resto < 100 || resto % 100 === 0);
+  return parts.join(joinWithE ? " e " : " ");
 }
 
 export function valorPorExtenso(value: number) {
   const rounded = Math.round(value * 100);
   const reais = Math.floor(rounded / 100);
   const centavos = rounded % 100;
-  const realText = `${inteiroPorExtenso(reais)} ${reais === 1 ? "real" : "reais"}`;
+  const de = reais >= 1_000_000 && reais % 1_000_000 === 0 ? " de" : "";
+  const realText = `${inteiroPorExtenso(reais)}${de} ${reais === 1 ? "real" : "reais"}`;
   return centavos ? `${realText} e ${inteiroPorExtenso(centavos)} ${centavos === 1 ? "centavo" : "centavos"}` : realText;
+}
+
+type PdfDoc = jsPDF;
+
+async function fallbackLogo() {
+  const response = await fetch("/app-icon.png");
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob);
+  });
+}
+
+async function drawDocumentHeader(doc: PdfDoc, input: { empresa: DadosEmpresa; cliente: Cliente; date: string; title: string }) {
+  const width = doc.internal.pageSize.getWidth();
+  const logo = input.empresa.logo_data_url ?? await fallbackLogo();
+  try { doc.addImage(logo, logo.startsWith("data:image/png") ? "PNG" : "JPEG", 14, 10, 20, 20, undefined, "FAST"); } catch { /* PDF remains usable without an unreadable image. */ }
+  doc.setTextColor(34, 45, 62); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(input.empresa.nome_fantasia, 39, 15);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text(`CNPJ: ${input.empresa.cnpj}`, 39, 21);
+  doc.text(input.empresa.email, width - 14, 15, { align: "right" }); doc.text(`Contato: ${input.empresa.contato}${input.empresa.telefone ? ` · ${input.empresa.telefone}` : ""}`, width - 14, 21, { align: "right" });
+  doc.setDrawColor(170); doc.setLineWidth(0.25); doc.line(14, 34, width - 14, 34);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text("DADOS DO CLIENTE", 14, 40);
+  doc.setFont("helvetica", "normal"); doc.text(input.cliente.nome, 14, 46); if (input.cliente.cnpj) doc.text(`CPF/CNPJ: ${input.cliente.cnpj}`, 14, 51); doc.text(input.date, width - 14, 46, { align: "right" });
+  doc.setFillColor(74, 82, 94); doc.rect(14, 56, width - 28, 9, "F"); doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.text(input.title, width / 2, 62, { align: "center" }); doc.setTextColor(34, 45, 62);
+  return 70;
+}
+
+function drawDocumentFooter(doc: PdfDoc, empresa: DadosEmpresa) {
+  const width = doc.internal.pageSize.getWidth(); const height = doc.internal.pageSize.getHeight();
+  for (let page = 1; page <= doc.getNumberOfPages(); page += 1) {
+    doc.setPage(page); doc.setDrawColor(140); doc.line(width / 2 - 38, height - 20, width / 2 + 38, height - 20); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(65, 72, 82); doc.text(empresa.nome_fantasia, width / 2, height - 15, { align: "center" }); doc.text(`Contato: ${empresa.contato}`, width / 2, height - 11, { align: "center" }); doc.text(`${page}/${doc.getNumberOfPages()}`, width - 14, height - 10, { align: "right" });
+  }
 }
 
 export async function generateClientReport(
@@ -88,22 +124,15 @@ export async function generateClientReport(
     import("jspdf-autotable"),
   ]);
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("CP TECHNIC", 12, 14);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(`Cliente: ${cliente.nome}`, 12, 21);
-  const details = [cliente.cidade, cliente.cnpj ? `CNPJ: ${cliente.cnpj}` : null].filter(Boolean).join(" · ");
-  if (details) doc.text(details, 12, 26);
-  doc.text(`Período: ${formatDateBR(inicio)} a ${formatDateBR(fim)}`, 12, details ? 31 : 26);
+  const empresa = await ensureEmpresa();
+  const startY = await drawDocumentHeader(doc, { empresa, cliente, date: `${formatDateBR(inicio)} a ${formatDateBR(fim)}`, title: "RELATÓRIO DE SERVIÇO" });
 
   const totals = somarTotais(apontamentos);
   const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
   const totalComPecas = financial.totalGeral + totalPecas;
   autoTable(doc, {
-    startY: details ? 36 : 31,
+    startY,
     margin: { left: 8, right: 8, bottom: 12 },
     styles: { fontSize: 6.8, cellPadding: 1.5, overflow: "linebreak", valign: "top" },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
@@ -206,16 +235,7 @@ export async function generateClientReport(
     },
   });
 
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const lastPage = doc.getNumberOfPages();
-  doc.setPage(lastPage);
-  doc.setDrawColor(140);
-  doc.line(16, pageHeight - 20, 86, pageHeight - 20);
-  doc.line(164, pageHeight - 20, 234, pageHeight - 20);
-  doc.setFontSize(8);
-  doc.text("Assinatura do técnico", 16, pageHeight - 15);
-  doc.text("Responsável do cliente", 164, pageHeight - 15);
-  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 248, pageHeight - 10, { align: "right" });
+  drawDocumentFooter(doc, empresa);
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
   await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
@@ -231,23 +251,9 @@ export async function generatePaymentReceipt(input: {
 }) {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("CP TECHNIC", 18, 22);
-  doc.setFontSize(12);
-  doc.text("RECIBO DE PAGAMENTO", 192, 22, { align: "right" });
-  doc.setDrawColor(39, 54, 78);
-  doc.setLineWidth(0.8);
-  doc.line(18, 28, 192, 28);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text(`Recebemos de ${input.cliente.nome}`, 18, 43);
-  const details = [input.cliente.cnpj ? `CNPJ ${input.cliente.cnpj}` : null, input.cliente.cidade].filter(Boolean).join(" · ");
-  if (details) doc.text(details, 18, 50);
-  doc.text(`referente ao relatório do período de ${formatDateBR(input.inicio)} a ${formatDateBR(input.fim)}.`, 18, details ? 60 : 52);
-
-  const startY = details ? 76 : 68;
+  const empresa = await ensureEmpresa();
+  const startY = await drawDocumentHeader(doc, { empresa, cliente: input.cliente, date: formatDateBR(input.dataRecebimento), title: "RECIBO DE PAGAMENTO" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.text(`Referente ao relatório de ${formatDateBR(input.inicio)} a ${formatDateBR(input.fim)}.`, 18, startY + 5);
   doc.setFillColor(238, 242, 248);
   doc.roundedRect(18, startY, 174, 34, 2, 2, "F");
   doc.setFont("helvetica", "bold");
@@ -262,13 +268,31 @@ export async function generatePaymentReceipt(input: {
   doc.text(`Forma de pagamento: ${input.formaPagamento}`, 18, startY + 50);
   doc.text(`Data do recebimento: ${formatDateBR(input.dataRecebimento)}`, 18, startY + 59);
 
-  doc.line(65, 230, 145, 230);
-  doc.setFontSize(9);
-  doc.text("CP TECHNIC", 105, 236, { align: "center" });
-  doc.text("Assinatura", 105, 242, { align: "center" });
-  doc.setFontSize(8);
-  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 192, 281, { align: "right" });
+  drawDocumentFooter(doc, empresa);
 
   const filename = `RECIBO_CPTECHNIC_${filePart(input.cliente.nome)}_${fileDate(input.dataRecebimento)}.pdf`;
   await shareOrDownloadPdf(doc, filename, `Recibo CP TECHNIC — ${input.cliente.nome}`);
+}
+
+export async function generateQuotePdf(orcamento: Orcamento) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const empresa = await ensureEmpresa();
+  const startY = await drawDocumentHeader(doc, { empresa, cliente: orcamento.cliente_snapshot, date: formatDateBR(orcamento.data), title: `ORÇAMENTO Nº ${orcamento.numero}` });
+  autoTable(doc, {
+    startY, margin: { left: 14, right: 14, bottom: 30 }, theme: "striped",
+    styles: { fontSize: 8, cellPadding: 2, valign: "middle" }, headStyles: { fillColor: [39, 54, 78], textColor: 255 },
+    head: [["Foto", "Nome e código", "Qtd.", "Un.", "Valor unit.", "Valor total"]],
+    body: orcamento.itens.map((item) => [item.foto_data_url ? "Foto" : "—", `${item.nome}${item.codigo ? `\nCódigo: ${item.codigo}` : ""}`, String(item.quantidade), item.unidade, formatCurrency(item.valor_unitario), formatCurrency(item.quantidade * item.valor_unitario)]),
+    columnStyles: { 0: { cellWidth: 15, halign: "center" }, 1: { cellWidth: 62 }, 2: { cellWidth: 14, halign: "right" }, 3: { cellWidth: 12 }, 4: { cellWidth: 30, halign: "right" }, 5: { cellWidth: 32, halign: "right" } },
+    didDrawCell: (data) => { if (data.section === "body" && data.column.index === 0) { const item = orcamento.itens[data.row.index]; if (item?.foto_data_url) { try { doc.addImage(item.foto_data_url, item.foto_data_url.startsWith("data:image/png") ? "PNG" : "JPEG", data.cell.x + 1, data.cell.y + 1, 13, Math.min(13, data.cell.height - 2), undefined, "FAST"); } catch { /* Ignore unsupported image. */ } } } },
+  });
+  const tableDoc = doc as typeof doc & { lastAutoTable?: { finalY: number } }; let y = (tableDoc.lastAutoTable?.finalY ?? startY) + 7;
+  const rows = [["Produtos", orcamento.total_produtos], ["Serviços", orcamento.total_servicos], ["Subtotal", orcamento.subtotal], ["Desconto", -(orcamento.subtotal - orcamento.total)], ["TOTAL", orcamento.total]] as const;
+  rows.forEach(([label, value], index) => { doc.setFont("helvetica", index === rows.length - 1 ? "bold" : "normal"); doc.setFontSize(index === rows.length - 1 ? 11 : 9); doc.text(label, 140, y, { align: "right" }); doc.text(formatCurrency(value), 195, y, { align: "right" }); y += index === rows.length - 2 ? 7 : 5; });
+  y += 4; doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.text("OBSERVAÇÕES", 14, y); y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+  const notes = [`Formas de pagamento: ${orcamento.formas_pagamento.join(", ") || "—"}`, `Condições: ${orcamento.condicoes_pagamento || "—"}`, `Validade: ${orcamento.validade_dias} dias`, orcamento.observacoes || ""].filter(Boolean);
+  doc.text(notes, 14, y, { maxWidth: 180 });
+  drawDocumentFooter(doc, empresa);
+  await shareOrDownloadPdf(doc, `ORCAMENTO_${orcamento.numero}_${filePart(orcamento.cliente_snapshot.nome)}.pdf`, `Orçamento ${orcamento.numero} — ${orcamento.cliente_snapshot.nome}`);
 }

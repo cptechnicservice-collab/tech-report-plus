@@ -8,8 +8,10 @@ import type { AgendamentoComCliente } from "@/lib/agenda";
 import type { ValorVigencia } from "@/lib/financeiro";
 import type { Peca } from "@/lib/pecas";
 import type { RelatorioSalvo } from "@/lib/relatorios";
+import type { DadosEmpresa } from "@/lib/empresa";
+import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
 
-type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos";
+type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -36,6 +38,8 @@ const CACHE_VALORES = "valores-vigencia";
 const CACHE_AGENDAMENTOS = "agendamentos";
 const CACHE_PECAS = "pecas";
 const CACHE_RELATORIOS = "relatorios-salvos";
+const CACHE_EMPRESA = "dados-empresa";
+const CACHE_ORCAMENTOS = "orcamentos";
 const OFFLINE_EVENT = "cp-offline-change";
 
 function database() {
@@ -390,6 +394,108 @@ export async function deletePecaOffline(id: string) {
   return { queued: true };
 }
 
+type EmpresaWrite = Omit<DadosEmpresa, "created_at" | "updated_at" | "user_id"> &
+  Partial<Pick<DadosEmpresa, "created_at" | "updated_at" | "user_id">>;
+
+export async function saveEmpresaOffline(payload: EmpresaWrite) {
+  const userId = await requireUserId();
+  const dbPayload: TablesInsert<"dados_empresa"> = { ...payload, user_id: userId };
+  const now = new Date().toISOString();
+  const record: DadosEmpresa = { created_at: payload.created_at ?? now, updated_at: now, ...payload, user_id: userId };
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase.from("dados_empresa").upsert(dbPayload, { onConflict: "user_id" }).abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_EMPRESA, record);
+        return { record, queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  await enqueue({ entity: "dados_empresa", action: "upsert", recordId: record.id, payload: dbPayload, userId });
+  await writeCached(CACHE_EMPRESA, record);
+  return { record, queued: true };
+}
+
+type OrcamentoWrite = Omit<Orcamento, "created_at" | "updated_at" | "user_id" | "itens"> &
+  Partial<Pick<Orcamento, "created_at" | "updated_at" | "user_id">> & { itens: Array<Omit<OrcamentoItem, "created_at" | "updated_at" | "user_id">> };
+
+function orcamentoPayload(payload: OrcamentoWrite, userId: string): TablesInsert<"orcamentos"> {
+  return {
+    id: payload.id, user_id: userId, numero: payload.numero, cliente_id: payload.cliente_id,
+    cliente_snapshot: payload.cliente_snapshot as unknown as Json, data: payload.data,
+    validade_dias: payload.validade_dias, desconto_tipo: payload.desconto_tipo,
+    desconto_valor: payload.desconto_valor, formas_pagamento: payload.formas_pagamento as unknown as Json,
+    condicoes_pagamento: payload.condicoes_pagamento, observacoes: payload.observacoes,
+    status: payload.status, total_produtos: payload.total_produtos, total_servicos: payload.total_servicos,
+    subtotal: payload.subtotal, total: payload.total,
+  };
+}
+
+export async function saveOrcamentoOffline(payload: OrcamentoWrite) {
+  const userId = await requireUserId();
+  const now = new Date().toISOString();
+  const dbPayload = orcamentoPayload(payload, userId);
+  const itemPayloads: TablesInsert<"orcamento_itens">[] = payload.itens.map((item, index) => ({
+    ...item, user_id: userId, orcamento_id: payload.id, ordem: index,
+  }));
+  const record: Orcamento = {
+    ...payload, user_id: userId, created_at: payload.created_at ?? now, updated_at: now,
+    itens: payload.itens.map((item, index) => ({ ...item, user_id: userId, ordem: index, created_at: now, updated_at: now })),
+  };
+  const cached = (await readCached<Orcamento[]>(CACHE_ORCAMENTOS)) ?? [];
+  const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) => `${b.data}${b.created_at}`.localeCompare(`${a.data}${a.created_at}`));
+  if (!isOffline()) {
+    try {
+      const parent = await supabase.from("orcamentos").upsert(dbPayload, { onConflict: "id" }).abortSignal(timeoutSignal());
+      if (parent.error) throw parent.error;
+      const removed = await supabase.from("orcamento_itens").delete().eq("orcamento_id", payload.id).abortSignal(timeoutSignal());
+      if (removed.error) throw removed.error;
+      if (itemPayloads.length > 0) {
+        const inserted = await supabase.from("orcamento_itens").upsert(itemPayloads, { onConflict: "id" }).abortSignal(timeoutSignal());
+        if (inserted.error) throw inserted.error;
+      }
+      await writeCached(CACHE_ORCAMENTOS, nextCache);
+      return { record, queued: false };
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  const previous = cached.find((item) => item.id === record.id);
+  const nextItemIds = new Set(itemPayloads.map((item) => item.id));
+  for (const oldItem of previous?.itens ?? []) {
+    if (!nextItemIds.has(oldItem.id)) await enqueue({ entity: "orcamento_itens", action: "delete", recordId: oldItem.id, userId });
+  }
+  await enqueue({ entity: "orcamentos", action: "upsert", recordId: record.id, payload: dbPayload, userId });
+  for (const item of itemPayloads) await enqueue({ entity: "orcamento_itens", action: "upsert", recordId: item.id ?? crypto.randomUUID(), payload: item, userId });
+  await writeCached(CACHE_ORCAMENTOS, nextCache);
+  return { record, queued: true };
+}
+
+export async function deleteOrcamentoOffline(id: string) {
+  const userId = await requireUserId();
+  const cached = (await readCached<Orcamento[]>(CACHE_ORCAMENTOS)) ?? [];
+  if (!isOffline()) {
+    try {
+      const { error } = await supabase.from("orcamentos").delete().eq("id", id).abortSignal(timeoutSignal());
+      if (error) {
+        if (!isNetworkError(error)) throw error;
+      } else {
+        await writeCached(CACHE_ORCAMENTOS, cached.filter((item) => item.id !== id));
+        return { queued: false };
+      }
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+  await enqueue({ entity: "orcamentos", action: "delete", recordId: id, userId });
+  await writeCached(CACHE_ORCAMENTOS, cached.filter((item) => item.id !== id));
+  return { queued: true };
+}
+
 type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento"> &
   Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento">>;
 
@@ -515,7 +621,7 @@ export async function syncOfflineQueue() {
   const db = await database();
   const items = await db.getAll("queue");
   items.sort((a, b) => {
-    const priority = (item: QueueItem) => item.entity === "valores_vigencia" ? 0 : item.entity === "clientes" ? 1 : 2;
+    const priority = (item: QueueItem) => item.entity === "valores_vigencia" || item.entity === "dados_empresa" ? 0 : item.entity === "clientes" ? 1 : item.entity === "orcamentos" ? 2 : item.entity === "orcamento_itens" ? 3 : 4;
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
@@ -553,11 +659,17 @@ export async function syncOfflineQueue() {
           .from("pecas")
           .upsert((item.payload ?? {}) as TablesInsert<"pecas">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
-      } else {
+      } else if (item.entity === "relatorios_salvos") {
         result = await supabase
           .from("relatorios_salvos")
           .upsert((item.payload ?? {}) as TablesInsert<"relatorios_salvos">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
+      } else if (item.entity === "dados_empresa") {
+        result = await supabase.from("dados_empresa").upsert((item.payload ?? {}) as TablesInsert<"dados_empresa">, { onConflict: "user_id" }).abortSignal(timeoutSignal());
+      } else if (item.entity === "orcamentos") {
+        result = await supabase.from("orcamentos").upsert((item.payload ?? {}) as TablesInsert<"orcamentos">, { onConflict: "id" }).abortSignal(timeoutSignal());
+      } else {
+        result = await supabase.from("orcamento_itens").upsert((item.payload ?? {}) as TablesInsert<"orcamento_itens">, { onConflict: "id" }).abortSignal(timeoutSignal());
       }
       if (result.error) throw result.error;
       if (item.queueId != null) await db.delete("queue", item.queueId);
@@ -582,4 +694,6 @@ export const offlineCacheKeys = {
   agendamentos: CACHE_AGENDAMENTOS,
   pecas: CACHE_PECAS,
   relatorios: CACHE_RELATORIOS,
+  empresa: CACHE_EMPRESA,
+  orcamentos: CACHE_ORCAMENTOS,
 };

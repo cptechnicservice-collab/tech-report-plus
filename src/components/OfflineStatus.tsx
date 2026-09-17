@@ -31,6 +31,11 @@ export function OfflineStatus() {
         queryClient.invalidateQueries({ queryKey: ["clientes"] }),
         queryClient.invalidateQueries({ queryKey: ["apontamentos"] }),
         queryClient.invalidateQueries({ queryKey: ["valores"] }),
+        queryClient.invalidateQueries({ queryKey: ["agendamentos"] }),
+        queryClient.invalidateQueries({ queryKey: ["pecas"] }),
+        queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] }),
+        queryClient.invalidateQueries({ queryKey: ["dados-empresa"] }),
+        queryClient.invalidateQueries({ queryKey: ["orcamentos"] }),
       ]);
     } finally {
       syncing.current = false;

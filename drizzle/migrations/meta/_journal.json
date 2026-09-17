@@ -85,6 +85,13 @@
       "when": 1789612144888,
       "tag": "0011_add_report_receivables",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789643375584,
+      "tag": "0012_create_empresa_orcamentos",
+      "breakpoints": true
     }
   ]
 }
