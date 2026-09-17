@@ -207,6 +207,185 @@ export type Database = {
         }
         Relationships: []
       }
+      dados_empresa: {
+        Row: {
+          cnpj: string
+          contato: string
+          created_at: string
+          email: string
+          id: string
+          logo_data_url: string | null
+          nome_fantasia: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cnpj?: string
+          contato?: string
+          created_at?: string
+          email?: string
+          id?: string
+          logo_data_url?: string | null
+          nome_fantasia?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cnpj?: string
+          contato?: string
+          created_at?: string
+          email?: string
+          id?: string
+          logo_data_url?: string | null
+          nome_fantasia?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orcamento_itens: {
+        Row: {
+          codigo: string | null
+          created_at: string
+          foto_data_url: string | null
+          id: string
+          nome: string
+          orcamento_id: string
+          ordem: number
+          peca_id: string | null
+          quantidade: number
+          tipo: string
+          unidade: string
+          updated_at: string
+          user_id: string
+          valor_unitario: number
+        }
+        Insert: {
+          codigo?: string | null
+          created_at?: string
+          foto_data_url?: string | null
+          id?: string
+          nome: string
+          orcamento_id: string
+          ordem?: number
+          peca_id?: string | null
+          quantidade?: number
+          tipo?: string
+          unidade?: string
+          updated_at?: string
+          user_id: string
+          valor_unitario?: number
+        }
+        Update: {
+          codigo?: string | null
+          created_at?: string
+          foto_data_url?: string | null
+          id?: string
+          nome?: string
+          orcamento_id?: string
+          ordem?: number
+          peca_id?: string | null
+          quantidade?: number
+          tipo?: string
+          unidade?: string
+          updated_at?: string
+          user_id?: string
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_itens_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamentos: {
+        Row: {
+          cliente_id: string | null
+          cliente_snapshot: Json
+          condicoes_pagamento: string | null
+          created_at: string
+          data: string
+          desconto_tipo: string
+          desconto_valor: number
+          formas_pagamento: Json
+          id: string
+          numero: string
+          observacoes: string | null
+          status: string
+          subtotal: number
+          total: number
+          total_produtos: number
+          total_servicos: number
+          updated_at: string
+          user_id: string
+          validade_dias: number
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_snapshot: Json
+          condicoes_pagamento?: string | null
+          created_at?: string
+          data: string
+          desconto_tipo?: string
+          desconto_valor?: number
+          formas_pagamento?: Json
+          id?: string
+          numero: string
+          observacoes?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          total_produtos?: number
+          total_servicos?: number
+          updated_at?: string
+          user_id: string
+          validade_dias?: number
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_snapshot?: Json
+          condicoes_pagamento?: string | null
+          created_at?: string
+          data?: string
+          desconto_tipo?: string
+          desconto_valor?: number
+          formas_pagamento?: Json
+          id?: string
+          numero?: string
+          observacoes?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          total_produtos?: number
+          total_servicos?: number
+          updated_at?: string
+          user_id?: string
+          validade_dias?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pecas: {
         Row: {
           codigo: string | null
