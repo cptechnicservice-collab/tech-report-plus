@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CalendarPlus, ChevronRight, CircleDollarSign, Gauge, MapPin, Timer } from "lucide-react";
+import { BriefcaseBusiness, CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, MapPin, Timer, Users } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -37,20 +37,28 @@ export const Route = createFileRoute("/_authenticated/painel")({
 });
 
 function Resumo() {
+  const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
     queryFn: fetchApontamentos,
   });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
 
-  const mes = todayISO().slice(0, 7);
   const doMes = useMemo(
     () => apontamentos.filter((a) => a.data.startsWith(mes)),
     [apontamentos, mes],
   );
   const totais = somarTotais(doMes);
   const financeiro = calcularValoresPeriodo(doMes, valores);
-  const ultimos = apontamentos.slice(0, 5);
+  const ultimos = doMes.slice(0, 5);
+  const clientesAtendidos = new Set(doMes.map((item) => item.cliente_id)).size;
+  const servicosInformados = doMes.filter((item) => Boolean(item.maquina_servico?.trim())).length;
+
+  const moverMes = (diferenca: number) => {
+    const [ano, numeroMes] = mes.split("-").map(Number);
+    const data = new Date(ano, numeroMes - 1 + diferenca, 1);
+    setMes(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`);
+  };
 
   const nomeMes = new Date(`${mes}-01T12:00:00`).toLocaleDateString("pt-BR", {
     month: "long",
@@ -60,53 +68,76 @@ function Resumo() {
 
   return (
     <PageShell title="Painel" subtitle="CP TECHNIC Horas">
-      <div className="ios-group flex items-center justify-between p-4">
-        <div>
-          <p className="text-[0.68rem] font-semibold uppercase text-muted-foreground">Período</p>
-          <p className="mt-0.5 text-base font-medium">{periodo}</p>
+      <section className="ios-group">
+        <div className="grid grid-cols-3 divide-x divide-border py-4 text-center">
+          <div className="px-2">
+            <Users className="mx-auto h-5 w-5 text-primary" />
+            <p className="mt-1 text-xl font-bold tabular-nums">{clientesAtendidos}</p>
+            <p className="text-[0.68rem] text-muted-foreground">Clientes</p>
+          </div>
+          <div className="px-2">
+            <BriefcaseBusiness className="mx-auto h-5 w-5 text-primary" />
+            <p className="mt-1 text-xl font-bold tabular-nums">{servicosInformados}</p>
+            <p className="text-[0.68rem] text-muted-foreground">Serviços</p>
+          </div>
+          <div className="px-2">
+            <Timer className="mx-auto h-5 w-5 text-primary" />
+            <p className="mt-1 text-xl font-bold tabular-nums">{doMes.length}</p>
+            <p className="text-[0.68rem] text-muted-foreground">Apontamentos</p>
+          </div>
         </div>
-        <span className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-secondary-foreground">
-          <CalendarDays className="h-5 w-5" />
-        </span>
-      </div>
+        <div className="flex h-14 items-center justify-between border-t border-border px-2">
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Mês anterior" onClick={() => moverMes(-1)}>
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <p className="font-semibold">{periodo}</p>
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Próximo mês" onClick={() => moverMes(1)}>
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+      </section>
 
-      <div className="grid gap-3">
-        <div className="ios-group p-5">
-          <div className="flex items-center gap-2 text-primary">
-            <CircleDollarSign className="h-5 w-5" />
-            <p className="text-xs font-semibold uppercase">Valor acumulado</p>
-          </div>
+      <section className="ios-group overflow-hidden">
+        <div className="px-5 py-6 text-center">
+          <CircleDollarSign className="mx-auto h-6 w-6 text-primary" />
           <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(financeiro.totalGeral)}</p>
-          <p className="mt-2 text-xs text-muted-foreground">Atualizado com os dados disponíveis, inclusive offline</p>
+          <p className="mt-2 text-sm text-muted-foreground">Total acumulado no mês</p>
         </div>
-        <div className="ios-group p-5">
-          <div className="flex items-center gap-2 text-primary">
-            <Timer className="h-5 w-5" />
-            <p className="text-xs font-semibold uppercase">Horas trabalhadas</p>
+        <div className="grid grid-cols-3 divide-x divide-border border-t border-border bg-secondary/50 py-4 text-center">
+          <div className="px-1">
+            <Timer className="mx-auto h-4 w-4 text-muted-foreground" />
+            <p className="mt-1 text-xs text-muted-foreground">Trabalho</p>
+            <p className="mt-0.5 font-bold tabular-nums">{formatMinutes(totais.trabalho)}</p>
           </div>
-          <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatMinutes(totais.trabalho)}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="ios-group p-4">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
-              <MapPin className="h-5 w-5 text-muted-foreground" />
-            </span>
-            <p className="mt-3 text-xs font-medium text-muted-foreground">
-              Viagem
-            </p>
-            <p className="mt-0.5 text-xl font-bold tabular-nums">{formatMinutes(totais.viagem)}</p>
+          <div className="px-1">
+            <MapPin className="mx-auto h-4 w-4 text-muted-foreground" />
+            <p className="mt-1 text-xs text-muted-foreground">Viagem</p>
+            <p className="mt-0.5 font-bold tabular-nums">{formatMinutes(totais.viagem)}</p>
           </div>
-          <div className="ios-group p-4">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
-              <Gauge className="h-5 w-5 text-muted-foreground" />
-            </span>
-            <p className="mt-3 text-xs font-medium text-muted-foreground">
-              KM rodados
-            </p>
-            <p className="mt-0.5 text-xl font-bold tabular-nums">{totais.km}</p>
+          <div className="px-1">
+            <Gauge className="mx-auto h-4 w-4 text-muted-foreground" />
+            <p className="mt-1 text-xs text-muted-foreground">KM</p>
+            <p className="mt-0.5 font-bold tabular-nums">{totais.km}</p>
           </div>
         </div>
-      </div>
+      </section>
+
+      <Section title="Composição do valor">
+        <dl className="-my-2 divide-y divide-border">
+          {[
+            ["Horas trabalhadas", financeiro.valorTrabalho],
+            ["Horas de viagem", financeiro.valorViagem],
+            ["Quilometragem", financeiro.valorKm],
+            ["Diárias", financeiro.valorDiarias],
+            ["Despesas", financeiro.pedagios + financeiro.outrasDespesas],
+          ].map(([label, valor]) => (
+            <div key={String(label)} className="flex min-h-11 items-center justify-between gap-3 py-2 text-sm">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="font-semibold tabular-nums">{formatCurrency(Number(valor))}</dd>
+            </div>
+          ))}
+        </dl>
+      </Section>
 
       <Button asChild className="h-14 w-full rounded-2xl text-base">
         <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined }}>
