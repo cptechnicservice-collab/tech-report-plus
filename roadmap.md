@@ -19,8 +19,8 @@
 - [x] Permitir salvar apontamentos somente de viagem, sem horário de trabalho.
 - [x] Melhorar a leitura e os filtros da lista de relatórios salvos no iPhone.
 - [x] Reorganizar o Painel mensal com troca de mês, indicadores e composição do valor.
-- [ ] Adicionar recebimentos aos relatórios salvos com atualização offline.
-- [ ] Exibir status, filtros e registro de recebimento em folha inferior.
-- [ ] Mostrar o total a receber no Painel com acesso aos relatórios pendentes.
-- [ ] Gerar e compartilhar relatório e recibo em PDF no iPhone.
-- [ ] Validar o fluxo no tamanho do iPhone e confirmar compilação sem erros.
+- [x] Adicionar recebimentos aos relatórios salvos com atualização offline.
+- [x] Exibir status, filtros e registro de recebimento em folha inferior.
+- [x] Mostrar o total a receber no Painel com acesso aos relatórios pendentes.
+- [x] Gerar e compartilhar relatório e recibo em PDF no iPhone.
+- [x] Validar o fluxo no tamanho do iPhone e confirmar compilação sem erros.
