@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, CircleDollarSign, FileArchive, Package, Users } from "lucide-react";
+import { Building2, ChevronRight, CircleDollarSign, ClipboardList, FileArchive, Package, Users } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/mais")({
   head: () => ({ meta: [
     { title: "Mais opções — CP TECHNIC Horas" },
-    { name: "description", content: "Acesse clientes, peças, valores e relatórios salvos." },
+    { name: "description", content: "Acesse dados da empresa, clientes, peças, valores, orçamentos e relatórios." },
     { property: "og:title", content: "Mais opções — CP TECHNIC Horas" },
     { property: "og:description", content: "Cadastros e relatórios do CP TECHNIC Horas." },
     { property: "og:type", content: "website" },
@@ -16,9 +16,11 @@ export const Route = createFileRoute("/_authenticated/mais")({
 });
 
 const options = [
+  { to: "/dados-empresa", label: "Dados da empresa", detail: "Identificação e logo dos documentos", icon: Building2 },
   { to: "/clientes", label: "Clientes", detail: "Cadastro e contatos", icon: Users },
   { to: "/pecas", label: "Peças", detail: "Catálogo e preços", icon: Package },
   { to: "/valores", label: "Valores", detail: "Horas, viagem, KM e diárias", icon: CircleDollarSign },
+  { to: "/orcamentos", label: "Orçamentos", detail: "Propostas, valores e aprovação", icon: ClipboardList },
   { to: "/relatorios-salvos", label: "Relatórios salvos", detail: "Documentos finais por cliente", icon: FileArchive },
 ] as const;
 
