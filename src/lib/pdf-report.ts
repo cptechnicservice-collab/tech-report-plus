@@ -124,15 +124,22 @@ export async function generateClientReport(
     import("jspdf-autotable"),
   ]);
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-  const empresa = await ensureEmpresa();
-  const startY = await drawDocumentHeader(doc, { empresa, cliente, date: `${formatDateBR(inicio)} a ${formatDateBR(fim)}`, title: "RELATÓRIO DE SERVIÇO" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("CP TECHNIC", 12, 14);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(`Cliente: ${cliente.nome}`, 12, 21);
+  const details = [cliente.cidade, cliente.cnpj ? `CNPJ: ${cliente.cnpj}` : null].filter(Boolean).join(" · ");
+  if (details) doc.text(details, 12, 26);
+  doc.text(`Período: ${formatDateBR(inicio)} a ${formatDateBR(fim)}`, 12, details ? 31 : 26);
 
   const totals = somarTotais(apontamentos);
   const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
   const totalComPecas = financial.totalGeral + totalPecas;
   autoTable(doc, {
-    startY,
+    startY: details ? 36 : 31,
     margin: { left: 8, right: 8, bottom: 12 },
     styles: { fontSize: 6.8, cellPadding: 1.5, overflow: "linebreak", valign: "top" },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
@@ -235,7 +242,16 @@ export async function generateClientReport(
     },
   });
 
-  drawDocumentFooter(doc, empresa);
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const lastPage = doc.getNumberOfPages();
+  doc.setPage(lastPage);
+  doc.setDrawColor(140);
+  doc.line(16, pageHeight - 20, 86, pageHeight - 20);
+  doc.line(164, pageHeight - 20, 234, pageHeight - 20);
+  doc.setFontSize(8);
+  doc.text("Assinatura do técnico", 16, pageHeight - 15);
+  doc.text("Responsável do cliente", 164, pageHeight - 15);
+  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 248, pageHeight - 10, { align: "right" });
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
   await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
