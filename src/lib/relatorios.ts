@@ -19,9 +19,44 @@ export type RelatorioSalvo = {
   valores_snapshot: ValorVigencia[];
   pecas_snapshot: ReportPartItem[];
   financeiro_snapshot: TotaisFinanceiros;
+  pagamento_status: PagamentoStatus;
+  valor_recebido: number;
+  data_recebimento: string | null;
+  forma_pagamento: FormaPagamento | null;
   created_at: string;
   updated_at: string;
 };
+
+export type PagamentoStatus = "pendente" | "parcial" | "pago";
+export type FormaPagamento = "pix" | "transferencia" | "dinheiro" | "boleto" | "outro";
+
+export const formasPagamento: Array<{ value: FormaPagamento; label: string }> = [
+  { value: "pix", label: "Pix" },
+  { value: "transferencia", label: "Transferência" },
+  { value: "dinheiro", label: "Dinheiro" },
+  { value: "boleto", label: "Boleto" },
+  { value: "outro", label: "Outro" },
+];
+
+export function statusPagamento(total: number, recebido: number): PagamentoStatus {
+  if (recebido <= 0) return "pendente";
+  return recebido >= total ? "pago" : "parcial";
+}
+
+export function saldoRelatorio(relatorio: Pick<RelatorioSalvo, "total_geral" | "valor_recebido">) {
+  return Math.max(0, relatorio.total_geral - (relatorio.valor_recebido ?? 0));
+}
+
+function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
+  const recebido = Number(item.valor_recebido ?? 0);
+  return {
+    ...item,
+    pagamento_status: statusPagamento(item.total_geral, recebido),
+    valor_recebido: recebido,
+    data_recebimento: item.data_recebimento ?? null,
+    forma_pagamento: item.forma_pagamento ?? null,
+  };
+}
 
 export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
   const { data, error } = await supabase
@@ -30,10 +65,10 @@ export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
     .order("created_at", { ascending: false });
   if (error) {
     const cached = await readCached<RelatorioSalvo[]>(offlineCacheKeys.relatorios);
-    if (cached) return cached;
+    if (cached) return cached.map(normalizeRelatorio);
     throw error;
   }
-  const result = (data ?? []) as unknown as RelatorioSalvo[];
+  const result = ((data ?? []) as unknown as RelatorioSalvo[]).map(normalizeRelatorio);
   await writeCached(offlineCacheKeys.relatorios, result);
   return result;
 }
