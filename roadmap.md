@@ -16,3 +16,4 @@
 - [x] Permitir apagar e substituir diretamente a quantidade de uma peça.
 - [x] Validar a edição no tamanho de tela do iPhone.
 - [x] Corrigir definitivamente a digitação da quantidade de peças no iPhone.
+- [ ] Permitir salvar apontamentos somente de viagem, sem horário de trabalho.

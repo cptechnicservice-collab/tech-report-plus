@@ -362,8 +362,6 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   const podeSalvar = Boolean(
     form.cliente_id &&
       form.data &&
-      form.trabalho_inicio &&
-      form.trabalho_fim &&
       !validacoes.trabalhoIncompleto,
   );
 
@@ -444,7 +442,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_ida_saida, payload.viagem_ida_chegada))}</Warning> : null}
       </OptionalSection>
 
-      <Section title="Trabalho">
+      <Section title="Trabalho (opcional)">
         <div className="grid grid-cols-2 gap-3">
           <TimeField
             label="Início"
@@ -576,7 +574,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         </Button>
         {!podeSalvar ? (
           <p className="text-center text-xs text-muted-foreground">
-            Informe data, cliente e os horários de início e fim do trabalho.
+            Informe data e cliente. Se preencher trabalho, informe início e fim.
           </p>
         ) : null}
         {apontamento ? (
