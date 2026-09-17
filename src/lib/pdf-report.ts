@@ -26,6 +26,54 @@ const filePart = (value: string) =>
 
 const fileDate = (value: string) => value.split("-").reverse().join("-");
 
+async function shareOrDownloadPdf(doc: { output: (type: "blob") => Blob; save: (filename: string) => void }, filename: string, title: string) {
+  const blob = doc.output("blob");
+  const file = new File([blob], filename, { type: "application/pdf" });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title });
+      return;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+  }
+  doc.save(filename);
+}
+
+const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+function ate999(value: number) {
+  if (value === 100) return "cem";
+  const parts: string[] = [];
+  const centena = Math.floor(value / 100);
+  const resto = value % 100;
+  if (centena) parts.push(centenas[centena] ?? "");
+  if (resto) parts.push(resto < 20 ? unidades[resto] ?? "" : [dezenas[Math.floor(resto / 10)], unidades[resto % 10]].filter(Boolean).join(" e "));
+  return parts.join(" e ");
+}
+
+function inteiroPorExtenso(value: number) {
+  if (value === 0) return "zero";
+  const parts: string[] = [];
+  const milhoes = Math.floor(value / 1_000_000);
+  const milhares = Math.floor((value % 1_000_000) / 1_000);
+  const resto = value % 1_000;
+  if (milhoes) parts.push(milhoes === 1 ? "um milhão" : `${ate999(milhoes)} milhões`);
+  if (milhares) parts.push(milhares === 1 ? "mil" : `${ate999(milhares)} mil`);
+  if (resto) parts.push(ate999(resto));
+  return parts.join(resto > 0 && resto < 100 ? " e " : " ");
+}
+
+export function valorPorExtenso(value: number) {
+  const rounded = Math.round(value * 100);
+  const reais = Math.floor(rounded / 100);
+  const centavos = rounded % 100;
+  const realText = `${inteiroPorExtenso(reais)} ${reais === 1 ? "real" : "reais"}`;
+  return centavos ? `${realText} e ${inteiroPorExtenso(centavos)} ${centavos === 1 ? "centavo" : "centavos"}` : realText;
+}
+
 export async function generateClientReport(
   cliente: Cliente,
   apontamentos: ApontamentoComCliente[],
@@ -170,15 +218,57 @@ export async function generateClientReport(
   doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 248, pageHeight - 10, { align: "right" });
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
-  const blob = doc.output("blob");
-  const file = new File([blob], filename, { type: "application/pdf" });
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: `Relatório CP TECHNIC — ${cliente.nome}` });
-      return;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-    }
-  }
-  doc.save(filename);
+  await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
+}
+
+export async function generatePaymentReceipt(input: {
+  cliente: Cliente;
+  inicio: string;
+  fim: string;
+  valorRecebido: number;
+  formaPagamento: string;
+  dataRecebimento: string;
+}) {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("CP TECHNIC", 18, 22);
+  doc.setFontSize(12);
+  doc.text("RECIBO DE PAGAMENTO", 192, 22, { align: "right" });
+  doc.setDrawColor(39, 54, 78);
+  doc.setLineWidth(0.8);
+  doc.line(18, 28, 192, 28);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.text(`Recebemos de ${input.cliente.nome}`, 18, 43);
+  const details = [input.cliente.cnpj ? `CNPJ ${input.cliente.cnpj}` : null, input.cliente.cidade].filter(Boolean).join(" · ");
+  if (details) doc.text(details, 18, 50);
+  doc.text(`referente ao relatório do período de ${formatDateBR(input.inicio)} a ${formatDateBR(input.fim)}.`, 18, details ? 60 : 52);
+
+  const startY = details ? 76 : 68;
+  doc.setFillColor(238, 242, 248);
+  doc.roundedRect(18, startY, 174, 34, 2, 2, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(19);
+  doc.text(formatCurrency(input.valorRecebido), 26, startY + 14);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const extenso = valorPorExtenso(input.valorRecebido);
+  doc.text(extenso.charAt(0).toUpperCase() + extenso.slice(1), 26, startY + 24, { maxWidth: 155 });
+
+  doc.setFontSize(11);
+  doc.text(`Forma de pagamento: ${input.formaPagamento}`, 18, startY + 50);
+  doc.text(`Data do recebimento: ${formatDateBR(input.dataRecebimento)}`, 18, startY + 59);
+
+  doc.line(65, 230, 145, 230);
+  doc.setFontSize(9);
+  doc.text("CP TECHNIC", 105, 236, { align: "center" });
+  doc.text("Assinatura", 105, 242, { align: "center" });
+  doc.setFontSize(8);
+  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 192, 281, { align: "right" });
+
+  const filename = `RECIBO_CPTECHNIC_${filePart(input.cliente.nome)}_${fileDate(input.dataRecebimento)}.pdf`;
+  await shareOrDownloadPdf(doc, filename, `Recibo CP TECHNIC — ${input.cliente.nome}`);
 }
