@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, PackagePlus, Save, Trash2 } from "lucide-react";
@@ -14,8 +14,12 @@ import { generateClientReport } from "@/lib/pdf-report";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
 import { saveRelatorioOffline } from "@/lib/offline";
+import { fetchRelatoriosSalvos } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    relatorio: typeof search["relatorio"] === "string" ? search["relatorio"] : undefined,
+  }),
   head: () => ({ meta: [
     { title: "Relatório por cliente — CP TECHNIC Horas" },
     { name: "description", content: "Gere e compartilhe relatórios de horas, viagens e quilometragem por cliente e período." },
@@ -106,30 +110,49 @@ function atendimentoHours(minutes: number) {
 }
 
 function Relatorio() {
+  const search = Route.useSearch();
   const [clienteId, setClienteId] = useState("");
   const [inicio, setInicio] = useState(() => getShortcut("month")[0]);
   const [fim, setFim] = useState(() => getShortcut("month")[1]);
   const [activePeriod, setActivePeriod] = useState<PeriodKind>("month");
   const [generating, setGenerating] = useState(false);
   const [pecaId, setPecaId] = useState("");
-  const [pecasSelecionadas, setPecasSelecionadas] = useState<ReportPartItem[]>([]);
+  const [pecasSelecionadas, setPecasSelecionadas] = useState<Array<Omit<ReportPartItem, "quantidade"> & { quantidade: number | "" }>>([]);
+  const initializedReportId = useRef<string | null>(null);
   const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
+  const { data: relatoriosSalvos = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+  const relatorioEmEdicao = useMemo(
+    () => relatoriosSalvos.find((item) => item.id === search.relatorio),
+    [relatoriosSalvos, search.relatorio],
+  );
+  const apontamentosDisponiveis = relatorioEmEdicao?.apontamentos_snapshot ?? apontamentos;
+  const valoresDisponiveis = relatorioEmEdicao?.valores_snapshot ?? valores;
+
+  useEffect(() => {
+    if (!relatorioEmEdicao || initializedReportId.current === relatorioEmEdicao.id) return;
+    initializedReportId.current = relatorioEmEdicao.id;
+    setClienteId(relatorioEmEdicao.cliente_id ?? relatorioEmEdicao.cliente_snapshot.id);
+    setInicio(relatorioEmEdicao.inicio);
+    setFim(relatorioEmEdicao.fim);
+    setActivePeriod("custom");
+    setPecasSelecionadas(structuredClone(relatorioEmEdicao.pecas_snapshot));
+  }, [relatorioEmEdicao]);
   const atendimentos = useMemo(
-    () => groupAtendimentos(apontamentos.filter((item) => item.cliente_id === clienteId)),
-    [apontamentos, clienteId],
+    () => groupAtendimentos(apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId)),
+    [apontamentosDisponiveis, clienteId],
   );
   const filtrados = useMemo(
-    () => apontamentos.filter((item) => item.cliente_id === clienteId && item.data >= inicio && item.data <= fim),
-    [apontamentos, clienteId, inicio, fim],
+    () => apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId && item.data >= inicio && item.data <= fim),
+    [apontamentosDisponiveis, clienteId, inicio, fim],
   );
   const totais = somarTotais(filtrados);
-  const financeiros = useMemo(() => calcularValoresPeriodo(filtrados, valores), [filtrados, valores]);
+  const financeiros = useMemo(() => calcularValoresPeriodo(filtrados, valoresDisponiveis), [filtrados, valoresDisponiveis]);
   const totalPecas = useMemo(
-    () => pecasSelecionadas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0),
+    () => pecasSelecionadas.reduce((total, peca) => total + peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade), 0),
     [pecasSelecionadas],
   );
   const totalRelatorio = financeiros.totalGeral + totalPecas;
@@ -165,17 +188,21 @@ function Relatorio() {
     setPecaId("");
   };
 
-  const setPecaQuantidade = (id: string, quantidade: number) => {
-    if (!Number.isFinite(quantidade) || quantidade <= 0) return;
+  const setPecaQuantidade = (id: string, quantidade: number | "") => {
     setPecasSelecionadas((current) => current.map((item) => item.id === id ? { ...item, quantidade } : item));
   };
 
+  const pecasValidas = pecasSelecionadas.every((item) => typeof item.quantidade === "number" && item.quantidade > 0);
+  const pecasParaSalvar = () => pecasSelecionadas.map((item) => ({ ...item, quantidade: Number(item.quantidade) }));
+
   const save = useMutation({
     mutationFn: async () => {
-      const cliente = clientes.find((item) => item.id === clienteId);
+      const cliente = relatorioEmEdicao?.cliente_snapshot ?? clientes.find((item) => item.id === clienteId);
       if (!cliente || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
+      if (!pecasValidas) throw new Error("Informe uma quantidade maior que zero para cada peça.");
       return saveRelatorioOffline({
-        id: crypto.randomUUID(),
+        id: relatorioEmEdicao?.id ?? crypto.randomUUID(),
+        created_at: relatorioEmEdicao?.created_at,
         cliente_id: cliente.id,
         cliente_nome: cliente.nome,
         inicio,
@@ -185,20 +212,21 @@ function Relatorio() {
         total_geral: totalRelatorio,
         cliente_snapshot: structuredClone(cliente),
         apontamentos_snapshot: structuredClone(filtrados),
-        valores_snapshot: structuredClone(valores),
-        pecas_snapshot: structuredClone(pecasSelecionadas),
+        valores_snapshot: structuredClone(valoresDisponiveis),
+        pecas_snapshot: structuredClone(pecasParaSalvar()),
         financeiro_snapshot: structuredClone(financeiros),
       });
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
-      toast.success(result.queued ? "Relatório salvo no aparelho — será enviado quando houver conexão" : "Relatório salvo");
+      const action = relatorioEmEdicao ? "atualizado" : "salvo";
+      toast.success(result.queued ? `Relatório ${action} no aparelho — será enviado quando houver conexão` : `Relatório ${action}`);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar o relatório"),
   });
 
   const generate = async () => {
-    const cliente = clientes.find((item) => item.id === clienteId);
+    const cliente = relatorioEmEdicao?.cliente_snapshot ?? clientes.find((item) => item.id === clienteId);
     if (!cliente || !inicio || !fim || invalidPeriod) return;
     if (filtrados.length === 0) {
       toast.warning("Nenhum apontamento no período selecionado");
@@ -206,7 +234,11 @@ function Relatorio() {
     }
     setGenerating(true);
     try {
-      await generateClientReport(cliente, filtrados, valores, pecasSelecionadas, inicio, fim);
+      if (!pecasValidas) {
+        toast.warning("Informe uma quantidade maior que zero para cada peça");
+        return;
+      }
+      await generateClientReport(cliente, filtrados, valoresDisponiveis, pecasParaSalvar(), inicio, fim);
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
     } finally {
@@ -215,12 +247,13 @@ function Relatorio() {
   };
 
   return (
-    <PageShell title="Relatório" subtitle="Cliente e período">
+    <PageShell title={relatorioEmEdicao ? "Editar relatório" : "Relatório"} subtitle={relatorioEmEdicao ? "Documento salvo" : "Cliente e período"}>
       <Section title="Dados do relatório">
         <div className="space-y-1.5">
           <Label htmlFor="report-client">Cliente</Label>
-          <select id="report-client" value={clienteId} onChange={(event) => selectCliente(event.target.value)} className="ios-field h-12 w-full border px-3">
+          <select id="report-client" value={clienteId} disabled={Boolean(relatorioEmEdicao)} onChange={(event) => selectCliente(event.target.value)} className="ios-field h-12 w-full border px-3">
             <option value="">Selecione o cliente</option>
+            {relatorioEmEdicao && !clientes.some((item) => item.id === clienteId) ? <option value={clienteId}>{relatorioEmEdicao.cliente_nome}</option> : null}
             {clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>)}
           </select>
         </div>
@@ -276,8 +309,8 @@ function Relatorio() {
           <ul className="divide-y divide-border">
             {pecasSelecionadas.map((peca) => (
               <li key={peca.id} className="grid grid-cols-[minmax(0,1fr)_5rem_2.5rem] items-center gap-2 py-3 first:pt-0 last:pb-0">
-                <div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * peca.quantidade)}</p></div>
-                <Input type="number" min="0.01" step="0.01" value={peca.quantidade} onChange={(event) => setPecaQuantidade(peca.id, Number(event.target.value))} className="h-10 rounded-lg text-right tabular-nums" aria-label={`Quantidade de ${peca.descricao}`} />
+                <div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade))}</p></div>
+                <Input type="number" inputMode="decimal" min="0.01" step="0.01" value={peca.quantidade} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setPecaQuantidade(peca.id, event.target.value === "" ? "" : Number(event.target.value))} onBlur={() => { if (peca.quantidade === "" || peca.quantidade <= 0) setPecaQuantidade(peca.id, 1); }} className="h-10 rounded-lg text-right tabular-nums" aria-label={`Quantidade de ${peca.descricao}`} />
                 <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive" aria-label={`Remover ${peca.descricao}`} onClick={() => setPecasSelecionadas((current) => current.filter((item) => item.id !== peca.id))}><Trash2 className="h-4 w-4" /></Button>
               </li>
             ))}
@@ -299,8 +332,8 @@ function Relatorio() {
         </dl>
       </Section>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || filtrados.length === 0 || save.isPending} onClick={() => save.mutate()}>
-          <Save className="mr-2 h-5 w-5" /> {save.isPending ? "Salvando..." : "Salvar relatório"}
+        <Button variant="outline" className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || filtrados.length === 0 || !pecasValidas || save.isPending} onClick={() => save.mutate()}>
+          <Save className="mr-2 h-5 w-5" /> {save.isPending ? "Salvando..." : relatorioEmEdicao ? "Atualizar" : "Salvar relatório"}
         </Button>
         <Button className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || generating} onClick={() => void generate()}>
           <FileText className="mr-2 h-5 w-5" /> {generating ? "Gerando..." : "Gerar PDF"}

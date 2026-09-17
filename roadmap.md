@@ -12,3 +12,6 @@
 - [x] Salvar relatórios completos com peças e valores congelados, inclusive offline.
 - [x] Criar histórico de relatórios por cliente com reabertura, PDF e exclusão.
 - [x] Validar o fluxo no iPhone e confirmar compilação sem erros.
+- [ ] Permitir editar um relatório salvo e atualizar o mesmo documento offline.
+- [ ] Permitir apagar e substituir diretamente a quantidade de uma peça.
+- [ ] Validar a edição no tamanho de tela do iPhone.
