@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, FileText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, FilePenLine, FileText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -98,7 +98,8 @@ function RelatoriosSalvos() {
                     </dl>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2 pl-14">
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 pl-14">
+                  <Button asChild variant="outline" className="h-10 rounded-xl"><Link to="/relatorio" search={{ relatorio: item.id }}><FilePenLine className="mr-2 h-4 w-4" />Editar</Link></Button>
                   <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === item.id} onClick={() => void generate(item)}><FileText className="mr-2 h-4 w-4" />{generatingId === item.id ? "Gerando..." : "Gerar PDF"}</Button>
                   <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive" aria-label="Excluir relatório"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                 </div>

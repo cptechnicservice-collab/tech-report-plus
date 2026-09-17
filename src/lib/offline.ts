@@ -416,7 +416,12 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
   const userId = await requireUserId();
   const dbPayload = relatorioPayload(payload, userId);
   const now = new Date().toISOString();
-  const record: RelatorioSalvo = { created_at: now, updated_at: now, ...payload, user_id: userId };
+  const record: RelatorioSalvo = {
+    ...payload,
+    created_at: payload.created_at ?? now,
+    updated_at: now,
+    user_id: userId,
+  };
   const cached = (await readCached<RelatorioSalvo[]>(CACHE_RELATORIOS)) ?? [];
   const nextCache = [record, ...cached.filter((item) => item.id !== record.id)].sort((a, b) =>
     b.created_at.localeCompare(a.created_at),
