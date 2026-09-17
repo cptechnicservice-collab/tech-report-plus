@@ -182,7 +182,7 @@ function Relatorio() {
     if (!peca) return;
     setPecasSelecionadas((current) => {
       const existing = current.find((item) => item.id === peca.id);
-      if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: (item.quantidade === "" ? 0 : item.quantidade) + 1 } : item);
+      if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: (typeof item.quantidade === "number" ? item.quantidade : 0) + 1 } : item);
       return [...current, { id: peca.id, descricao: peca.descricao, codigo: peca.codigo, unidade: peca.unidade, preco: peca.preco, quantidade: 1 }];
     });
     setPecaId("");
@@ -310,7 +310,19 @@ function Relatorio() {
             {pecasSelecionadas.map((peca) => (
               <li key={peca.id} className="grid grid-cols-[minmax(0,1fr)_5rem_2.5rem] items-center gap-2 py-3 first:pt-0 last:pb-0">
                 <div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade))}</p></div>
-                <Input type="number" inputMode="decimal" min="0.01" step="0.01" value={peca.quantidade} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setPecaQuantidade(peca.id, event.target.value === "" ? "" : Number(event.target.value))} onBlur={() => { if (peca.quantidade === "" || peca.quantidade <= 0) setPecaQuantidade(peca.id, 1); }} className="h-10 rounded-lg text-right tabular-nums" aria-label={`Quantidade de ${peca.descricao}`} />
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={peca.quantidade}
+                  onFocus={(event) => event.currentTarget.select()}
+                  onChange={(event) => {
+                    const value = event.target.value.replace(",", ".");
+                    if (value === "") setPecaQuantidade(peca.id, "");
+                    else if (/^\d*\.?\d*$/.test(value)) setPecaQuantidade(peca.id, Number(value));
+                  }}
+                  className="h-10 rounded-lg text-right tabular-nums"
+                  aria-label={`Quantidade de ${peca.descricao}`}
+                />
                 <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive" aria-label={`Remover ${peca.descricao}`} onClick={() => setPecasSelecionadas((current) => current.filter((item) => item.id !== peca.id))}><Trash2 className="h-4 w-4" /></Button>
               </li>
             ))}
