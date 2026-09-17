@@ -242,9 +242,9 @@ export async function generateClientReport(
 
   autoTable(doc, {
     startY: (reportTable.lastAutoTable?.finalY ?? 35) + 6,
-    margin: { left: 153, right: 8, bottom: 32 },
+    margin: { left: 153, right: 8, bottom: 18 },
     theme: "plain",
-    styles: { fontSize: 9, cellPadding: 2.2 },
+    styles: { fontSize: 8.5, cellPadding: 1.4 },
     headStyles: { fillColor: [74, 82, 94], textColor: 255, fontStyle: "bold" },
     head: [["RESUMO DOS VALORES", ""]],
     body: [
@@ -252,7 +252,7 @@ export async function generateClientReport(
       ["Peças", formatCurrency(totalPecas)],
     ],
     foot: [["TOTAL GERAL", formatCurrency(totalComPecas)]],
-    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 10 },
+    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 9.5 },
     columnStyles: {
       0: { cellWidth: 72 },
       1: { cellWidth: 64, halign: "right", fontStyle: "bold" },
