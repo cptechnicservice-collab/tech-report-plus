@@ -78,6 +78,13 @@
       "when": 1789600917412,
       "tag": "0010_add_relatorio_financeiro_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789612144888,
+      "tag": "0011_add_report_receivables",
+      "breakpoints": true
     }
   ]
 }

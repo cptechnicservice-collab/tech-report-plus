@@ -271,16 +271,20 @@ export type Database = {
           cliente_nome: string
           cliente_snapshot: Json
           created_at: string
+          data_recebimento: string | null
           fim: string
           financeiro_snapshot: Json
+          forma_pagamento: string | null
           id: string
           inicio: string
+          pagamento_status: string
           pecas_snapshot: Json
           total_geral: number
           total_pecas: number
           total_servicos: number
           updated_at: string
           user_id: string
+          valor_recebido: number
           valores_snapshot: Json
         }
         Insert: {
@@ -289,16 +293,20 @@ export type Database = {
           cliente_nome: string
           cliente_snapshot: Json
           created_at?: string
+          data_recebimento?: string | null
           fim: string
           financeiro_snapshot?: Json
+          forma_pagamento?: string | null
           id?: string
           inicio: string
+          pagamento_status?: string
           pecas_snapshot?: Json
           total_geral?: number
           total_pecas?: number
           total_servicos?: number
           updated_at?: string
           user_id: string
+          valor_recebido?: number
           valores_snapshot?: Json
         }
         Update: {
@@ -307,16 +315,20 @@ export type Database = {
           cliente_nome?: string
           cliente_snapshot?: Json
           created_at?: string
+          data_recebimento?: string | null
           fim?: string
           financeiro_snapshot?: Json
+          forma_pagamento?: string | null
           id?: string
           inicio?: string
+          pagamento_status?: string
           pecas_snapshot?: Json
           total_geral?: number
           total_pecas?: number
           total_servicos?: number
           updated_at?: string
           user_id?: string
+          valor_recebido?: number
           valores_snapshot?: Json
         }
         Relationships: [
