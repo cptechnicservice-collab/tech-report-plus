@@ -74,7 +74,8 @@ export function valorPorExtenso(value: number) {
   const rounded = Math.round(value * 100);
   const reais = Math.floor(rounded / 100);
   const centavos = rounded % 100;
-  const realText = `${inteiroPorExtenso(reais)} ${reais === 1 ? "real" : "reais"}`;
+  const de = reais >= 1_000_000 && reais % 1_000_000 === 0 ? " de" : "";
+  const realText = `${inteiroPorExtenso(reais)}${de} ${reais === 1 ? "real" : "reais"}`;
   return centavos ? `${realText} e ${inteiroPorExtenso(centavos)} ${centavos === 1 ? "centavo" : "centavos"}` : realText;
 }
 
