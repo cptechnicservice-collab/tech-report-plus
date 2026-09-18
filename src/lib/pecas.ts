@@ -9,6 +9,7 @@ export type Peca = {
   unidade: string;
   preco: number;
   observacoes: string | null;
+  foto_data_url: string | null;
   created_at: string;
   updated_at: string;
 };
