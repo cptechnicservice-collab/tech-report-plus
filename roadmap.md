@@ -35,4 +35,4 @@
 - [x] Incluir horas trabalhadas, horas de viagem, diária inteira e meia diária entre os itens disponíveis do orçamento.
 - [x] Validar o novo PDF e o orçamento no iPhone e confirmar compilação sem erros.
 - [x] Adicionar foto opcional ao cadastro de peças, com redução e funcionamento offline.
-- [ ] Exibir as fotos das peças no PDF e validar o resultado no iPhone.
+- [x] Exibir as fotos das peças no PDF e validar o resultado no iPhone.
