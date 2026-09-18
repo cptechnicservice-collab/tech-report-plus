@@ -183,7 +183,7 @@ function Relatorio() {
     setPecasSelecionadas((current) => {
       const existing = current.find((item) => item.id === peca.id);
       if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: (typeof item.quantidade === "number" ? item.quantidade : 0) + 1 } : item);
-      return [...current, { id: peca.id, descricao: peca.descricao, codigo: peca.codigo, unidade: peca.unidade, preco: peca.preco, quantidade: 1 }];
+      return [...current, { id: peca.id, descricao: peca.descricao, codigo: peca.codigo, unidade: peca.unidade, preco: peca.preco, foto_data_url: peca.foto_data_url, quantidade: 1 }];
     });
     setPecaId("");
   };
@@ -313,7 +313,7 @@ function Relatorio() {
           <ul className="divide-y divide-border">
             {pecasSelecionadas.map((peca) => (
               <li key={peca.id} className="grid grid-cols-[minmax(0,1fr)_5rem_2.5rem] items-center gap-2 py-3 first:pt-0 last:pb-0">
-                <div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade))}</p></div>
+                <div className="flex min-w-0 items-center gap-2">{peca.foto_data_url ? <img src={peca.foto_data_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" /> : null}<div className="min-w-0"><p className="truncate text-sm font-medium">{peca.descricao}</p><p className="text-xs text-muted-foreground">{formatCurrency(peca.preco)} por {peca.unidade} · {formatCurrency(peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade))}</p></div></div>
                 <Input
                   type="text"
                   inputMode="decimal"

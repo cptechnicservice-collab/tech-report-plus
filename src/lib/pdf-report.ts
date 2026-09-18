@@ -19,6 +19,7 @@ export type ReportPartItem = {
   unidade: string;
   preco: number;
   quantidade: number;
+  foto_data_url?: string | null;
 };
 
 const range = (start?: string | null, end?: string | null) =>
@@ -173,19 +174,28 @@ export async function generateClientReport(
       styles: { fontSize: 7, cellPadding: 1.25 },
       headStyles: { fillColor: [39, 54, 78], textColor: 255 },
       footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
-      head: [["Peças utilizadas", "Qtd.", "Valor unit.", "Total"]],
+      head: [["Foto", "Peças utilizadas", "Qtd.", "Valor unit.", "Total"]],
       body: pecas.map((peca) => [
+        peca.foto_data_url ? "" : "—",
         `${peca.descricao}${peca.codigo ? ` · ${peca.codigo}` : ""}`,
         `${peca.quantidade} ${peca.unidade}`,
         formatCurrency(peca.preco),
         formatCurrency(peca.preco * peca.quantidade),
       ]),
-      foot: [["SUBTOTAL PEÇAS", "", "", formatCurrency(totalPecas)]],
+      foot: [["SUBTOTAL PEÇAS", "", "", "", formatCurrency(totalPecas)]],
       columnStyles: {
-        0: { cellWidth: 91 },
-        1: { cellWidth: 31, halign: "right" },
-        2: { cellWidth: 34, halign: "right" },
-        3: { cellWidth: 40, halign: "right" },
+        0: { cellWidth: 16, halign: "center" },
+        1: { cellWidth: 75 },
+        2: { cellWidth: 31, halign: "right" },
+        3: { cellWidth: 34, halign: "right" },
+        4: { cellWidth: 40, halign: "right" },
+      },
+      didParseCell: (data) => { if (data.section === "body" && data.column.index === 0 && pecas[data.row.index]?.foto_data_url) data.cell.styles.minCellHeight = 14; },
+      didDrawCell: (data) => {
+        if (data.section !== "body" || data.column.index !== 0) return;
+        const foto = pecas[data.row.index]?.foto_data_url;
+        if (!foto) return;
+        try { doc.addImage(foto, foto.startsWith("data:image/png") ? "PNG" : "JPEG", data.cell.x + 1, data.cell.y + 1, 12, Math.min(12, data.cell.height - 2), undefined, "FAST"); } catch { /* O PDF continua disponível se uma foto estiver corrompida. */ }
       },
     });
   }
