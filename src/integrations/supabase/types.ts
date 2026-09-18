@@ -391,6 +391,7 @@ export type Database = {
           codigo: string | null
           created_at: string
           descricao: string
+          foto_data_url: string | null
           id: string
           observacoes: string | null
           preco: number
@@ -402,6 +403,7 @@ export type Database = {
           codigo?: string | null
           created_at?: string
           descricao: string
+          foto_data_url?: string | null
           id?: string
           observacoes?: string | null
           preco?: number
@@ -413,6 +415,7 @@ export type Database = {
           codigo?: string | null
           created_at?: string
           descricao?: string
+          foto_data_url?: string | null
           id?: string
           observacoes?: string | null
           preco?: number
