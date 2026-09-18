@@ -87,7 +87,7 @@ function Pecas() {
   const openNew = () => { setDraft(emptyDraft); setEditing("new"); };
   const selectPhoto = async (file?: File) => {
     if (!file) return;
-    try { setDraft((current) => ({ ...current, foto_data_url: await resizeImage(file) })); }
+    try { const photo = await resizeImage(file); setDraft((current) => ({ ...current, foto_data_url: photo })); }
     catch { toast.error("Não foi possível usar essa foto"); }
   };
 
