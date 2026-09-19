@@ -8,6 +8,7 @@ import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTotais, todayISO, type ApontamentoComCliente } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";
@@ -117,6 +118,7 @@ function Relatorio() {
   const [activePeriod, setActivePeriod] = useState<PeriodKind>("month");
   const [generating, setGenerating] = useState(false);
   const [pecaId, setPecaId] = useState("");
+  const [observacaoRelatorio, setObservacaoRelatorio] = useState("");
   const [pecasSelecionadas, setPecasSelecionadas] = useState<Array<Omit<ReportPartItem, "quantidade"> & { quantidade: number | "" }>>([]);
   const initializedReportId = useRef<string | null>(null);
   const queryClient = useQueryClient();
@@ -242,7 +244,7 @@ function Relatorio() {
         toast.warning("Informe uma quantidade maior que zero para cada peça");
         return;
       }
-      await generateClientReport(cliente, filtrados, valoresDisponiveis, pecasParaSalvar(), inicio, fim);
+      await generateClientReport(cliente, filtrados, valoresDisponiveis, pecasParaSalvar(), inicio, fim, undefined, observacaoRelatorio);
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
     } finally {
@@ -298,6 +300,18 @@ function Relatorio() {
         </div>
         {invalidPeriod && <p className="text-sm font-medium text-destructive">A data “De” deve ser anterior ou igual à data “Até”.</p>}
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
+      </Section>
+      <Section title="Observação do relatório">
+        <div className="space-y-1.5">
+          <Label htmlFor="report-note">Observação (opcional)</Label>
+          <Textarea
+            id="report-note"
+            value={observacaoRelatorio}
+            onChange={(event) => setObservacaoRelatorio(event.target.value)}
+            placeholder="Digite uma observação geral para incluir no PDF"
+            rows={4}
+          />
+        </div>
       </Section>
       <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
