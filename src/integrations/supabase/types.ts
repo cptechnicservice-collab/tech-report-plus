@@ -459,6 +459,7 @@ export type Database = {
           forma_pagamento: string | null
           id: string
           inicio: string
+          observacao_relatorio: string
           pagamento_status: string
           pecas_snapshot: Json
           total_geral: number
@@ -481,6 +482,7 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           inicio: string
+          observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
           total_geral?: number
@@ -503,6 +505,7 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           inicio?: string
+          observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
           total_geral?: number

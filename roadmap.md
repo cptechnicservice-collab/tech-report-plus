@@ -36,3 +36,6 @@
 - [x] Validar o novo PDF e o orçamento no iPhone e confirmar compilação sem erros.
 - [x] Adicionar foto opcional ao cadastro de peças, com redução e funcionamento offline.
 - [x] Exibir as fotos das peças no PDF e validar o resultado no iPhone.
+- [x] Reorganizar somente o PDF do relatório em A4 paisagem, com horários separados, observação geral e valores lado a lado.
+- [x] Validar o novo relatório no iPhone e confirmar compilação sem erros.
+- [x] Mover a observação geral para Relatórios salvos, salvando o texto para o PDF final.

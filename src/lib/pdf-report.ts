@@ -119,12 +119,13 @@ export async function generateClientReport(
   inicio: string,
   fim: string,
   financeiroSalvo?: TotaisFinanceiros,
+  observacaoRelatorio = "",
 ) {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
     import("jspdf-autotable"),
   ]);
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text("CP TECHNIC", 9, 11);
@@ -142,31 +143,51 @@ export async function generateClientReport(
   autoTable(doc, {
     startY: details ? 28 : 24,
     margin: { left: 7, right: 7, bottom: 24 },
-    styles: { fontSize: 6.2, cellPadding: 1.15, overflow: "linebreak", valign: "top", lineWidth: 0.05 },
+    theme: "plain",
+    styles: { fontSize: 7, cellPadding: 1.5, overflow: "linebreak", valign: "middle", lineColor: [218, 222, 228], lineWidth: { bottom: 0.12 } },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-    head: [["Data", "Máquina / serviço", "Horários", "H. trab.", "Viagem / KM", "Observações"]],
+    footStyles: { fillColor: [235, 239, 244], textColor: [39, 54, 78], fontStyle: "bold", lineWidth: 0 },
+    head: [["Data", "Ida", "Trabalho", "Intervalo", "Retorno", "H. trab.", "H. viagem", "KM"]],
     body: [...apontamentos].sort((a, b) => a.data.localeCompare(b.data)).map((item) => {
       const itemTotals = calcularTotais(item);
-      const horarios = [
-        item.viagem_ida_saida && item.viagem_ida_chegada ? `Ida ${range(item.viagem_ida_saida, item.viagem_ida_chegada)}` : null,
-        item.trabalho_inicio && item.trabalho_fim ? `Trab. ${range(item.trabalho_inicio, item.trabalho_fim)}` : null,
-        item.intervalo_inicio && item.intervalo_fim ? `Int. ${range(item.intervalo_inicio, item.intervalo_fim)}` : null,
-        item.viagem_volta_saida && item.viagem_volta_chegada ? `Ret. ${range(item.viagem_volta_saida, item.viagem_volta_chegada)}` : null,
-      ].filter(Boolean).join("\n") || "—";
       return [
         formatDateBR(item.data),
-        item.maquina_servico || "—",
-        horarios,
+        range(item.viagem_ida_saida, item.viagem_ida_chegada),
+        range(item.trabalho_inicio, item.trabalho_fim),
+        range(item.intervalo_inicio, item.intervalo_fim),
+        range(item.viagem_volta_saida, item.viagem_volta_chegada),
         formatMinutes(itemTotals.trabalho),
-        `${formatMinutes(itemTotals.viagem)}\n${itemTotals.km} km`,
-        item.observacoes || "—",
+        formatMinutes(itemTotals.viagem),
+        `${itemTotals.km} km`,
       ];
     }),
-    foot: [["TOTAIS", "", "", formatMinutes(totals.trabalho), `${formatMinutes(totals.viagem)}\n${totals.km} km`, ""]],
-    columnStyles: { 0: { cellWidth: 17 }, 1: { cellWidth: 36 }, 2: { cellWidth: 43 }, 3: { cellWidth: 17 }, 4: { cellWidth: 22 }, 5: { cellWidth: 61 } },
+    foot: [["TOTAIS", "", "", "", "", formatMinutes(totals.trabalho), formatMinutes(totals.viagem), `${totals.km} km`]],
+    columnStyles: {
+      0: { cellWidth: 25 }, 1: { cellWidth: 39 }, 2: { cellWidth: 39 }, 3: { cellWidth: 39 }, 4: { cellWidth: 39 },
+      5: { cellWidth: 32, halign: "right" }, 6: { cellWidth: 32, halign: "right" }, 7: { cellWidth: 32, halign: "right" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body") {
+        data.cell.styles.fillColor = data.row.index % 2 === 0 ? [247, 248, 250] : [255, 255, 255];
+        if (data.cell.raw === "—") data.cell.styles.textColor = [170, 176, 184];
+      }
+    },
   });
 
   const reportTable = doc as typeof doc & { lastAutoTable?: { finalY: number } };
+  const note = observacaoRelatorio.trim();
+  if (note) {
+    const noteStart = (reportTable.lastAutoTable?.finalY ?? 30) + 4;
+    const noteLines = doc.splitTextToSize(note, 272) as string[];
+    const noteHeight = 10 + noteLines.length * 3.5;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (noteStart + noteHeight > pageHeight - 24) doc.addPage();
+    const y = noteStart + noteHeight > pageHeight - 24 ? 12 : noteStart;
+    doc.setFillColor(247, 248, 250); doc.roundedRect(7, y, 283, noteHeight, 1.5, 1.5, "F");
+    doc.setTextColor(39, 54, 78); doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text("OBSERVAÇÃO", 11, y + 5);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(noteLines, 11, y + 10);
+    reportTable.lastAutoTable = { finalY: y + noteHeight };
+  }
   if (pecas.length > 0) {
     autoTable(doc, {
       startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
@@ -183,13 +204,7 @@ export async function generateClientReport(
         formatCurrency(peca.preco * peca.quantidade),
       ]),
       foot: [["SUBTOTAL PEÇAS", "", "", "", formatCurrency(totalPecas)]],
-      columnStyles: {
-        0: { cellWidth: 16, halign: "center" },
-        1: { cellWidth: 75 },
-        2: { cellWidth: 31, halign: "right" },
-        3: { cellWidth: 34, halign: "right" },
-        4: { cellWidth: 40, halign: "right" },
-      },
+      columnStyles: { 0: { cellWidth: 16, halign: "center" }, 1: { cellWidth: 146 }, 2: { cellWidth: 39, halign: "right" }, 3: { cellWidth: 40, halign: "right" }, 4: { cellWidth: 42, halign: "right" } },
       didParseCell: (data) => { if (data.section === "body" && data.column.index === 0 && pecas[data.row.index]?.foto_data_url) data.cell.styles.minCellHeight = 14; },
       didDrawCell: (data) => {
         if (data.section !== "body" || data.column.index !== 0) return;
@@ -235,39 +250,38 @@ export async function generateClientReport(
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
   ];
+  const valuesStartY = (reportTable.lastAutoTable?.finalY ?? 30) + 4;
+  const valuesPage = doc.getNumberOfPages();
   autoTable(doc, {
-    startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
-    margin: { left: 37, right: 7, bottom: 24 },
+    startY: valuesStartY,
+    margin: { left: 7, right: 108, bottom: 24 },
     styles: { fontSize: 7, cellPadding: 1.25 },
     headStyles: { fillColor: [39, 54, 78], textColor: 255 },
     footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
     head: [["Valores dos serviços", "Qtd.", "Valor unit.", "Total"]],
     body: financialRows,
     foot: [["TOTAL DOS SERVIÇOS", "", "", formatCurrency(financial.totalGeral)]],
-    columnStyles: {
-      0: { cellWidth: 52 },
-      1: { cellWidth: 30, halign: "right" },
-      2: { cellWidth: 43, halign: "right" },
-      3: { cellWidth: 41, halign: "right" },
-    },
+    columnStyles: { 0: { cellWidth: 62 }, 1: { cellWidth: 35, halign: "right" }, 2: { cellWidth: 42, halign: "right" }, 3: { cellWidth: 43, halign: "right" } },
   });
-
+  const servicesFinalY = reportTable.lastAutoTable?.finalY ?? valuesStartY;
+  doc.setPage(valuesPage);
+  const summaryCurrency = (value: number) => formatCurrency(value).replace(/^R\$\s?/, "");
   autoTable(doc, {
-    startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
-    margin: { left: 74, right: 7, bottom: 24 },
+    startY: valuesStartY,
+    margin: { left: 194, right: 7, bottom: 24 },
     theme: "plain",
     styles: { fontSize: 7.5, cellPadding: 1.2 },
     headStyles: { fillColor: [74, 82, 94], textColor: 255, fontStyle: "bold" },
     head: [["RESUMO DOS VALORES", ""]],
     body: [
-      ["Serviços", formatCurrency(financial.totalGeral)],
-      ["Peças", formatCurrency(totalPecas)],
+      ["Serviços", summaryCurrency(financial.totalGeral)],
+      ["Peças", summaryCurrency(totalPecas)],
     ],
-    foot: [["TOTAL GERAL", formatCurrency(totalComPecas)]],
+    foot: [["TOTAL GERAL", summaryCurrency(totalComPecas)]],
     footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 8.5 },
     columnStyles: {
-      0: { cellWidth: 66 },
-      1: { cellWidth: 63, halign: "right", fontStyle: "bold" },
+      0: { cellWidth: 48 },
+      1: { cellWidth: 48, halign: "right", fontStyle: "bold" },
     },
     didParseCell: (data) => {
       if (data.section === "body") {
@@ -275,18 +289,20 @@ export async function generateClientReport(
       }
     },
   });
+  const summaryFinalY = reportTable.lastAutoTable?.finalY ?? valuesStartY;
+  reportTable.lastAutoTable = { finalY: Math.max(servicesFinalY, summaryFinalY) };
 
   const pageHeight = doc.internal.pageSize.getHeight();
   const finalY = reportTable.lastAutoTable?.finalY ?? 0;
   if (finalY > pageHeight - 27) doc.addPage();
   doc.setPage(doc.getNumberOfPages());
   doc.setDrawColor(140);
-  doc.line(10, pageHeight - 18, 82, pageHeight - 18);
-  doc.line(128, pageHeight - 18, 200, pageHeight - 18);
+  doc.line(10, pageHeight - 18, 105, pageHeight - 18);
+  doc.line(192, pageHeight - 18, 287, pageHeight - 18);
   doc.setFontSize(7);
   doc.text("Assinatura do técnico", 10, pageHeight - 13);
-  doc.text("Responsável do cliente", 128, pageHeight - 13);
-  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 200, pageHeight - 7, { align: "right" });
+  doc.text("Responsável do cliente", 192, pageHeight - 13);
+  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 287, pageHeight - 7, { align: "right" });
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
   await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);

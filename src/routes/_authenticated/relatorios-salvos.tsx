@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Download, FilePenLine, FileText, HandCoins, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Download, FilePenLine, FileText, HandCoins, MessageSquareText, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
@@ -46,6 +47,8 @@ function RelatoriosSalvos() {
   const [valorRecebido, setValorRecebido] = useState("");
   const [dataRecebimento, setDataRecebimento] = useState("");
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
+  const [relatorioObservacao, setRelatorioObservacao] = useState<RelatorioSalvo | null>(null);
+  const [observacao, setObservacao] = useState("");
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
   const relatoriosVisiveis = useMemo(() => {
@@ -93,6 +96,7 @@ function RelatoriosSalvos() {
         item.inicio,
         item.fim,
         item.financeiro_snapshot,
+        item.observacao_relatorio,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
@@ -130,6 +134,24 @@ function RelatoriosSalvos() {
       toast.success(result.queued ? "Recebimento salvo no aparelho" : "Recebimento registrado");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível registrar o recebimento"),
+  });
+
+  const openObservacao = (item: RelatorioSalvo) => {
+    setRelatorioObservacao(item);
+    setObservacao(item.observacao_relatorio ?? "");
+  };
+
+  const saveObservacao = useMutation({
+    mutationFn: async () => {
+      if (!relatorioObservacao) throw new Error("Relatório não encontrado.");
+      return saveRelatorioOffline({ ...relatorioObservacao, observacao_relatorio: observacao.trim() });
+    },
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
+      setRelatorioObservacao(null);
+      toast.success(result.queued ? "Observação salva no aparelho" : "Observação salva");
+    },
+    onError: () => toast.error("Não foi possível salvar a observação"),
   });
 
   const generateReceipt = async (item: RelatorioSalvo) => {
@@ -209,11 +231,13 @@ function RelatoriosSalvos() {
                     <p className="mt-1 text-sm text-muted-foreground">{formatDateBR(item.inicio)} a {formatDateBR(item.fim)}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}</p>
                     {item.pagamento_status !== "pago" ? <p className="mt-1 text-xs font-medium text-warning-foreground">Saldo {formatCurrency(saldoRelatorio(item))}</p> : null}
+                    {item.observacao_relatorio ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Obs.: {item.observacao_relatorio}</p> : null}
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 pl-[3.25rem]">
                   <Button asChild variant="outline" className="h-10 rounded-xl"><Link to="/relatorio" search={{ relatorio: item.id }}><FilePenLine className="mr-2 h-4 w-4" />Editar</Link></Button>
                   <Button variant="outline" className="h-10 rounded-xl" onClick={() => openRecebimento(item)}><HandCoins className="mr-2 h-4 w-4" />Recebimento</Button>
+                   <Button variant="outline" className="h-10 rounded-xl" onClick={() => openObservacao(item)}><MessageSquareText className="mr-2 h-4 w-4" />Observação</Button>
                   <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === item.id} onClick={() => void generate(item)}><Download className="mr-2 h-4 w-4" />Relatório</Button>
                   {item.valor_recebido > 0 ? <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === `recibo-${item.id}`} onClick={() => void generateReceipt(item)}><ReceiptText className="mr-2 h-4 w-4" />Recibo</Button> : <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}
                   {item.valor_recebido > 0 ? <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="col-span-2 h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : null}
@@ -236,6 +260,22 @@ function RelatoriosSalvos() {
           </div>
           <DrawerFooter>
             <Button className="h-12 rounded-xl" disabled={saveRecebimento.isPending} onClick={() => saveRecebimento.mutate()}>{saveRecebimento.isPending ? "Salvando..." : "Confirmar recebimento"}</Button>
+            <DrawerClose asChild><Button variant="ghost" className="h-11 rounded-xl">Cancelar</Button></DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+      <Drawer open={Boolean(relatorioObservacao)} onOpenChange={(open) => { if (!open) setRelatorioObservacao(null); }}>
+        <DrawerContent className="mx-auto max-w-lg rounded-t-3xl pb-[max(env(safe-area-inset-bottom),1rem)]">
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Observação do relatório</DrawerTitle>
+            <DrawerDescription>{relatorioObservacao?.cliente_nome} · aparece somente no PDF final</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4">
+            <Label htmlFor="saved-report-note">Observação</Label>
+            <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Ex.: gastos com hotel, alimentação ou detalhes finais" rows={5} />
+          </div>
+          <DrawerFooter>
+            <Button className="h-12 rounded-xl" disabled={saveObservacao.isPending} onClick={() => saveObservacao.mutate()}>{saveObservacao.isPending ? "Salvando..." : "Salvar observação"}</Button>
             <DrawerClose asChild><Button variant="ghost" className="h-11 rounded-xl">Cancelar</Button></DrawerClose>
           </DrawerFooter>
         </DrawerContent>

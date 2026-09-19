@@ -496,8 +496,8 @@ export async function deleteOrcamentoOffline(id: string) {
   return { queued: true };
 }
 
-type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento"> &
-  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento">>;
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio">>;
 
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
@@ -515,6 +515,7 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     valores_snapshot: payload.valores_snapshot as unknown as Json,
     pecas_snapshot: payload.pecas_snapshot as unknown as Json,
     financeiro_snapshot: payload.financeiro_snapshot as unknown as Json,
+    observacao_relatorio: payload.observacao_relatorio ?? "",
     pagamento_status: payload.pagamento_status ?? "pendente",
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
@@ -532,6 +533,7 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
+    observacao_relatorio: payload.observacao_relatorio ?? "",
     created_at: payload.created_at ?? now,
     updated_at: now,
     user_id: userId,
