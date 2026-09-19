@@ -515,10 +515,12 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     valores_snapshot: payload.valores_snapshot as unknown as Json,
     pecas_snapshot: payload.pecas_snapshot as unknown as Json,
     financeiro_snapshot: payload.financeiro_snapshot as unknown as Json,
+    observacao_relatorio: payload.observacao_relatorio ?? "",
     pagamento_status: payload.pagamento_status ?? "pendente",
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
+    observacao_relatorio: payload.observacao_relatorio ?? "",
   };
 }
 

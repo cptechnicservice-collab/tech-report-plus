@@ -19,6 +19,7 @@ export type RelatorioSalvo = {
   valores_snapshot: ValorVigencia[];
   pecas_snapshot: ReportPartItem[];
   financeiro_snapshot: TotaisFinanceiros;
+  observacao_relatorio: string;
   pagamento_status: PagamentoStatus;
   valor_recebido: number;
   data_recebimento: string | null;
@@ -55,6 +56,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     valor_recebido: recebido,
     data_recebimento: item.data_recebimento ?? null,
     forma_pagamento: item.forma_pagamento ?? null,
+    observacao_relatorio: item.observacao_relatorio ?? "",
   };
 }
 
