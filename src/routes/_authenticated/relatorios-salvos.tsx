@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Download, FilePenLine, FileText, HandCoins, MessageSquareText, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Camera, Download, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -18,11 +18,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
+import { resizeImage } from "@/lib/image-resize";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
 
-type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string };
+type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: string[] };
+
+const tiposDespesa = [
+  { value: "pedagio", label: "Pedágio" },
+  { value: "hotel", label: "Hotel" },
+  { value: "alimentacao", label: "Alimentação" },
+  { value: "combustivel", label: "Combustível" },
+  { value: "diversos", label: "Gastos diversos" },
+] as const;
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
   validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" } => {
@@ -53,6 +62,7 @@ function RelatoriosSalvos() {
   const [relatorioObservacao, setRelatorioObservacao] = useState<RelatorioSalvo | null>(null);
   const [observacao, setObservacao] = useState("");
   const [despesas, setDespesas] = useState<DespesaEditavel[]>([]);
+  const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
   const relatoriosVisiveis = useMemo(() => {
@@ -145,7 +155,30 @@ function RelatoriosSalvos() {
   const openObservacao = (item: RelatorioSalvo) => {
     setRelatorioObservacao(item);
     setObservacao(item.observacao_relatorio ?? "");
-    setDespesas((item.despesas_snapshot ?? []).map((despesa) => ({ ...despesa, valor: String(despesa.valor).replace(".", ",") })));
+    setDespesas((item.despesas_snapshot ?? []).map((despesa) => ({
+      ...despesa,
+      tipo: despesa.tipo ?? "diversos",
+      data: despesa.data ?? item.fim,
+      anexos: despesa.anexos ?? [],
+      valor: String(despesa.valor).replace(".", ","),
+    })));
+  };
+
+  const addExpensePhotos = async (despesaId: string, files: FileList | null, replaceIndex?: number) => {
+    if (!files?.length) return;
+    try {
+      const photos = await Promise.all(Array.from(files).map((file) => resizeImage(file)));
+      setDespesas((current) => current.map((despesa) => {
+        if (despesa.id !== despesaId) return despesa;
+        if (replaceIndex == null) return { ...despesa, anexos: [...despesa.anexos, ...photos] };
+        const anexos = [...despesa.anexos];
+        const replacement = photos[0];
+        if (replacement) anexos[replaceIndex] = replacement;
+        return { ...despesa, anexos };
+      }));
+    } catch {
+      toast.error("Não foi possível usar essa foto");
+    }
   };
 
   const saveObservacao = useMutation({
@@ -153,8 +186,11 @@ function RelatoriosSalvos() {
       if (!relatorioObservacao) throw new Error("Relatório não encontrado.");
       const despesasValidas = despesas.map((despesa) => ({
         id: despesa.id,
+        tipo: despesa.tipo ?? "diversos" as const,
         descricao: despesa.descricao.trim(),
+        data: despesa.data || relatorioObservacao.fim,
         valor: Number(despesa.valor.replace(",", ".")),
+        anexos: despesa.anexos,
       }));
       if (despesasValidas.some((despesa) => !despesa.descricao || !Number.isFinite(despesa.valor) || despesa.valor <= 0)) {
         throw new Error("Preencha a descrição e um valor maior que zero em cada despesa.");
@@ -302,15 +338,23 @@ function RelatoriosSalvos() {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div><p className="text-sm font-semibold">Despesas adicionais</p><p className="text-xs text-muted-foreground">Hotel, pedágio ou outras despesas</p></div>
-                <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Adicionar despesa" onClick={() => setDespesas((current) => [...current, { id: crypto.randomUUID(), descricao: "", valor: "" }])}><Plus className="h-4 w-4" /></Button>
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Adicionar despesa" onClick={() => setDespesas((current) => [...current, { id: crypto.randomUUID(), tipo: "diversos", descricao: "", data: relatorioObservacao?.fim ?? "", valor: "", anexos: [] }])}><Plus className="h-4 w-4" /></Button>
               </div>
               {despesas.length === 0 ? <p className="rounded-xl bg-secondary px-3 py-4 text-center text-sm text-muted-foreground">Nenhuma despesa adicionada.</p> : (
                 <div className="space-y-3">
                   {despesas.map((despesa, index) => (
-                    <div key={despesa.id} className="grid grid-cols-[minmax(0,1fr)_6.5rem_2.5rem] items-end gap-2">
-                      <div className="space-y-1"><Label htmlFor={`expense-description-${despesa.id}`}>Descrição {index + 1}</Label><Input id={`expense-description-${despesa.id}`} value={despesa.descricao} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, descricao: event.target.value } : item))} placeholder="Hotel" className="h-11 rounded-xl" /></div>
-                      <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
-                      <Button type="button" variant="ghost" size="icon" className="h-11 w-10 rounded-full text-destructive" aria-label={`Remover despesa ${index + 1}`} onClick={() => setDespesas((current) => current.filter((item) => item.id !== despesa.id))}><Trash2 className="h-4 w-4" /></Button>
+                    <div key={despesa.id} className="space-y-3 rounded-xl border border-border p-3">
+                      <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold">Despesa {index + 1}</p>{despesa.anexos.length > 0 ? <span className="inline-flex items-center gap-1 text-xs font-medium text-primary"><Paperclip className="h-3.5 w-3.5" />{despesa.anexos.length}</span> : null}<Button type="button" variant="ghost" size="icon" className="ml-auto h-9 w-9 rounded-full text-destructive" aria-label={`Remover despesa ${index + 1}`} onClick={() => setDespesas((current) => current.filter((item) => item.id !== despesa.id))}><Trash2 className="h-4 w-4" /></Button></div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1"><Label htmlFor={`expense-type-${despesa.id}`}>Tipo</Label><select id={`expense-type-${despesa.id}`} value={despesa.tipo ?? "diversos"} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, tipo: event.target.value as DespesaRelatorio["tipo"] } : item))} className="ios-field h-11 w-full border px-3">{tiposDespesa.map((tipo) => <option key={tipo.value} value={tipo.value}>{tipo.label}</option>)}</select></div>
+                        <div className="space-y-1"><Label htmlFor={`expense-date-${despesa.id}`}>Data</Label><Input id={`expense-date-${despesa.id}`} type="date" value={despesa.data ?? ""} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, data: event.target.value } : item))} className="h-11 rounded-xl" /></div>
+                      </div>
+                      <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+                        <div className="space-y-1"><Label htmlFor={`expense-description-${despesa.id}`}>Descrição</Label><Input id={`expense-description-${despesa.id}`} value={despesa.descricao} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, descricao: event.target.value } : item))} placeholder="Hotel" className="h-11 rounded-xl" /></div>
+                        <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
+                      </div>
+                      {despesa.anexos.length > 0 ? <div className="grid grid-cols-3 gap-2">{despesa.anexos.map((anexo, anexoIndex) => <div key={`${despesa.id}-${anexoIndex}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted"><button type="button" className="h-full w-full" aria-label={`Visualizar comprovante ${anexoIndex + 1}`} onClick={() => setAnexoAberto(anexo)}><img src={anexo} alt={`Comprovante ${anexoIndex + 1}`} className="h-full w-full object-cover" /></button><div className="absolute bottom-1 right-1 flex gap-1"><Button asChild type="button" variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow"><label aria-label={`Substituir comprovante ${anexoIndex + 1}`}><ImagePlus className="h-3.5 w-3.5" /><input type="file" accept="image/*" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files, anexoIndex)} /></label></Button><Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full shadow" aria-label={`Excluir comprovante ${anexoIndex + 1}`} onClick={() => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, anexos: item.anexos.filter((_, photoIndex) => photoIndex !== anexoIndex) } : item))}><Trash2 className="h-3.5 w-3.5" /></Button></div></div>)}</div> : null}
+                      <div className="grid grid-cols-2 gap-2"><Button asChild type="button" variant="outline" className="h-10 rounded-xl"><label><Camera className="mr-2 h-4 w-4" />Câmera<input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl"><label><ImagePlus className="mr-2 h-4 w-4" />Galeria<input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button></div>
                     </div>
                   ))}
                   <div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total das despesas</span><span className="tabular-nums text-primary">{formatCurrency(despesas.reduce((total, despesa) => total + (Number(despesa.valor.replace(",", ".")) || 0), 0))}</span></div>
@@ -322,6 +366,12 @@ function RelatoriosSalvos() {
             <Button variant="ghost" className="h-11 rounded-xl sm:order-first" onClick={() => setRelatorioObservacao(null)}>Cancelar</Button>
             <Button className="h-11 rounded-xl" disabled={saveObservacao.isPending} onClick={() => saveObservacao.mutate()}>{saveObservacao.isPending ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={Boolean(anexoAberto)} onOpenChange={(open) => { if (!open) setAnexoAberto(null); }}>
+        <DialogContent className="h-[100dvh] max-h-none w-screen max-w-none border-0 bg-foreground p-0 text-background sm:h-auto sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:max-w-3xl sm:rounded-2xl">
+          <DialogHeader className="sr-only"><DialogTitle>Comprovante</DialogTitle><DialogDescription>Visualização ampliada do comprovante</DialogDescription></DialogHeader>
+          {anexoAberto ? <img src={anexoAberto} alt="Comprovante ampliado" className="h-full w-full object-contain" /> : null}
         </DialogContent>
       </Dialog>
     </PageShell>
