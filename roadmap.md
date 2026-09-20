@@ -51,3 +51,5 @@
 - [x] Acrescentar páginas de anexos ao PDF sem alterar a primeira folha.
 - [x] Manter todas as fotos exclusivamente em páginas adicionais, preservando o relatório atual.
 - [x] Validar anexos no iPhone, PDFs com e sem comprovantes e compilação.
+- [x] Permitir anexar comprovantes em PDF de até 5 MB às despesas.
+- [x] Incluir todas as páginas de cada PDF ao final do relatório, começando em página exclusiva.

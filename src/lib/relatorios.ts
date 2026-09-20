@@ -4,13 +4,19 @@ import type { TotaisFinanceiros, ValorVigencia } from "@/lib/financeiro";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ReportPartItem } from "@/lib/pdf-report";
 
+export type AnexoDespesa = string | {
+  tipo: "imagem" | "pdf";
+  nome: string;
+  conteudo: string;
+};
+
 export type DespesaRelatorio = {
   id: string;
   tipo?: "pedagio" | "hotel" | "alimentacao" | "combustivel" | "diversos";
   descricao: string;
   data?: string;
   valor: number;
-  anexos?: string[];
+  anexos?: AnexoDespesa[];
 };
 
 export type RelatorioSalvo = {
@@ -72,7 +78,11 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
         ...despesa,
         tipo: despesa.tipo ?? ("diversos" as const),
         data: despesa.data ?? item.fim,
-        anexos: Array.isArray(despesa.anexos) ? despesa.anexos.filter((anexo): anexo is string => typeof anexo === "string") : [],
+        anexos: Array.isArray(despesa.anexos)
+          ? despesa.anexos.filter((anexo): anexo is AnexoDespesa =>
+              typeof anexo === "string" || Boolean(anexo && typeof anexo === "object" && "tipo" in anexo && "conteudo" in anexo),
+            )
+          : [],
       }))
     : [];
   return {

@@ -21,9 +21,23 @@ import { formatCurrency } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
+import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
 
-type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: string[] };
+type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: AnexoDespesa[] };
+
+const MAX_PDF_SIZE = 5 * 1024 * 1024;
+
+const attachmentContent = (anexo: AnexoDespesa) => typeof anexo === "string" ? anexo : anexo.conteudo;
+const attachmentIsPdf = (anexo: AnexoDespesa) => typeof anexo !== "string" && anexo.tipo === "pdf";
+
+async function fileToDataUrl(file: File) {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("Não foi possível ler o arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
 
 const tiposDespesa = [
   { value: "pedagio", label: "Pedágio" },
@@ -179,6 +193,36 @@ function RelatoriosSalvos() {
       }));
     } catch {
       toast.error("Não foi possível usar essa foto");
+    }
+  };
+
+  const addExpensePdfs = async (despesaId: string, files: FileList | null, replaceIndex?: number) => {
+    if (!files?.length) return;
+    const selected = Array.from(files);
+    if (selected.some((file) => file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf"))) {
+      toast.error("Escolha somente arquivos PDF");
+      return;
+    }
+    if (selected.some((file) => file.size > MAX_PDF_SIZE)) {
+      toast.error("Cada PDF pode ter no máximo 5 MB");
+      return;
+    }
+    try {
+      const pdfs = await Promise.all(selected.map(async (file): Promise<AnexoDespesa> => ({
+        tipo: "pdf",
+        nome: file.name,
+        conteudo: await fileToDataUrl(file),
+      })));
+      setDespesas((current) => current.map((despesa) => {
+        if (despesa.id !== despesaId) return despesa;
+        if (replaceIndex == null) return { ...despesa, anexos: [...despesa.anexos, ...pdfs] };
+        const anexos = [...despesa.anexos];
+        const replacement = pdfs[0];
+        if (replacement) anexos[replaceIndex] = replacement;
+        return { ...despesa, anexos };
+      }));
+    } catch {
+      toast.error("Não foi possível usar esse PDF");
     }
   };
 
@@ -354,8 +398,8 @@ function RelatoriosSalvos() {
                         <div className="space-y-1"><Label htmlFor={`expense-description-${despesa.id}`}>Descrição</Label><Input id={`expense-description-${despesa.id}`} value={despesa.descricao} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, descricao: event.target.value } : item))} placeholder="Hotel" className="h-11 rounded-xl" /></div>
                         <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
                       </div>
-                      {despesa.anexos.length > 0 ? <div className="grid grid-cols-3 gap-2">{despesa.anexos.map((anexo, anexoIndex) => <div key={`${despesa.id}-${anexoIndex}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted"><Button type="button" variant="ghost" className="h-full w-full rounded-none p-0" aria-label={`Visualizar comprovante ${anexoIndex + 1}`} onClick={() => setAnexoAberto(anexo)}><img src={anexo} alt={`Comprovante ${anexoIndex + 1}`} className="h-full w-full object-cover" /></Button><div className="absolute bottom-1 right-1 flex gap-1"><Button asChild type="button" variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow"><label aria-label={`Substituir comprovante ${anexoIndex + 1}`}><ImagePlus className="h-3.5 w-3.5" /><input type="file" accept="image/*" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files, anexoIndex)} /></label></Button><Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full shadow" aria-label={`Excluir comprovante ${anexoIndex + 1}`} onClick={() => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, anexos: item.anexos.filter((_, photoIndex) => photoIndex !== anexoIndex) } : item))}><Trash2 className="h-3.5 w-3.5" /></Button></div></div>)}</div> : null}
-                      <div className="grid grid-cols-2 gap-2"><Button asChild type="button" variant="outline" className="h-10 rounded-xl"><label><Camera className="mr-2 h-4 w-4" />Câmera<input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl"><label><ImagePlus className="mr-2 h-4 w-4" />Galeria<input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button></div>
+                      {despesa.anexos.length > 0 ? <div className="grid grid-cols-3 gap-2">{despesa.anexos.map((anexo, anexoIndex) => <div key={`${despesa.id}-${anexoIndex}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted"><Button type="button" variant="ghost" className="h-full w-full rounded-none p-0" aria-label={`Visualizar comprovante ${anexoIndex + 1}`} onClick={() => setAnexoAberto(attachmentContent(anexo))}>{attachmentIsPdf(anexo) ? <span className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center"><FileText className="h-7 w-7 text-primary" /><span className="line-clamp-2 text-[0.65rem] font-medium">{typeof anexo === "string" ? "PDF" : anexo.nome}</span></span> : <img src={attachmentContent(anexo)} alt={`Comprovante ${anexoIndex + 1}`} className="h-full w-full object-cover" />}</Button><div className="absolute bottom-1 right-1 flex gap-1"><Button asChild type="button" variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow"><label aria-label={`Substituir comprovante ${anexoIndex + 1}`}>{attachmentIsPdf(anexo) ? <FileText className="h-3.5 w-3.5" /> : <ImagePlus className="h-3.5 w-3.5" />}<input type="file" accept={attachmentIsPdf(anexo) ? "application/pdf,.pdf" : "image/*"} className="sr-only" onChange={(event) => attachmentIsPdf(anexo) ? void addExpensePdfs(despesa.id, event.target.files, anexoIndex) : void addExpensePhotos(despesa.id, event.target.files, anexoIndex)} /></label></Button><Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full shadow" aria-label={`Excluir comprovante ${anexoIndex + 1}`} onClick={() => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, anexos: item.anexos.filter((_, photoIndex) => photoIndex !== anexoIndex) } : item))}><Trash2 className="h-3.5 w-3.5" /></Button></div></div>)}</div> : null}
+                      <div className="grid grid-cols-3 gap-2"><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><Camera className="mr-1.5 h-4 w-4" />Câmera<input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><ImagePlus className="mr-1.5 h-4 w-4" />Fotos<input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><FileText className="mr-1.5 h-4 w-4" />PDF<input type="file" accept="application/pdf,.pdf" multiple className="sr-only" onChange={(event) => void addExpensePdfs(despesa.id, event.target.files)} /></label></Button></div>
                     </div>
                   ))}
                   <div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total das despesas</span><span className="tabular-nums text-primary">{formatCurrency(despesas.reduce((total, despesa) => total + (Number(despesa.valor.replace(",", ".")) || 0), 0))}</span></div>
@@ -369,7 +413,7 @@ function RelatoriosSalvos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {anexoAberto ? <div role="dialog" aria-modal="true" aria-label="Comprovante" className="fixed inset-0 z-[70] grid h-[100dvh] w-screen place-items-center bg-foreground p-3 text-background"><img src={anexoAberto} alt="Comprovante ampliado" className="max-h-full max-w-full object-contain" /><Button type="button" variant="secondary" size="icon" className="absolute right-4 top-[max(env(safe-area-inset-top),1rem)] h-10 w-10 rounded-full" aria-label="Fechar comprovante" onClick={() => setAnexoAberto(null)}><X className="h-5 w-5" /></Button></div> : null}
+      {anexoAberto ? <div role="dialog" aria-modal="true" aria-label="Comprovante" className="fixed inset-0 z-[70] grid h-[100dvh] w-screen place-items-center bg-foreground p-3 text-background">{anexoAberto.startsWith("data:application/pdf") ? <iframe src={anexoAberto} title="Comprovante PDF" className="h-full w-full rounded-lg bg-card" /> : <img src={anexoAberto} alt="Comprovante ampliado" className="max-h-full max-w-full object-contain" />}<Button type="button" variant="secondary" size="icon" className="absolute right-4 top-[max(env(safe-area-inset-top),1rem)] h-10 w-10 rounded-full" aria-label="Fechar comprovante" onClick={() => setAnexoAberto(null)}><X className="h-5 w-5" /></Button></div> : null}
     </PageShell>
   );
 }
