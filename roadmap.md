@@ -44,3 +44,5 @@
 - [x] Validar observação, despesas e PDF no tamanho de tela do iPhone.
 - [x] Reorganizar e validar o PDF do relatório em uma folha A3 vertical, com linhas suaves.
 - [x] Mover Valores dos serviços para a parte inferior esquerda, ao lado do resumo, liberando espaço para mais horários.
+- [x] Atualizar o cabeçalho do relatório com o novo logo e os dados completos da empresa.
+- [x] Alinhar os títulos numéricos com os campos de horas, viagem, KM e valores.
