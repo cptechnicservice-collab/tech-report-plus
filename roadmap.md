@@ -43,3 +43,4 @@
 - [x] Adicionar despesas extras aos relatórios salvos, somadas ao total e exibidas no PDF.
 - [x] Validar observação, despesas e PDF no tamanho de tela do iPhone.
 - [x] Reorganizar e validar o PDF do relatório em uma folha A3 vertical, com linhas suaves.
+- [ ] Mover Valores dos serviços para a parte inferior esquerda, ao lado do resumo, liberando espaço para mais horários.
