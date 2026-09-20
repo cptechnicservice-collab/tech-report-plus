@@ -309,6 +309,7 @@ export async function generateClientReport(
       foot: [["TOTAL DAS DESPESAS", currencyNumber(totalDespesas)]],
       columnStyles: { 0: { cellWidth: 151 }, 1: { cellWidth: 35, halign: "right" } },
       didParseCell: (data) => {
+        if (data.section === "head" && data.column.index === 1) data.cell.styles.halign = "right";
         if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
       },
     });
@@ -362,6 +363,7 @@ export async function generateClientReport(
     foot: [["TOTAL DOS SERVIÇOS", "", "", currencyNumber(financial.totalGeral)]],
     columnStyles: { 0: { cellWidth: 79 }, 1: { cellWidth: 31, halign: "right" }, 2: { cellWidth: 38, halign: "right" }, 3: { cellWidth: 38, halign: "right" } },
     didParseCell: (data) => {
+      if (data.section === "head" && data.column.index > 0) data.cell.styles.halign = "right";
       if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
     },
   });
