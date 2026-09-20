@@ -46,3 +46,4 @@
 - [x] Mover Valores dos serviços para a parte inferior esquerda, ao lado do resumo, liberando espaço para mais horários.
 - [x] Atualizar o cabeçalho do relatório com o novo logo e os dados completos da empresa.
 - [x] Alinhar os títulos numéricos com os campos de horas, viagem, KM e valores.
+- [x] Adicionar número permanente e exclusivo no canto superior direito de cada relatório.

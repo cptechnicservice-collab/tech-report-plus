@@ -460,6 +460,7 @@ export type Database = {
           forma_pagamento: string | null
           id: string
           inicio: string
+          numero_relatorio: string | null
           observacao_relatorio: string
           pagamento_status: string
           pecas_snapshot: Json
@@ -485,6 +486,7 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           inicio: string
+          numero_relatorio?: string | null
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
@@ -510,6 +512,7 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           inicio?: string
+          numero_relatorio?: string | null
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json

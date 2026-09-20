@@ -12,6 +12,7 @@ export type DespesaRelatorio = {
 
 export type RelatorioSalvo = {
   id: string;
+  numero_relatorio: string;
   user_id: string;
   cliente_id: string | null;
   cliente_nome: string;
@@ -35,6 +36,11 @@ export type RelatorioSalvo = {
   created_at: string;
   updated_at: string;
 };
+
+export function numeroRelatorio(id: string, date = new Date()) {
+  const compactId = id.replaceAll("-", "").slice(0, 12).toUpperCase();
+  return `RT-${date.getFullYear()}-${compactId}`;
+}
 
 export type PagamentoStatus = "pendente" | "parcial" | "pago";
 export type FormaPagamento = "pix" | "transferencia" | "dinheiro" | "boleto" | "outro";
@@ -60,6 +66,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
   const recebido = Number(item.valor_recebido ?? 0);
   return {
     ...item,
+    numero_relatorio: item.numero_relatorio || numeroRelatorio(item.id, new Date(item.created_at)),
     pagamento_status: statusPagamento(item.total_geral, recebido),
     valor_recebido: recebido,
     data_recebimento: item.data_recebimento ?? null,

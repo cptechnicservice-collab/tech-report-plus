@@ -131,6 +131,7 @@ export async function generateClientReport(
   financeiroSalvo?: TotaisFinanceiros,
   observacaoRelatorio = "",
   despesasRelatorio: DespesaRelatorio[] = [],
+  numeroRelatorio?: string,
 ) {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -195,6 +196,12 @@ export async function generateClientReport(
   doc.text("clarelcapavan@gmail.com", contactX, 13);
   doc.text("+55 (54) 99129-1187", contactX, 18);
   doc.text("54 991291187", contactX, 23);
+  if (numeroRelatorio) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...colors.petroleum);
+    doc.text(`Nº ${numeroRelatorio}`, pageWidth - marginX, 8, { align: "right" });
+  }
 
   doc.setFillColor(...colors.petroleum);
   doc.rect(0, 36, pageWidth, 12, "F");

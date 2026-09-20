@@ -502,6 +502,7 @@ type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_i
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
     id: payload.id,
+    numero_relatorio: payload.numero_relatorio,
     user_id: userId,
     cliente_id: payload.cliente_id,
     cliente_nome: payload.cliente_nome,

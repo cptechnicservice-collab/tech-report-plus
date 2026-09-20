@@ -102,6 +102,7 @@ function RelatoriosSalvos() {
         item.financeiro_snapshot,
         item.observacao_relatorio,
         item.despesas_snapshot,
+        item.numero_relatorio,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
