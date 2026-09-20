@@ -155,7 +155,8 @@ function Relatorio() {
     () => pecasSelecionadas.reduce((total, peca) => total + peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade), 0),
     [pecasSelecionadas],
   );
-  const totalRelatorio = financeiros.totalGeral + totalPecas;
+  const totalDespesasSalvas = relatorioEmEdicao?.total_despesas ?? 0;
+  const totalRelatorio = financeiros.totalGeral + totalPecas + totalDespesasSalvas;
   const invalidPeriod = Boolean(inicio && fim && inicio > fim);
 
   const shortcut = (kind: "week" | "lastWeek" | "month") => {
@@ -215,6 +216,8 @@ function Relatorio() {
         pecas_snapshot: structuredClone(pecasParaSalvar()),
         financeiro_snapshot: structuredClone(financeiros),
         observacao_relatorio: relatorioEmEdicao?.observacao_relatorio ?? "",
+        despesas_snapshot: relatorioEmEdicao?.despesas_snapshot ?? [],
+        total_despesas: relatorioEmEdicao?.total_despesas ?? 0,
         pagamento_status: relatorioEmEdicao?.pagamento_status ?? "pendente" as const,
         valor_recebido: relatorioEmEdicao?.valor_recebido ?? 0,
         data_recebimento: relatorioEmEdicao?.data_recebimento ?? null,
@@ -243,7 +246,17 @@ function Relatorio() {
         toast.warning("Informe uma quantidade maior que zero para cada peça");
         return;
       }
-      await generateClientReport(cliente, filtrados, valoresDisponiveis, pecasParaSalvar(), inicio, fim);
+      await generateClientReport(
+        cliente,
+        filtrados,
+        valoresDisponiveis,
+        pecasParaSalvar(),
+        inicio,
+        fim,
+        undefined,
+        relatorioEmEdicao?.observacao_relatorio ?? "",
+        relatorioEmEdicao?.despesas_snapshot ?? [],
+      );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
     } finally {
@@ -344,6 +357,7 @@ function Relatorio() {
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
           {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasSelecionadas.length} item(ns)`} value={totalPecas} /> : null}
           <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
+            {totalDespesasSalvas > 0 ? <><dt>Despesas adicionais</dt><dd className="tabular-nums">{formatCurrency(totalDespesasSalvas)}</dd></> : null}
             <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(totalRelatorio)}</dd>
           </div>
         </dl>

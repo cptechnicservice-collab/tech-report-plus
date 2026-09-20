@@ -4,6 +4,12 @@ import type { TotaisFinanceiros, ValorVigencia } from "@/lib/financeiro";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ReportPartItem } from "@/lib/pdf-report";
 
+export type DespesaRelatorio = {
+  id: string;
+  descricao: string;
+  valor: number;
+};
+
 export type RelatorioSalvo = {
   id: string;
   user_id: string;
@@ -20,6 +26,8 @@ export type RelatorioSalvo = {
   pecas_snapshot: ReportPartItem[];
   financeiro_snapshot: TotaisFinanceiros;
   observacao_relatorio: string;
+  despesas_snapshot: DespesaRelatorio[];
+  total_despesas: number;
   pagamento_status: PagamentoStatus;
   valor_recebido: number;
   data_recebimento: string | null;
@@ -57,6 +65,8 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     data_recebimento: item.data_recebimento ?? null,
     forma_pagamento: item.forma_pagamento ?? null,
     observacao_relatorio: item.observacao_relatorio ?? "",
+    despesas_snapshot: Array.isArray(item.despesas_snapshot) ? item.despesas_snapshot : [],
+    total_despesas: Number(item.total_despesas ?? 0),
   };
 }
 

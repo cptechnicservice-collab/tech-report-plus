@@ -496,8 +496,8 @@ export async function deleteOrcamentoOffline(id: string) {
   return { queued: true };
 }
 
-type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio"> &
-  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio">>;
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas">>;
 
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
@@ -516,6 +516,8 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     pecas_snapshot: payload.pecas_snapshot as unknown as Json,
     financeiro_snapshot: payload.financeiro_snapshot as unknown as Json,
     observacao_relatorio: payload.observacao_relatorio ?? "",
+    despesas_snapshot: (payload.despesas_snapshot ?? []) as unknown as Json,
+    total_despesas: payload.total_despesas ?? 0,
     pagamento_status: payload.pagamento_status ?? "pendente",
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
@@ -534,6 +536,8 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
     observacao_relatorio: payload.observacao_relatorio ?? "",
+    despesas_snapshot: payload.despesas_snapshot ?? [],
+    total_despesas: payload.total_despesas ?? 0,
     created_at: payload.created_at ?? now,
     updated_at: now,
     user_id: userId,

@@ -39,3 +39,6 @@
 - [x] Reorganizar somente o PDF do relatório em A4 paisagem, com horários separados, observação geral e valores lado a lado.
 - [x] Validar o novo relatório no iPhone e confirmar compilação sem erros.
 - [x] Mover a observação geral para Relatórios salvos, salvando o texto para o PDF final.
+- [x] Corrigir a digitação da observação no iPhone com uma janela estável.
+- [x] Adicionar despesas extras aos relatórios salvos, somadas ao total e exibidas no PDF.
+- [x] Validar observação, despesas e PDF no tamanho de tela do iPhone.

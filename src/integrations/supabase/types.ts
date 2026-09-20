@@ -454,6 +454,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at: string
           data_recebimento: string | null
+          despesas_snapshot: Json
           fim: string
           financeiro_snapshot: Json
           forma_pagamento: string | null
@@ -462,6 +463,7 @@ export type Database = {
           observacao_relatorio: string
           pagamento_status: string
           pecas_snapshot: Json
+          total_despesas: number
           total_geral: number
           total_pecas: number
           total_servicos: number
@@ -477,6 +479,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at?: string
           data_recebimento?: string | null
+          despesas_snapshot?: Json
           fim: string
           financeiro_snapshot?: Json
           forma_pagamento?: string | null
@@ -485,6 +488,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          total_despesas?: number
           total_geral?: number
           total_pecas?: number
           total_servicos?: number
@@ -500,6 +504,7 @@ export type Database = {
           cliente_snapshot?: Json
           created_at?: string
           data_recebimento?: string | null
+          despesas_snapshot?: Json
           fim?: string
           financeiro_snapshot?: Json
           forma_pagamento?: string | null
@@ -508,6 +513,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          total_despesas?: number
           total_geral?: number
           total_pecas?: number
           total_servicos?: number

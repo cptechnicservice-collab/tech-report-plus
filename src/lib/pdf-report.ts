@@ -10,6 +10,7 @@ import {
 import { calcularValoresPeriodo, formatCurrency, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
 import { ensureEmpresa, type DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento } from "@/lib/orcamentos";
+import type { DespesaRelatorio } from "@/lib/relatorios";
 import type jsPDF from "jspdf";
 
 export type ReportPartItem = {
@@ -120,6 +121,7 @@ export async function generateClientReport(
   fim: string,
   financeiroSalvo?: TotaisFinanceiros,
   observacaoRelatorio = "",
+  despesasRelatorio: DespesaRelatorio[] = [],
 ) {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -139,7 +141,8 @@ export async function generateClientReport(
   const totals = somarTotais(apontamentos);
   const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
-  const totalComPecas = financial.totalGeral + totalPecas;
+  const totalDespesas = despesasRelatorio.reduce((total, despesa) => total + despesa.valor, 0);
+  const totalComPecas = financial.totalGeral + totalPecas + totalDespesas;
   autoTable(doc, {
     startY: details ? 28 : 24,
     margin: { left: 7, right: 7, bottom: 24 },
@@ -214,6 +217,23 @@ export async function generateClientReport(
       },
     });
   }
+  if (despesasRelatorio.length > 0) {
+    autoTable(doc, {
+      startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
+      margin: { left: 7, right: 7, bottom: 24 },
+      theme: "plain",
+      styles: { fontSize: 7, cellPadding: 1.25, lineColor: [218, 222, 228], lineWidth: { bottom: 0.12 } },
+      headStyles: { fillColor: [74, 82, 94], textColor: 255 },
+      footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold", lineWidth: 0 },
+      head: [["Despesas adicionais", "Valor"]],
+      body: despesasRelatorio.map((despesa) => [despesa.descricao, formatCurrency(despesa.valor)]),
+      foot: [["TOTAL DAS DESPESAS", formatCurrency(totalDespesas)]],
+      columnStyles: { 0: { cellWidth: 241 }, 1: { cellWidth: 42, halign: "right" } },
+      didParseCell: (data) => {
+        if (data.section === "body") data.cell.styles.fillColor = data.row.index % 2 === 0 ? [247, 248, 250] : [255, 255, 255];
+      },
+    });
+  }
   const unitValue = (total: number, quantity: number, suffix = "") =>
     quantity > 0 ? `${formatCurrency(total / quantity)}${suffix}` : "—";
   const financialRows = [
@@ -276,6 +296,7 @@ export async function generateClientReport(
     body: [
       ["Serviços", summaryCurrency(financial.totalGeral)],
       ["Peças", summaryCurrency(totalPecas)],
+      ...(totalDespesas > 0 ? [["Despesas", summaryCurrency(totalDespesas)]] : []),
     ],
     foot: [["TOTAL GERAL", summaryCurrency(totalComPecas)]],
     footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 8.5 },
