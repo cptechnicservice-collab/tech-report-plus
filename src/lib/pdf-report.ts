@@ -267,6 +267,7 @@ export async function generateClientReport(
     },
     didParseCell: (data) => {
       if (data.section === "head" && data.column.index >= 5) data.cell.styles.halign = "right";
+      if (data.section === "foot" && data.column.index >= 5) data.cell.styles.halign = "right";
       if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
     },
     didDrawCell: (data) => {
