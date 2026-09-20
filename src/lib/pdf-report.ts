@@ -209,7 +209,7 @@ export async function generateClientReport(
     styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak", valign: "middle", textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
     headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", fontSize: 7, lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
     footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blue, lineWidth: { top: 0.4 } },
-    head: [["Data", "Ida", "Trabalho", "Intervalo", "Retorno", "H. trab.", "H. viagem", "KM"]],
+    head: [["Data", "Ida", "Trabalho", "Intervalo", "Retorno", "H.\ntrab.", "H.\nviagem", "KM"]],
     body: sortedEntries.map((item) => {
       const itemTotals = calcularTotais(item);
       return [
@@ -225,8 +225,8 @@ export async function generateClientReport(
     }),
     foot: [["TOTAIS DO PERÍODO", "", "", "", "", formatMinutes(totals.trabalho), formatMinutes(totals.viagem), String(totals.km)]],
     columnStyles: {
-      0: { cellWidth: 24 }, 1: { cellWidth: 23 }, 2: { cellWidth: 26 }, 3: { cellWidth: 23 }, 4: { cellWidth: 23 },
-      5: { cellWidth: 22, halign: "right" }, 6: { cellWidth: 23, halign: "right" }, 7: { cellWidth: 22, halign: "right" },
+      0: { cellWidth: 23 }, 1: { cellWidth: 27 }, 2: { cellWidth: 27 }, 3: { cellWidth: 27 }, 4: { cellWidth: 27 },
+      5: { cellWidth: 20, halign: "right" }, 6: { cellWidth: 20, halign: "right" }, 7: { cellWidth: 15, halign: "right" },
     },
     didParseCell: (data) => {
       if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
