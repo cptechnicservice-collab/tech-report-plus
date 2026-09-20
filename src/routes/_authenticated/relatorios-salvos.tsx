@@ -32,6 +32,7 @@ const tiposDespesa = [
   { value: "combustivel", label: "Combustível" },
   { value: "diversos", label: "Gastos diversos" },
 ] as const;
+type TipoDespesa = typeof tiposDespesa[number]["value"];
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
   validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" } => {
@@ -346,7 +347,7 @@ function RelatoriosSalvos() {
                     <div key={despesa.id} className="space-y-3 rounded-xl border border-border p-3">
                       <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold">Despesa {index + 1}</p>{despesa.anexos.length > 0 ? <span className="inline-flex items-center gap-1 text-xs font-medium text-primary"><Paperclip className="h-3.5 w-3.5" />{despesa.anexos.length}</span> : null}<Button type="button" variant="ghost" size="icon" className="ml-auto h-9 w-9 rounded-full text-destructive" aria-label={`Remover despesa ${index + 1}`} onClick={() => setDespesas((current) => current.filter((item) => item.id !== despesa.id))}><Trash2 className="h-4 w-4" /></Button></div>
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1"><Label htmlFor={`expense-type-${despesa.id}`}>Tipo</Label><select id={`expense-type-${despesa.id}`} value={despesa.tipo ?? "diversos"} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, tipo: event.target.value as DespesaRelatorio["tipo"] } : item))} className="ios-field h-11 w-full border px-3">{tiposDespesa.map((tipo) => <option key={tipo.value} value={tipo.value}>{tipo.label}</option>)}</select></div>
+                        <div className="space-y-1"><Label htmlFor={`expense-type-${despesa.id}`}>Tipo</Label><select id={`expense-type-${despesa.id}`} value={despesa.tipo ?? "diversos"} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, tipo: event.target.value as TipoDespesa } : item))} className="ios-field h-11 w-full border px-3">{tiposDespesa.map((tipo) => <option key={tipo.value} value={tipo.value}>{tipo.label}</option>)}</select></div>
                         <div className="space-y-1"><Label htmlFor={`expense-date-${despesa.id}`}>Data</Label><Input id={`expense-date-${despesa.id}`} type="date" value={despesa.data ?? ""} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, data: event.target.value } : item))} className="h-11 rounded-xl" /></div>
                       </div>
                       <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
@@ -368,12 +369,7 @@ function RelatoriosSalvos() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(anexoAberto)} onOpenChange={(open) => { if (!open) setAnexoAberto(null); }}>
-        <DialogContent className="!inset-0 !left-0 !top-0 h-[100dvh] max-h-none w-screen max-w-none !translate-x-0 !translate-y-0 border-0 bg-foreground p-0 text-background sm:!inset-auto sm:!left-1/2 sm:!top-1/2 sm:h-auto sm:max-h-[90dvh] sm:w-[calc(100%-2rem)] sm:max-w-3xl sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:rounded-2xl">
-          <DialogHeader className="sr-only"><DialogTitle>Comprovante</DialogTitle><DialogDescription>Visualização ampliada do comprovante</DialogDescription></DialogHeader>
-          {anexoAberto ? <img src={anexoAberto} alt="Comprovante ampliado" className="h-full w-full object-contain" /> : null}
-        </DialogContent>
-      </Dialog>
+      {anexoAberto ? <div role="dialog" aria-modal="true" aria-label="Comprovante" className="fixed inset-0 z-[70] grid h-[100dvh] w-screen place-items-center bg-foreground p-3 text-background"><img src={anexoAberto} alt="Comprovante ampliado" className="max-h-full max-w-full object-contain" /><Button type="button" variant="secondary" size="icon" className="absolute right-4 top-[max(env(safe-area-inset-top),1rem)] h-10 w-10 rounded-full" aria-label="Fechar comprovante" onClick={() => setAnexoAberto(null)}><X className="h-5 w-5" /></Button></div> : null}
     </PageShell>
   );
 }
