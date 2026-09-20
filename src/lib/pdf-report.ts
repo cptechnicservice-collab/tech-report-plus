@@ -350,29 +350,32 @@ export async function generateClientReport(
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", currencyNumber(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", currencyNumber(financial.outrasDespesas)]] : []),
   ];
-  const valuesStartY = (reportTable.lastAutoTable?.finalY ?? 30) + 4;
+  const summaryWidth = 80;
+  const summaryHeight = totalDespesas > 0 ? 42 : 36;
+  const servicesWidth = 100;
+  const servicesEstimatedHeight = (financialRows.length + 2) * 6;
+  const lowerBlocksY = pageHeight - 60 - Math.max(summaryHeight, servicesEstimatedHeight);
+  const upperContentFinalY = reportTable.lastAutoTable?.finalY ?? 30;
+  if (upperContentFinalY + 6 > lowerBlocksY) doc.addPage();
+  doc.setPage(doc.getNumberOfPages());
+  const valuesStartY = pageHeight - 60 - servicesEstimatedHeight;
   autoTable(doc, {
     startY: valuesStartY,
-    margin: { left: marginX, right: marginX, bottom: 24 },
+    margin: { left: marginX, right: pageWidth - marginX - servicesWidth, bottom: 24 },
     theme: "plain",
-    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
-    headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
-    footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { top: 0.4 } },
+    tableWidth: servicesWidth,
+    styles: { font: "helvetica", fontSize: 6.5, cellPadding: 1.25, textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
+    headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", fontSize: 6.5, lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
+    footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", fontSize: 6.5, lineColor: colors.blueLight, lineWidth: { top: 0.4 } },
     head: [["Valores dos serviços", "Qtd.", "Valor unit.", "Total"]],
     body: financialRows,
     foot: [["TOTAL DOS SERVIÇOS", "", "", currencyNumber(financial.totalGeral)]],
-    columnStyles: { 0: { cellWidth: 79 }, 1: { cellWidth: 31, halign: "right" }, 2: { cellWidth: 38, halign: "right" }, 3: { cellWidth: 38, halign: "right" } },
+    columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 17, halign: "right" }, 2: { cellWidth: 22, halign: "right" }, 3: { cellWidth: 21, halign: "right" } },
     didParseCell: (data) => {
       if (data.section === "head" && data.column.index > 0) data.cell.styles.halign = "right";
       if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
     },
   });
-  const servicesFinalY = reportTable.lastAutoTable?.finalY ?? valuesStartY;
-  const summaryWidth = 80;
-  const summaryHeight = totalDespesas > 0 ? 42 : 36;
-  const summaryY = pageHeight - 60 - summaryHeight;
-  if (servicesFinalY + 6 > summaryY) doc.addPage();
-  doc.setPage(doc.getNumberOfPages());
   const cardX = pageWidth - marginX - summaryWidth;
   const cardY = pageHeight - 60 - summaryHeight;
   doc.setDrawColor(...colors.divider);
