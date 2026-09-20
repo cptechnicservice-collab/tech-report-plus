@@ -14,7 +14,7 @@ import { generateClientReport } from "@/lib/pdf-report";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
 import { saveRelatorioOffline } from "@/lib/offline";
-import { fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { fetchRelatoriosSalvos, numeroRelatorio } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -119,6 +119,7 @@ function Relatorio() {
   const [pecaId, setPecaId] = useState("");
   const [pecasSelecionadas, setPecasSelecionadas] = useState<Array<Omit<ReportPartItem, "quantidade"> & { quantidade: number | "" }>>([]);
   const initializedReportId = useRef<string | null>(null);
+  const draftReportId = useRef(crypto.randomUUID());
   const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
@@ -202,7 +203,8 @@ function Relatorio() {
       if (!cliente || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
       if (!pecasValidas) throw new Error("Informe uma quantidade maior que zero para cada peça.");
       const report = {
-        id: relatorioEmEdicao?.id ?? crypto.randomUUID(),
+        id: relatorioEmEdicao?.id ?? draftReportId.current,
+        numero_relatorio: relatorioEmEdicao?.numero_relatorio ?? numeroRelatorio(draftReportId.current),
         cliente_id: cliente.id,
         cliente_nome: cliente.nome,
         inicio,
@@ -256,6 +258,7 @@ function Relatorio() {
         undefined,
         relatorioEmEdicao?.observacao_relatorio ?? "",
         relatorioEmEdicao?.despesas_snapshot ?? [],
+        relatorioEmEdicao?.numero_relatorio ?? numeroRelatorio(draftReportId.current),
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
