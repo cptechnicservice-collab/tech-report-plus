@@ -476,6 +476,125 @@ export async function generateClientReport(
   doc.text("Assinatura do técnico", 12, signatureY + 4);
   doc.text("Responsável do cliente", 115, signatureY + 4);
 
+  const expenseTypeLabel: Record<NonNullable<DespesaRelatorio["tipo"]>, string> = {
+    pedagio: "Pedágio",
+    hotel: "Hotel",
+    alimentacao: "Alimentação",
+    combustivel: "Combustível",
+    diversos: "Gastos diversos",
+  };
+  const attachments = despesasRelatorio.flatMap((despesa) =>
+    (despesa.anexos ?? []).map((image, index) => ({ despesa, image, index })),
+  );
+  const drawAttachmentHeader = () => {
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, 36, "F");
+    try {
+      const properties = doc.getImageProperties(logo);
+      const logoHeight = 27;
+      const logoWidth = logoHeight * (properties.width / properties.height);
+      doc.addImage(logo, logo.startsWith("data:image/png") ? "PNG" : "JPEG", marginX, 4.5, logoWidth, logoHeight, undefined, "FAST");
+    } catch { /* A página continua disponível se o logo estiver corrompido. */ }
+    doc.setTextColor(...colors.petroleum);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.text("CP-Technic Service", companyX, 7.5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.3);
+    doc.setTextColor(...colors.text);
+    doc.text("CP TECHNIC SERVICE MANUTENÇÃO DE", companyX, 12);
+    doc.text("MÁQUINAS LTDA", companyX, 15.2);
+    doc.text("CNPJ: 46.696.388/0001-08", companyX, 19.2);
+    doc.text("Rua Agostino Carini, 181", companyX, 23.2);
+    doc.text("Fátima, Bento Gonçalves-RS", companyX, 27.2);
+    doc.text("CEP 95702-412", companyX, 31.2);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...colors.petroleum);
+    doc.text("CONTATO", contactX, 8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...colors.text);
+    doc.text("clarelcapavan@gmail.com", contactX, 13);
+    doc.text("+55 (54) 99129-1187", contactX, 18);
+    doc.text("54 991291187", contactX, 23);
+    if (numeroRelatorio) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...colors.petroleum);
+      doc.text(`Nº ${numeroRelatorio}`, pageWidth - marginX, 8, { align: "right" });
+    }
+    doc.setFillColor(...colors.petroleum);
+    doc.rect(0, 36, pageWidth, 12, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Anexos - Comprovantes de Despesas", marginX, 43.5);
+    doc.setTextColor(175, 203, 216);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text(`Emitido em ${emittedAt}`, pageWidth - marginX, 43.5, { align: "right" });
+    doc.setFillColor(...colors.cyan);
+    doc.rect(0, 48, pageWidth, 1.2, "F");
+  };
+  if (attachments.length > 0) {
+    const cardWidth = 89;
+    const cardHeight = 103;
+    const columnGap = 8;
+    const rowGap = 8;
+    const gridTop = 57;
+    attachments.forEach(({ despesa, image, index }, attachmentIndex) => {
+      if (attachmentIndex % 4 === 0) {
+        doc.addPage();
+        drawAttachmentHeader();
+      }
+      const slot = attachmentIndex % 4;
+      const column = slot % 2;
+      const row = Math.floor(slot / 2);
+      const x = marginX + column * (cardWidth + columnGap);
+      const y = gridTop + row * (cardHeight + rowGap);
+      doc.setDrawColor(...colors.divider);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 2, 2, "S");
+      const imageX = x + 3;
+      const imageY = y + 3;
+      const imageAreaWidth = cardWidth - 6;
+      const imageAreaHeight = 77;
+      try {
+        const properties = doc.getImageProperties(image);
+        const scale = Math.min(imageAreaWidth / properties.width, imageAreaHeight / properties.height);
+        const drawnWidth = properties.width * scale;
+        const drawnHeight = properties.height * scale;
+        doc.addImage(
+          image,
+          image.startsWith("data:image/png") ? "PNG" : "JPEG",
+          imageX + (imageAreaWidth - drawnWidth) / 2,
+          imageY + (imageAreaHeight - drawnHeight) / 2,
+          drawnWidth,
+          drawnHeight,
+          undefined,
+          "FAST",
+        );
+      } catch {
+        doc.setFillColor(...colors.light);
+        doc.rect(imageX, imageY, imageAreaWidth, imageAreaHeight, "F");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...colors.gray);
+        doc.text("Imagem indisponível", x + cardWidth / 2, imageY + imageAreaHeight / 2, { align: "center" });
+      }
+      const labelY = y + 84;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...colors.petroleum);
+      doc.text(`${expenseTypeLabel[despesa.tipo ?? "diversos"]} · ${despesa.descricao}`, x + 3, labelY, { maxWidth: cardWidth - 6 });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(...colors.text2);
+      const expenseDate = despesa.data ? formatDateBR(despesa.data) : formatDateBR(fim);
+      doc.text(`${expenseDate} · ${formatCurrency(despesa.valor)} · Anexo ${index + 1}`, x + 3, y + 98);
+    });
+  }
+
   const totalPages = doc.getNumberOfPages();
   for (let page = 1; page <= totalPages; page += 1) {
     doc.setPage(page);

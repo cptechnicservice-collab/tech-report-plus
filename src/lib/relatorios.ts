@@ -70,7 +70,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
   const despesas = Array.isArray(item.despesas_snapshot)
     ? item.despesas_snapshot.map((despesa) => ({
         ...despesa,
-        tipo: despesa.tipo ?? "diversos" as const,
+        tipo: despesa.tipo ?? ("diversos" as const),
         data: despesa.data ?? item.fim,
         anexos: Array.isArray(despesa.anexos) ? despesa.anexos.filter((anexo): anexo is string => typeof anexo === "string") : [],
       }))
