@@ -623,8 +623,14 @@ export async function generateClientReport(
     });
   }
 
-  const totalPages = doc.getNumberOfPages();
-  for (let page = 1; page <= totalPages; page += 1) {
+  const preparedPdfs = await Promise.all(pdfAttachments.map(async ({ anexo }) => {
+    if (typeof anexo === "string") return null;
+    const { PDFDocument } = await import("pdf-lib");
+    return await PDFDocument.load(dataUrlBytes(anexo.conteudo));
+  }));
+  const generatedPages = doc.getNumberOfPages();
+  const totalPages = generatedPages + preparedPdfs.reduce((total, pdf) => total + (pdf?.getPageCount() ?? 0), 0);
+  for (let page = 1; page <= generatedPages; page += 1) {
     doc.setPage(page);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
@@ -640,9 +646,8 @@ export async function generateClientReport(
   }
   const { PDFDocument } = await import("pdf-lib");
   const merged = await PDFDocument.load(doc.output("arraybuffer"));
-  for (const { anexo } of pdfAttachments) {
-    if (typeof anexo === "string") continue;
-    const source = await PDFDocument.load(dataUrlBytes(anexo.conteudo));
+  for (const source of preparedPdfs) {
+    if (!source) continue;
     const pages = await merged.copyPages(source, source.getPageIndices());
     pages.forEach((page) => merged.addPage(page));
   }
