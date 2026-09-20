@@ -6,8 +6,11 @@ import type { ReportPartItem } from "@/lib/pdf-report";
 
 export type DespesaRelatorio = {
   id: string;
+  tipo?: "pedagio" | "hotel" | "alimentacao" | "combustivel" | "diversos";
   descricao: string;
+  data?: string;
   valor: number;
+  anexos?: string[];
 };
 
 export type RelatorioSalvo = {
@@ -64,6 +67,14 @@ export function saldoRelatorio(relatorio: Pick<RelatorioSalvo, "total_geral" | "
 
 function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
   const recebido = Number(item.valor_recebido ?? 0);
+  const despesas = Array.isArray(item.despesas_snapshot)
+    ? item.despesas_snapshot.map((despesa) => ({
+        ...despesa,
+        tipo: despesa.tipo ?? "diversos" as const,
+        data: despesa.data ?? item.fim,
+        anexos: Array.isArray(despesa.anexos) ? despesa.anexos.filter((anexo): anexo is string => typeof anexo === "string") : [],
+      }))
+    : [];
   return {
     ...item,
     numero_relatorio: item.numero_relatorio || numeroRelatorio(item.id, new Date(item.created_at)),
@@ -72,7 +83,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     data_recebimento: item.data_recebimento ?? null,
     forma_pagamento: item.forma_pagamento ?? null,
     observacao_relatorio: item.observacao_relatorio ?? "",
-    despesas_snapshot: Array.isArray(item.despesas_snapshot) ? item.despesas_snapshot : [],
+    despesas_snapshot: despesas,
     total_despesas: Number(item.total_despesas ?? 0),
   };
 }

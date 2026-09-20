@@ -47,3 +47,6 @@
 - [x] Atualizar o cabeçalho do relatório com o novo logo e os dados completos da empresa.
 - [x] Alinhar os títulos numéricos com os campos de horas, viagem, KM e valores.
 - [x] Adicionar número permanente e exclusivo no canto superior direito de cada relatório.
+- [ ] Adicionar múltiplos comprovantes às despesas extras, com câmera, galeria e uso offline.
+- [ ] Acrescentar páginas de anexos ao PDF sem alterar a primeira folha.
+- [ ] Validar anexos no iPhone, PDFs com e sem comprovantes e compilação.
