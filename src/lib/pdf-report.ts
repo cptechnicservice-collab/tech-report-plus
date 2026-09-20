@@ -46,6 +46,31 @@ async function shareOrDownloadPdf(doc: { output: (type: "blob") => Blob; save: (
   doc.save(filename);
 }
 
+async function shareOrDownloadBlob(blob: Blob, filename: string, title: string) {
+  const file = new File([blob], filename, { type: "application/pdf" });
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title });
+      return;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function dataUrlBytes(dataUrl: string) {
+  const encoded = dataUrl.split(",")[1];
+  if (!encoded) throw new Error("Arquivo PDF inválido.");
+  const binary = atob(encoded);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
 const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
 const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
 const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
@@ -484,8 +509,10 @@ export async function generateClientReport(
     diversos: "Gastos diversos",
   };
   const attachments = despesasRelatorio.flatMap((despesa) =>
-    (despesa.anexos ?? []).map((image, index) => ({ despesa, image, index })),
+    (despesa.anexos ?? []).map((anexo, index) => ({ despesa, anexo, index })),
   );
+  const imageAttachments = attachments.filter(({ anexo }) => typeof anexo === "string" || anexo.tipo === "imagem");
+  const pdfAttachments = attachments.filter(({ anexo }) => typeof anexo !== "string" && anexo.tipo === "pdf");
   const drawAttachmentHeader = () => {
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, pageWidth, 36, "F");
@@ -536,13 +563,14 @@ export async function generateClientReport(
     doc.setFillColor(...colors.cyan);
     doc.rect(0, 48, pageWidth, 1.2, "F");
   };
-  if (attachments.length > 0) {
+  if (imageAttachments.length > 0) {
     const cardWidth = 89;
     const cardHeight = 103;
     const columnGap = 8;
     const rowGap = 8;
     const gridTop = 57;
-    attachments.forEach(({ despesa, image, index }, attachmentIndex) => {
+    imageAttachments.forEach(({ despesa, anexo, index }, attachmentIndex) => {
+      const image = typeof anexo === "string" ? anexo : anexo.conteudo;
       if (attachmentIndex % 4 === 0) {
         doc.addPage();
         drawAttachmentHeader();
@@ -606,7 +634,20 @@ export async function generateClientReport(
   }
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
-  await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
+  if (pdfAttachments.length === 0) {
+    await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
+    return;
+  }
+  const { PDFDocument } = await import("pdf-lib");
+  const merged = await PDFDocument.load(doc.output("arraybuffer"));
+  for (const { anexo } of pdfAttachments) {
+    if (typeof anexo === "string") continue;
+    const source = await PDFDocument.load(dataUrlBytes(anexo.conteudo));
+    const pages = await merged.copyPages(source, source.getPageIndices());
+    pages.forEach((page) => merged.addPage(page));
+  }
+  const mergedBytes = await merged.save();
+  await shareOrDownloadBlob(new Blob([mergedBytes as BlobPart], { type: "application/pdf" }), filename, `Relatório CP TECHNIC — ${cliente.nome}`);
 }
 
 export async function generatePaymentReceipt(input: {
