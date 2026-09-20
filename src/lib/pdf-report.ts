@@ -24,7 +24,7 @@ export type ReportPartItem = {
 };
 
 const range = (start?: string | null, end?: string | null) =>
-  start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "—";
+  start && end ? `${normalizeTime(start)}–${normalizeTime(end)}` : "";
 
 const filePart = (value: string) =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -127,52 +127,131 @@ export async function generateClientReport(
     import("jspdf"),
     import("jspdf-autotable"),
   ]);
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a3" });
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const empresa = await ensureEmpresa();
+  const colors = {
+    petroleum: [18, 50, 67] as [number, number, number],
+    petroleumLight: [31, 91, 118] as [number, number, number],
+    cyan: [0, 185, 254] as [number, number, number],
+    blue: [14, 147, 204] as [number, number, number],
+    blueLight: [169, 217, 238] as [number, number, number],
+    light: [243, 249, 252] as [number, number, number],
+    lightBlue: [229, 242, 249] as [number, number, number],
+    text: [30, 44, 54] as [number, number, number],
+    text2: [76, 93, 104] as [number, number, number],
+    gray: [131, 149, 159] as [number, number, number],
+    zebra: [250, 252, 254] as [number, number, number],
+    divider: [206, 221, 230] as [number, number, number],
+    hairline: [239, 243, 248] as [number, number, number],
+  };
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const marginX = 12;
+  const contentWidth = 186;
+  const emittedAt = new Date().toLocaleDateString("pt-BR");
+  const currencyNumber = (value: number) => formatCurrency(value).replace(/^R\$\s?/, "");
+  const logo = empresa.logo_data_url ?? await fallbackLogo();
+
+  doc.setFont("helvetica", "normal");
+  doc.setFillColor(...colors.petroleum);
+  doc.rect(0, 0, pageWidth, 26, "F");
+  try {
+    const properties = doc.getImageProperties(logo);
+    const logoHeight = 14;
+    const logoWidth = Math.min(48, logoHeight * (properties.width / properties.height));
+    doc.addImage(logo, logo.startsWith("data:image/png") ? "PNG" : "JPEG", marginX, 6, logoWidth, logoHeight, undefined, "FAST");
+  } catch { /* O relatório continua disponível se o logo estiver corrompido. */ }
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("CP TECHNIC", 9, 11);
+  doc.setFontSize(10);
+  doc.text("Relatório de atendimento", pageWidth - marginX, 11, { align: "right" });
+  doc.setTextColor(175, 203, 216);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text(`Cliente: ${cliente.nome}`, 9, 16);
-  const details = [cliente.cidade, cliente.cnpj ? `CNPJ: ${cliente.cnpj}` : null].filter(Boolean).join(" · ");
-  if (details) doc.text(details, 9, 20);
-  doc.text(`Período: ${formatDateBR(inicio)} a ${formatDateBR(fim)}`, 9, details ? 24 : 20);
+  doc.text(`Emitido em ${emittedAt}`, pageWidth - marginX, 17, { align: "right" });
+  doc.setFillColor(...colors.cyan);
+  doc.rect(0, 26, pageWidth, 1.2, "F");
+
+  const infoTop = 27.2;
+  doc.setFillColor(...colors.light);
+  doc.rect(0, infoTop, pageWidth, 14, "F");
+  const infoColumns = [
+    { label: "CLIENTE", value: cliente.nome, x: marginX, width: 78 },
+    { label: "CIDADE", value: cliente.cidade || "Não informada", x: 94, width: 45 },
+    { label: "PERÍODO", value: `${formatDateBR(inicio)} a ${formatDateBR(fim)}`, x: 143, width: 55 },
+  ];
+  doc.setDrawColor(...colors.divider);
+  doc.setLineWidth(0.2);
+  doc.line(90, infoTop + 2.5, 90, infoTop + 11.5);
+  doc.line(139, infoTop + 2.5, 139, infoTop + 11.5);
+  infoColumns.forEach(({ label, value, x, width }) => {
+    doc.setTextColor(...colors.gray);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.text(label, x, infoTop + 5);
+    doc.setTextColor(...colors.petroleum);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    const fitted = doc.splitTextToSize(value, width) as string[];
+    doc.text(fitted[0] ?? "", x, infoTop + 10.5);
+  });
 
   const totals = somarTotais(apontamentos);
   const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
   const totalDespesas = despesasRelatorio.reduce((total, despesa) => total + despesa.valor, 0);
   const totalComPecas = financial.totalGeral + totalPecas + totalDespesas;
+  const sortedEntries = [...apontamentos].sort((a, b) => a.data.localeCompare(b.data));
   autoTable(doc, {
-    startY: details ? 28 : 24,
-    margin: { left: 7, right: 7, bottom: 24 },
+    startY: 45,
+    margin: { left: marginX, right: marginX, bottom: 24 },
     theme: "plain",
-    styles: { fontSize: 7, cellPadding: 1.35, overflow: "linebreak", valign: "middle", lineColor: [232, 234, 238], lineWidth: { bottom: 0.08 } },
-    headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-    footStyles: { fillColor: [235, 239, 244], textColor: [39, 54, 78], fontStyle: "bold", lineWidth: 0 },
+    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak", valign: "middle", textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
+    headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", fontSize: 7, lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
+    footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blue, lineWidth: { top: 0.4 } },
     head: [["Data", "Ida", "Trabalho", "Intervalo", "Retorno", "H. trab.", "H. viagem", "KM"]],
-    body: [...apontamentos].sort((a, b) => a.data.localeCompare(b.data)).map((item) => {
+    body: sortedEntries.map((item) => {
       const itemTotals = calcularTotais(item);
       return [
-        formatDateBR(item.data),
+        "",
         range(item.viagem_ida_saida, item.viagem_ida_chegada),
         range(item.trabalho_inicio, item.trabalho_fim),
         range(item.intervalo_inicio, item.intervalo_fim),
         range(item.viagem_volta_saida, item.viagem_volta_chegada),
         formatMinutes(itemTotals.trabalho),
         formatMinutes(itemTotals.viagem),
-        `${itemTotals.km} km`,
+        String(itemTotals.km),
       ];
     }),
-    foot: [["TOTAIS", "", "", "", "", formatMinutes(totals.trabalho), formatMinutes(totals.viagem), `${totals.km} km`]],
+    foot: [["TOTAIS DO PERÍODO", "", "", "", "", formatMinutes(totals.trabalho), formatMinutes(totals.viagem), String(totals.km)]],
     columnStyles: {
-      0: { cellWidth: 25 }, 1: { cellWidth: 39 }, 2: { cellWidth: 39 }, 3: { cellWidth: 39 }, 4: { cellWidth: 39 },
-      5: { cellWidth: 32, halign: "right" }, 6: { cellWidth: 32, halign: "right" }, 7: { cellWidth: 32, halign: "right" },
+      0: { cellWidth: 24 }, 1: { cellWidth: 23 }, 2: { cellWidth: 26 }, 3: { cellWidth: 23 }, 4: { cellWidth: 23 },
+      5: { cellWidth: 22, halign: "right" }, 6: { cellWidth: 23, halign: "right" }, 7: { cellWidth: 22, halign: "right" },
     },
     didParseCell: (data) => {
-      if (data.section === "body") {
-        data.cell.styles.fillColor = data.row.index % 2 === 0 ? [247, 248, 250] : [255, 255, 255];
-        if (data.cell.raw === "—") data.cell.styles.textColor = [170, 176, 184];
+      if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
+    },
+    didDrawCell: (data) => {
+      if (data.column.index === 5) {
+        doc.setDrawColor(...colors.blueLight);
+        doc.setLineWidth(0.4);
+        doc.line(data.cell.x, data.cell.y, data.cell.x, data.cell.y + data.cell.height);
+      }
+      if (data.section === "body" && data.column.index === 0) {
+        const item = sortedEntries[data.row.index];
+        if (!item) return;
+        const parsed = new Date(`${item.data}T12:00:00`);
+        const date = `${String(parsed.getDate()).padStart(2, "0")}/${String(parsed.getMonth() + 1).padStart(2, "0")}`;
+        const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(parsed).replace(".", "").toLowerCase();
+        const baseline = data.cell.y + data.cell.height / 2 + 1;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...colors.petroleum);
+        doc.text(date, data.cell.x + 1.6, baseline);
+        const dateWidth = doc.getTextWidth(date);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...colors.gray);
+        doc.text(weekday, data.cell.x + 2.6 + dateWidth, baseline);
       }
     },
   });
@@ -181,34 +260,33 @@ export async function generateClientReport(
   const note = observacaoRelatorio.trim();
   if (note) {
     const noteStart = (reportTable.lastAutoTable?.finalY ?? 30) + 4;
-    const noteLines = doc.splitTextToSize(note, 272) as string[];
+    const noteLines = doc.splitTextToSize(note, 178) as string[];
     const noteHeight = 10 + noteLines.length * 3.5;
-    const pageHeight = doc.internal.pageSize.getHeight();
     if (noteStart + noteHeight > pageHeight - 24) doc.addPage();
     const y = noteStart + noteHeight > pageHeight - 24 ? 12 : noteStart;
-    doc.setFillColor(247, 248, 250); doc.roundedRect(7, y, 283, noteHeight, 1.5, 1.5, "F");
-    doc.setTextColor(39, 54, 78); doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text("OBSERVAÇÃO", 11, y + 5);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(noteLines, 11, y + 10);
+    doc.setFillColor(...colors.light); doc.roundedRect(marginX, y, contentWidth, noteHeight, 1.5, 1.5, "F");
+    doc.setTextColor(...colors.petroleum); doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.text("OBSERVAÇÃO", marginX + 4, y + 5);
+    doc.setTextColor(...colors.text2); doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.text(noteLines, marginX + 4, y + 10);
     reportTable.lastAutoTable = { finalY: y + noteHeight };
   }
   if (pecas.length > 0) {
     autoTable(doc, {
       startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
-      margin: { left: 7, right: 7, bottom: 24 },
+      margin: { left: marginX, right: marginX, bottom: 24 },
       theme: "plain",
-      styles: { fontSize: 7, cellPadding: 1.25, lineColor: [232, 234, 238], lineWidth: { bottom: 0.08 } },
-      headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-      footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
+      styles: { font: "helvetica", fontSize: 7, cellPadding: 1.4, textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
+      headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
+      footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { top: 0.4 } },
       head: [["Foto", "Peças utilizadas", "Qtd.", "Valor unit.", "Total"]],
       body: pecas.map((peca) => [
         peca.foto_data_url ? "" : "—",
         `${peca.descricao}${peca.codigo ? ` · ${peca.codigo}` : ""}`,
         `${peca.quantidade} ${peca.unidade}`,
-        formatCurrency(peca.preco),
-        formatCurrency(peca.preco * peca.quantidade),
+        currencyNumber(peca.preco),
+        currencyNumber(peca.preco * peca.quantidade),
       ]),
-      foot: [["SUBTOTAL PEÇAS", "", "", "", formatCurrency(totalPecas)]],
-      columnStyles: { 0: { cellWidth: 16, halign: "center" }, 1: { cellWidth: 146 }, 2: { cellWidth: 39, halign: "right" }, 3: { cellWidth: 40, halign: "right" }, 4: { cellWidth: 42, halign: "right" } },
+      foot: [["SUBTOTAL PEÇAS", "", "", "", currencyNumber(totalPecas)]],
+      columnStyles: { 0: { cellWidth: 16, halign: "center" }, 1: { cellWidth: 88 }, 2: { cellWidth: 25, halign: "right" }, 3: { cellWidth: 28, halign: "right" }, 4: { cellWidth: 29, halign: "right" } },
       didParseCell: (data) => { if (data.section === "body" && data.column.index === 0 && pecas[data.row.index]?.foto_data_url) data.cell.styles.minCellHeight = 14; },
       didDrawCell: (data) => {
         if (data.section !== "body" || data.column.index !== 0) return;
@@ -221,111 +299,141 @@ export async function generateClientReport(
   if (despesasRelatorio.length > 0) {
     autoTable(doc, {
       startY: (reportTable.lastAutoTable?.finalY ?? 30) + 4,
-      margin: { left: 7, right: 7, bottom: 24 },
+      margin: { left: marginX, right: marginX, bottom: 24 },
       theme: "plain",
-      styles: { fontSize: 7, cellPadding: 1.25, lineColor: [232, 234, 238], lineWidth: { bottom: 0.08 } },
-      headStyles: { fillColor: [74, 82, 94], textColor: 255 },
-      footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold", lineWidth: 0 },
+      styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
+      headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
+      footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { top: 0.4 } },
       head: [["Despesas adicionais", "Valor"]],
-      body: despesasRelatorio.map((despesa) => [despesa.descricao, formatCurrency(despesa.valor)]),
-      foot: [["TOTAL DAS DESPESAS", formatCurrency(totalDespesas)]],
-      columnStyles: { 0: { cellWidth: 241 }, 1: { cellWidth: 42, halign: "right" } },
+      body: despesasRelatorio.map((despesa) => [despesa.descricao, currencyNumber(despesa.valor)]),
+      foot: [["TOTAL DAS DESPESAS", currencyNumber(totalDespesas)]],
+      columnStyles: { 0: { cellWidth: 151 }, 1: { cellWidth: 35, halign: "right" } },
       didParseCell: (data) => {
-        if (data.section === "body") data.cell.styles.fillColor = data.row.index % 2 === 0 ? [247, 248, 250] : [255, 255, 255];
+        if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
       },
     });
   }
   const unitValue = (total: number, quantity: number, suffix = "") =>
-    quantity > 0 ? `${formatCurrency(total / quantity)}${suffix}` : "—";
+    quantity > 0 ? `${currencyNumber(total / quantity)}${suffix}` : "—";
   const financialRows = [
     [
       "Horas trabalhadas",
       formatMinutes(financial.horasTrabalhadas),
       unitValue(financial.valorTrabalho, financial.horasTrabalhadas / 60, "/h"),
-      formatCurrency(financial.valorTrabalho),
+      currencyNumber(financial.valorTrabalho),
     ],
     [
       "Horas de viagem",
       formatMinutes(financial.horasViagem),
       unitValue(financial.valorViagem, financial.horasViagem / 60, "/h"),
-      formatCurrency(financial.valorViagem),
+      currencyNumber(financial.valorViagem),
     ],
     [
       "Deslocamento",
       `${financial.km} km`,
       unitValue(financial.valorKm, financial.km, "/km"),
-      formatCurrency(financial.valorKm),
+      currencyNumber(financial.valorKm),
     ],
     ...(financial.diariasInteiras > 0 ? [[
       "Diária inteira",
       String(financial.diariasInteiras),
       unitValue(financial.valorDiariasInteiras, financial.diariasInteiras),
-      formatCurrency(financial.valorDiariasInteiras),
+      currencyNumber(financial.valorDiariasInteiras),
     ]] : []),
     ...(financial.meiasDiarias > 0 ? [[
       "Meia diária",
       String(financial.meiasDiarias),
       unitValue(financial.valorMeiasDiarias, financial.meiasDiarias),
-      formatCurrency(financial.valorMeiasDiarias),
+      currencyNumber(financial.valorMeiasDiarias),
     ]] : []),
-    ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", formatCurrency(financial.pedagios)]] : []),
-    ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", formatCurrency(financial.outrasDespesas)]] : []),
+    ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", currencyNumber(financial.pedagios)]] : []),
+    ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", currencyNumber(financial.outrasDespesas)]] : []),
   ];
   const valuesStartY = (reportTable.lastAutoTable?.finalY ?? 30) + 4;
-  const valuesPage = doc.getNumberOfPages();
   autoTable(doc, {
     startY: valuesStartY,
-    margin: { left: 7, right: 108, bottom: 24 },
+    margin: { left: marginX, right: marginX, bottom: 24 },
     theme: "plain",
-    styles: { fontSize: 7, cellPadding: 1.25, lineColor: [232, 234, 238], lineWidth: { bottom: 0.08 } },
-    headStyles: { fillColor: [39, 54, 78], textColor: 255 },
-    footStyles: { fillColor: [225, 232, 242], textColor: [39, 54, 78], fontStyle: "bold" },
+    styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
+    headStyles: { fillColor: colors.lightBlue, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { bottom: 0.3 } },
+    footStyles: { fillColor: colors.light, textColor: colors.petroleum, fontStyle: "bold", lineColor: colors.blueLight, lineWidth: { top: 0.4 } },
     head: [["Valores dos serviços", "Qtd.", "Valor unit.", "Total"]],
     body: financialRows,
-    foot: [["TOTAL DOS SERVIÇOS", "", "", formatCurrency(financial.totalGeral)]],
-    columnStyles: { 0: { cellWidth: 62 }, 1: { cellWidth: 35, halign: "right" }, 2: { cellWidth: 42, halign: "right" }, 3: { cellWidth: 43, halign: "right" } },
+    foot: [["TOTAL DOS SERVIÇOS", "", "", currencyNumber(financial.totalGeral)]],
+    columnStyles: { 0: { cellWidth: 79 }, 1: { cellWidth: 31, halign: "right" }, 2: { cellWidth: 38, halign: "right" }, 3: { cellWidth: 38, halign: "right" } },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
+    },
   });
   const servicesFinalY = reportTable.lastAutoTable?.finalY ?? valuesStartY;
-  doc.setPage(valuesPage);
-  const summaryCurrency = (value: number) => formatCurrency(value).replace(/^R\$\s?/, "");
-  autoTable(doc, {
-    startY: valuesStartY,
-    margin: { left: 194, right: 7, bottom: 24 },
-    theme: "plain",
-    styles: { fontSize: 7.5, cellPadding: 1.2, lineColor: [232, 234, 238], lineWidth: { bottom: 0.08 } },
-    headStyles: { fillColor: [74, 82, 94], textColor: 255, fontStyle: "bold" },
-    head: [["RESUMO DOS VALORES", ""]],
-    body: [
-      ["Serviços", summaryCurrency(financial.totalGeral)],
-      ["Peças", summaryCurrency(totalPecas)],
-      ...(totalDespesas > 0 ? [["Despesas", summaryCurrency(totalDespesas)]] : []),
-    ],
-    foot: [["TOTAL GERAL", summaryCurrency(totalComPecas)]],
-    footStyles: { fillColor: [39, 91, 158], textColor: 255, fontStyle: "bold", fontSize: 8.5 },
-    columnStyles: {
-      0: { cellWidth: 48 },
-      1: { cellWidth: 48, halign: "right", fontStyle: "bold" },
-    },
-    didParseCell: (data) => {
-      if (data.section === "body") {
-        data.cell.styles.fillColor = data.row.index % 2 === 0 ? [245, 247, 250] : [255, 255, 255];
-      }
-    },
-  });
-  const summaryFinalY = reportTable.lastAutoTable?.finalY ?? valuesStartY;
-  reportTable.lastAutoTable = { finalY: Math.max(servicesFinalY, summaryFinalY) };
-
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const finalY = reportTable.lastAutoTable?.finalY ?? 0;
-  if (finalY > pageHeight - 27) doc.addPage();
+  const summaryWidth = 80;
+  const summaryHeight = totalDespesas > 0 ? 42 : 36;
+  const summaryY = pageHeight - 60 - summaryHeight;
+  if (servicesFinalY + 6 > summaryY) doc.addPage();
   doc.setPage(doc.getNumberOfPages());
-  doc.setDrawColor(140);
-  doc.line(10, pageHeight - 18, 105, pageHeight - 18);
-  doc.line(192, pageHeight - 18, 287, pageHeight - 18);
+  const cardX = pageWidth - marginX - summaryWidth;
+  const cardY = pageHeight - 60 - summaryHeight;
+  doc.setDrawColor(...colors.divider);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(cardX, cardY, summaryWidth, summaryHeight, 2, 2, "S");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
-  doc.text("Assinatura do técnico", 10, pageHeight - 13);
-  doc.text("Responsável do cliente", 192, pageHeight - 13);
-  doc.text(`Emissão: ${new Date().toLocaleDateString("pt-BR")}`, 287, pageHeight - 7, { align: "right" });
+  doc.setTextColor(...colors.petroleumLight);
+  doc.text("RESUMO DOS VALORES", cardX + 5, cardY + 6);
+  const summaryRows = [
+    ["Serviços", financial.totalGeral],
+    ["Peças", totalPecas],
+    ...(totalDespesas > 0 ? [["Despesas", totalDespesas] as [string, number]] : []),
+  ] as [string, number][];
+  summaryRows.forEach(([label, value], index) => {
+    const y = cardY + 13 + index * 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...colors.text2);
+    doc.text(label, cardX + 5, y);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...colors.text);
+    doc.text(currencyNumber(value), cardX + summaryWidth - 5, y, { align: "right" });
+  });
+  const totalBandY = cardY + summaryHeight - 13;
+  doc.setFillColor(...colors.lightBlue);
+  doc.roundedRect(cardX + 0.2, totalBandY, summaryWidth - 0.4, 12.8, 0, 0, "F");
+  doc.setDrawColor(...colors.blue);
+  doc.setLineWidth(0.5);
+  doc.line(cardX, totalBandY, cardX + summaryWidth, totalBandY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...colors.text2);
+  doc.text("TOTAL GERAL", cardX + 5, totalBandY + 7.5);
+  const totalValue = currencyNumber(totalComPecas);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...colors.petroleum);
+  const totalValueWidth = doc.getTextWidth(totalValue) * (15 / 8);
+  doc.text("R$", cardX + summaryWidth - 6 - totalValueWidth, totalBandY + 7.5, { align: "right" });
+  doc.setFontSize(15);
+  doc.text(totalValue, cardX + summaryWidth - 5, totalBandY + 8, { align: "right" });
+
+  const signatureY = pageHeight - 30;
+  doc.setDrawColor(...colors.gray);
+  doc.setLineWidth(0.2);
+  doc.line(12, signatureY, 95, signatureY);
+  doc.line(115, signatureY, 198, signatureY);
+  doc.setTextColor(...colors.text2);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.text("Assinatura do técnico", 12, signatureY + 4);
+  doc.text("Responsável do cliente", 115, signatureY + 4);
+
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...colors.gray);
+    doc.text("CP TECHNIC — Clarel Pavan", marginX, pageHeight - 8);
+    doc.text(`página ${page} de ${totalPages}`, pageWidth - marginX, pageHeight - 8, { align: "right" });
+  }
 
   const filename = `CPTECHNIC_${filePart(cliente.nome)}_${fileDate(inicio)}_a_${fileDate(fim)}.pdf`;
   await shareOrDownloadPdf(doc, filename, `Relatório CP TECHNIC — ${cliente.nome}`);
