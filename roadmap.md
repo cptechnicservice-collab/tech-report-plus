@@ -49,4 +49,5 @@
 - [x] Adicionar número permanente e exclusivo no canto superior direito de cada relatório.
 - [ ] Adicionar múltiplos comprovantes às despesas extras, com câmera, galeria e uso offline.
 - [ ] Acrescentar páginas de anexos ao PDF sem alterar a primeira folha.
+- [ ] Manter todas as fotos exclusivamente em páginas adicionais, preservando o relatório atual.
 - [ ] Validar anexos no iPhone, PDFs com e sem comprovantes e compilação.
