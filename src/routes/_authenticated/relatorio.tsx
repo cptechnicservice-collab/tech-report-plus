@@ -215,6 +215,8 @@ function Relatorio() {
         pecas_snapshot: structuredClone(pecasParaSalvar()),
         financeiro_snapshot: structuredClone(financeiros),
         observacao_relatorio: relatorioEmEdicao?.observacao_relatorio ?? "",
+        despesas_snapshot: relatorioEmEdicao?.despesas_snapshot ?? [],
+        total_despesas: relatorioEmEdicao?.total_despesas ?? 0,
         pagamento_status: relatorioEmEdicao?.pagamento_status ?? "pendente" as const,
         valor_recebido: relatorioEmEdicao?.valor_recebido ?? 0,
         data_recebimento: relatorioEmEdicao?.data_recebimento ?? null,
