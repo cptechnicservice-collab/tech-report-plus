@@ -42,3 +42,4 @@
 - [x] Corrigir a digitação da observação no iPhone com uma janela estável.
 - [x] Adicionar despesas extras aos relatórios salvos, somadas ao total e exibidas no PDF.
 - [x] Validar observação, despesas e PDF no tamanho de tela do iPhone.
+- [ ] Reorganizar e validar o PDF do relatório em A4 vertical.
