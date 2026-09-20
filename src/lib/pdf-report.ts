@@ -12,6 +12,7 @@ import { ensureEmpresa, type DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento } from "@/lib/orcamentos";
 import type { DespesaRelatorio } from "@/lib/relatorios";
 import type jsPDF from "jspdf";
+import reportLogoAsset from "@/assets/cp-technic-homag-logo.png.asset.json";
 
 export type ReportPartItem = {
   id: string;
@@ -91,6 +92,14 @@ async function fallbackLogo() {
   });
 }
 
+async function imageUrlToDataUrl(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob);
+  });
+}
+
 async function drawDocumentHeader(doc: PdfDoc, input: { empresa: DadosEmpresa; cliente: Cliente; date: string; title: string }) {
   const width = doc.internal.pageSize.getWidth();
   const logo = input.empresa.logo_data_url ?? await fallbackLogo();
@@ -150,29 +159,57 @@ export async function generateClientReport(
   const contentWidth = 186;
   const emittedAt = new Date().toLocaleDateString("pt-BR");
   const currencyNumber = (value: number) => formatCurrency(value).replace(/^R\$\s?/, "");
-  const logo = empresa.logo_data_url ?? await fallbackLogo();
+  const logo = await imageUrlToDataUrl(reportLogoAsset.url);
 
   doc.setFont("helvetica", "normal");
-  doc.setFillColor(...colors.petroleum);
-  doc.rect(0, 0, pageWidth, 26, "F");
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, 36, "F");
   try {
     const properties = doc.getImageProperties(logo);
-    const logoHeight = 14;
-    const logoWidth = Math.min(48, logoHeight * (properties.width / properties.height));
-    doc.addImage(logo, logo.startsWith("data:image/png") ? "PNG" : "JPEG", marginX, 6, logoWidth, logoHeight, undefined, "FAST");
+    const logoHeight = 27;
+    const logoWidth = logoHeight * (properties.width / properties.height);
+    doc.addImage(logo, logo.startsWith("data:image/png") ? "PNG" : "JPEG", marginX, 4.5, logoWidth, logoHeight, undefined, "FAST");
   } catch { /* O relatório continua disponível se o logo estiver corrompido. */ }
+  const companyX = 43;
+  doc.setTextColor(...colors.petroleum);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.text("CP-Technic Service", companyX, 7.5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.3);
+  doc.setTextColor(...colors.text);
+  doc.text("CP TECHNIC SERVICE MANUTENÇÃO DE", companyX, 12);
+  doc.text("MÁQUINAS LTDA", companyX, 15.2);
+  doc.text("CNPJ: 46.696.388/0001-08", companyX, 19.2);
+  doc.text("Rua Agostino Carini, 181", companyX, 23.2);
+  doc.text("Fátima, Bento Gonçalves-RS", companyX, 27.2);
+  doc.text("CEP 95702-412", companyX, 31.2);
+
+  const contactX = 121;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...colors.petroleum);
+  doc.text("CONTATO", contactX, 8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...colors.text);
+  doc.text("clarelcapavan@gmail.com", contactX, 13);
+  doc.text("+55 (54) 99129-1187", contactX, 18);
+  doc.text("54 991291187", contactX, 23);
+
+  doc.setFillColor(...colors.petroleum);
+  doc.rect(0, 36, pageWidth, 12, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("Relatório de atendimento", pageWidth - marginX, 11, { align: "right" });
+  doc.text("Relatório de atendimento", marginX, 43.5);
   doc.setTextColor(175, 203, 216);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text(`Emitido em ${emittedAt}`, pageWidth - marginX, 17, { align: "right" });
+  doc.text(`Emitido em ${emittedAt}`, pageWidth - marginX, 43.5, { align: "right" });
   doc.setFillColor(...colors.cyan);
-  doc.rect(0, 26, pageWidth, 1.2, "F");
+  doc.rect(0, 48, pageWidth, 1.2, "F");
 
-  const infoTop = 27.2;
+  const infoTop = 49.2;
   doc.setFillColor(...colors.light);
   doc.rect(0, infoTop, pageWidth, 14, "F");
   const infoColumns = [
@@ -203,7 +240,7 @@ export async function generateClientReport(
   const totalComPecas = financial.totalGeral + totalPecas + totalDespesas;
   const sortedEntries = [...apontamentos].sort((a, b) => a.data.localeCompare(b.data));
   autoTable(doc, {
-    startY: 45,
+    startY: 67,
     margin: { left: marginX, right: marginX, bottom: 24 },
     theme: "plain",
     styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak", valign: "middle", textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
@@ -229,6 +266,7 @@ export async function generateClientReport(
       5: { cellWidth: 20, halign: "right" }, 6: { cellWidth: 20, halign: "right" }, 7: { cellWidth: 15, halign: "right" },
     },
     didParseCell: (data) => {
+      if (data.section === "head" && data.column.index >= 5) data.cell.styles.halign = "right";
       if (data.section === "body" && data.row.index % 2 === 1) data.cell.styles.fillColor = colors.zebra;
     },
     didDrawCell: (data) => {
