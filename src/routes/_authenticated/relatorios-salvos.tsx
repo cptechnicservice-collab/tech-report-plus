@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Download, FilePenLine, FileText, HandCoins, MessageSquareText, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Download, FilePenLine, FileText, HandCoins, MessageSquareText, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +20,9 @@ import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
+import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
+
+type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string };
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
   validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" } => {
@@ -49,6 +52,7 @@ function RelatoriosSalvos() {
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
   const [relatorioObservacao, setRelatorioObservacao] = useState<RelatorioSalvo | null>(null);
   const [observacao, setObservacao] = useState("");
+  const [despesas, setDespesas] = useState<DespesaEditavel[]>([]);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
   const relatoriosVisiveis = useMemo(() => {
@@ -97,6 +101,7 @@ function RelatoriosSalvos() {
         item.fim,
         item.financeiro_snapshot,
         item.observacao_relatorio,
+        item.despesas_snapshot,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
@@ -139,19 +144,37 @@ function RelatoriosSalvos() {
   const openObservacao = (item: RelatorioSalvo) => {
     setRelatorioObservacao(item);
     setObservacao(item.observacao_relatorio ?? "");
+    setDespesas((item.despesas_snapshot ?? []).map((despesa) => ({ ...despesa, valor: String(despesa.valor).replace(".", ",") })));
   };
 
   const saveObservacao = useMutation({
     mutationFn: async () => {
       if (!relatorioObservacao) throw new Error("Relatório não encontrado.");
-      return saveRelatorioOffline({ ...relatorioObservacao, observacao_relatorio: observacao.trim() });
+      const despesasValidas = despesas.map((despesa) => ({
+        id: despesa.id,
+        descricao: despesa.descricao.trim(),
+        valor: Number(despesa.valor.replace(",", ".")),
+      }));
+      if (despesasValidas.some((despesa) => !despesa.descricao || !Number.isFinite(despesa.valor) || despesa.valor <= 0)) {
+        throw new Error("Preencha a descrição e um valor maior que zero em cada despesa.");
+      }
+      const totalDespesas = despesasValidas.reduce((total, despesa) => total + despesa.valor, 0);
+      const totalGeral = relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + totalDespesas;
+      return saveRelatorioOffline({
+        ...relatorioObservacao,
+        observacao_relatorio: observacao.trim(),
+        despesas_snapshot: despesasValidas,
+        total_despesas: totalDespesas,
+        total_geral: totalGeral,
+        pagamento_status: statusPagamento(totalGeral, relatorioObservacao.valor_recebido),
+      });
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
       setRelatorioObservacao(null);
-      toast.success(result.queued ? "Observação salva no aparelho" : "Observação salva");
+      toast.success(result.queued ? "Informações salvas no aparelho" : "Observação e despesas salvas");
     },
-    onError: () => toast.error("Não foi possível salvar a observação"),
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar as informações"),
   });
 
   const generateReceipt = async (item: RelatorioSalvo) => {
@@ -229,7 +252,7 @@ function RelatoriosSalvos() {
                       <p className="shrink-0 text-base font-bold tabular-nums text-primary">{formatCurrency(item.total_geral)}</p>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{formatDateBR(item.inicio)} a {formatDateBR(item.fim)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}{item.total_despesas > 0 ? ` · Despesas ${formatCurrency(item.total_despesas)}` : ""}</p>
                     {item.pagamento_status !== "pago" ? <p className="mt-1 text-xs font-medium text-warning-foreground">Saldo {formatCurrency(saldoRelatorio(item))}</p> : null}
                     {item.observacao_relatorio ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Obs.: {item.observacao_relatorio}</p> : null}
                   </div>
@@ -237,7 +260,7 @@ function RelatoriosSalvos() {
                 <div className="mt-3 grid grid-cols-2 gap-2 pl-[3.25rem]">
                   <Button asChild variant="outline" className="h-10 rounded-xl"><Link to="/relatorio" search={{ relatorio: item.id }}><FilePenLine className="mr-2 h-4 w-4" />Editar</Link></Button>
                   <Button variant="outline" className="h-10 rounded-xl" onClick={() => openRecebimento(item)}><HandCoins className="mr-2 h-4 w-4" />Recebimento</Button>
-                   <Button variant="outline" className="h-10 rounded-xl" onClick={() => openObservacao(item)}><MessageSquareText className="mr-2 h-4 w-4" />Observação</Button>
+                    <Button variant="outline" className="h-10 rounded-xl" onClick={() => openObservacao(item)}><MessageSquareText className="mr-2 h-4 w-4" />Obs. e despesas</Button>
                   <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === item.id} onClick={() => void generate(item)}><Download className="mr-2 h-4 w-4" />Relatório</Button>
                   {item.valor_recebido > 0 ? <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === `recibo-${item.id}`} onClick={() => void generateReceipt(item)}><ReceiptText className="mr-2 h-4 w-4" />Recibo</Button> : <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}
                   {item.valor_recebido > 0 ? <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="col-span-2 h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : null}
@@ -264,22 +287,42 @@ function RelatoriosSalvos() {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-      <Drawer open={Boolean(relatorioObservacao)} onOpenChange={(open) => { if (!open) setRelatorioObservacao(null); }}>
-        <DrawerContent className="mx-auto max-w-lg rounded-t-3xl pb-[max(env(safe-area-inset-bottom),1rem)]">
-          <DrawerHeader className="text-left">
-            <DrawerTitle>Observação do relatório</DrawerTitle>
-            <DrawerDescription>{relatorioObservacao?.cliente_nome} · aparece somente no PDF final</DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4">
-            <Label htmlFor="saved-report-note">Observação</Label>
-            <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Ex.: gastos com hotel, alimentação ou detalhes finais" rows={5} />
+      <Dialog open={Boolean(relatorioObservacao)} onOpenChange={(open) => { if (!open) setRelatorioObservacao(null); }}>
+        <DialogContent className="bottom-3 left-3 right-3 top-[max(env(safe-area-inset-top),0.75rem)] flex w-auto max-w-lg translate-x-0 translate-y-0 grid-rows-none flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:left-1/2 sm:right-auto sm:w-[calc(100%-2rem)] sm:-translate-x-1/2">
+          <DialogHeader className="shrink-0 border-b border-border px-4 py-4 pr-12 text-left">
+            <DialogTitle>Observação e despesas</DialogTitle>
+            <DialogDescription>{relatorioObservacao?.cliente_nome} · informações do PDF final</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5">
+            <div>
+              <Label htmlFor="saved-report-note">Observação</Label>
+              <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Detalhes gerais do relatório" rows={4} />
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div><p className="text-sm font-semibold">Despesas adicionais</p><p className="text-xs text-muted-foreground">Hotel, pedágio ou outras despesas</p></div>
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Adicionar despesa" onClick={() => setDespesas((current) => [...current, { id: crypto.randomUUID(), descricao: "", valor: "" }])}><Plus className="h-4 w-4" /></Button>
+              </div>
+              {despesas.length === 0 ? <p className="rounded-xl bg-secondary px-3 py-4 text-center text-sm text-muted-foreground">Nenhuma despesa adicionada.</p> : (
+                <div className="space-y-3">
+                  {despesas.map((despesa, index) => (
+                    <div key={despesa.id} className="grid grid-cols-[minmax(0,1fr)_6.5rem_2.5rem] items-end gap-2">
+                      <div className="space-y-1"><Label htmlFor={`expense-description-${despesa.id}`}>Descrição {index + 1}</Label><Input id={`expense-description-${despesa.id}`} value={despesa.descricao} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, descricao: event.target.value } : item))} placeholder="Hotel" className="h-11 rounded-xl" /></div>
+                      <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
+                      <Button type="button" variant="ghost" size="icon" className="h-11 w-10 rounded-full text-destructive" aria-label={`Remover despesa ${index + 1}`} onClick={() => setDespesas((current) => current.filter((item) => item.id !== despesa.id))}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  ))}
+                  <div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total das despesas</span><span className="tabular-nums text-primary">{formatCurrency(despesas.reduce((total, despesa) => total + (Number(despesa.valor.replace(",", ".")) || 0), 0))}</span></div>
+                </div>
+              )}
+            </div>
           </div>
-          <DrawerFooter>
-            <Button className="h-12 rounded-xl" disabled={saveObservacao.isPending} onClick={() => saveObservacao.mutate()}>{saveObservacao.isPending ? "Salvando..." : "Salvar observação"}</Button>
-            <DrawerClose asChild><Button variant="ghost" className="h-11 rounded-xl">Cancelar</Button></DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+          <DialogFooter className="shrink-0 gap-2 border-t border-border bg-card px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:flex-row">
+            <Button variant="ghost" className="h-11 rounded-xl sm:order-first" onClick={() => setRelatorioObservacao(null)}>Cancelar</Button>
+            <Button className="h-11 rounded-xl" disabled={saveObservacao.isPending} onClick={() => saveObservacao.mutate()}>{saveObservacao.isPending ? "Salvando..." : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
