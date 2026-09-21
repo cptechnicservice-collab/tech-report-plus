@@ -57,5 +57,5 @@
 - [x] Validar a navegação de retorno no tamanho de tela do iPhone e confirmar compilação sem erros.
 - [x] Manter o filtro de recebimentos escolhido ao sair e retornar aos Relatórios salvos.
 - [x] Restaurar o cálculo original do orçamento comum.
-- [ ] Criar a opção Orçamento Horas com tarifas vigentes e PDF baseado na referência enviada.
-- [ ] Apresentar uma prévia do novo PDF antes da conclusão.
+- [x] Criar a opção Orçamento Horas com tarifas vigentes e PDF baseado na referência enviada.
+- [x] Apresentar uma prévia do novo PDF antes da conclusão.
