@@ -59,3 +59,6 @@
 - [x] Restaurar o cálculo original do orçamento comum.
 - [x] Criar a opção Orçamento Horas com tarifas vigentes e PDF baseado na referência enviada.
 - [x] Apresentar uma prévia do novo PDF antes da conclusão.
+
+- [ ] Corrigir a adição de peças no relatório e permitir limpar ou remover a escolha.
+- [ ] Validar o fluxo de peças no tamanho do iPhone e confirmar compilação sem erros.
