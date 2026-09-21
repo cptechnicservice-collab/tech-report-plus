@@ -117,6 +117,7 @@ function Clientes() {
     <PageShell
       title="Clientes"
       subtitle={`${clientes.length} cadastrado(s)`}
+      backTo="/mais"
       action={
         <Button className="rounded-full px-4" onClick={abrirNovo}>
           <Plus className="mr-1 h-5 w-5" /> Novo

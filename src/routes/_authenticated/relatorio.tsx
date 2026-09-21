@@ -268,7 +268,7 @@ function Relatorio() {
   };
 
   return (
-    <PageShell title={relatorioEmEdicao ? "Editar relatório" : "Relatório"} subtitle={relatorioEmEdicao ? "Documento salvo" : "Cliente e período"}>
+    <PageShell title={relatorioEmEdicao ? "Editar relatório" : "Relatório"} subtitle={relatorioEmEdicao ? "Documento salvo" : "Cliente e período"} backTo={relatorioEmEdicao ? "/relatorios-salvos" : "/historico"}>
       <Section title="Dados do relatório">
         <div className="space-y-1.5">
           <Label htmlFor="report-client">Cliente</Label>

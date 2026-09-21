@@ -92,7 +92,7 @@ function Pecas() {
   };
 
   return (
-    <PageShell title="Catálogo de Peças" subtitle={`${pecas.length} peça(s) cadastrada(s)`} action={<Button size="icon" className="rounded-full" aria-label="Cadastrar peça" onClick={openNew}><Plus className="h-5 w-5" /></Button>}>
+    <PageShell title="Catálogo de Peças" subtitle={`${pecas.length} peça(s) cadastrada(s)`} backTo="/mais" action={<Button size="icon" className="rounded-full" aria-label="Cadastrar peça" onClick={openNew}><Plus className="h-5 w-5" /></Button>}>
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar descrição ou código" className="h-14 rounded-xl bg-card pl-12 pr-12 shadow-card" />

@@ -91,7 +91,7 @@ function OrcamentoPage() {
   const selectPhoto = async (itemId: string, file?: File) => { if (!file) return; try { patchItem(itemId, { foto_data_url: await resizeImage(file) }); } catch { toast.error("Não foi possível usar essa foto"); } };
   const generate = async () => { if (!valid) return; try { await generateQuotePdf({ ...payload(), user_id: "", created_at: source?.created_at ?? new Date().toISOString(), updated_at: new Date().toISOString(), itens: numericItems.map(({ quantidadeTexto: _q, valorTexto: _v, ...item }) => ({ ...item, user_id: "", created_at: "", updated_at: "" })) }); } catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível gerar o PDF"); } };
 
-  return <PageShell title={source ? "Editar orçamento" : "Novo orçamento"} subtitle={numero || "Numeração automática"}>
+  return <PageShell title={source ? "Editar orçamento" : "Novo orçamento"} subtitle={numero || "Numeração automática"} backTo="/orcamentos">
     <Section title="Dados do orçamento">
       <div className="grid grid-cols-2 gap-3"><Field label="Número" value={numero} onChange={setNumero} /><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={data} onChange={(event) => setData(event.target.value)} className="h-12 rounded-xl" /></div></div>
       <ClienteSelect clientes={clientes} value={clienteId} onChange={setClienteId} />
