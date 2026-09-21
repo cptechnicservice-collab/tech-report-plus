@@ -20,6 +20,7 @@ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMaisRouteImport } from './routes/_authenticated/mais'
 import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/novo'
 import { Route as AuthenticatedOrcamentoRouteImport } from './routes/_authenticated/orcamento'
+import { Route as AuthenticatedOrcamentoHorasRouteImport } from './routes/_authenticated/orcamento-horas'
 import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
@@ -83,6 +84,12 @@ const AuthenticatedOrcamentoRoute = AuthenticatedOrcamentoRouteImport.update({
   path: '/orcamento',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrcamentoHorasRoute =
+  AuthenticatedOrcamentoHorasRouteImport.update({
+    id: '/orcamento-horas',
+    path: '/orcamento-horas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
   id: '/orcamentos',
   path: '/orcamentos',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/mais': typeof AuthenticatedMaisRoute
   '/novo': typeof AuthenticatedNovoRoute
   '/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
@@ -172,6 +181,7 @@ export interface FileRoutesById {
   '/_authenticated/mais': typeof AuthenticatedMaisRoute
   '/_authenticated/novo': typeof AuthenticatedNovoRoute
   '/_authenticated/orcamento': typeof AuthenticatedOrcamentoRoute
+  '/_authenticated/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/_authenticated/orcamentos': typeof AuthenticatedOrcamentosRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/mais'
     | '/novo'
     | '/orcamento'
+    | '/orcamento-horas'
     | '/orcamentos'
     | '/painel'
     | '/pecas'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/mais'
     | '/novo'
     | '/orcamento'
+    | '/orcamento-horas'
     | '/orcamentos'
     | '/painel'
     | '/pecas'
@@ -232,6 +244,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mais'
     | '/_authenticated/novo'
     | '/_authenticated/orcamento'
+    | '/_authenticated/orcamento-horas'
     | '/_authenticated/orcamentos'
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
@@ -327,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrcamentoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orcamento-horas': {
+      id: '/_authenticated/orcamento-horas'
+      path: '/orcamento-horas'
+      fullPath: '/orcamento-horas'
+      preLoaderRoute: typeof AuthenticatedOrcamentoHorasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orcamentos': {
       id: '/_authenticated/orcamentos'
       path: '/orcamentos'
@@ -387,6 +407,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMaisRoute: typeof AuthenticatedMaisRoute
   AuthenticatedNovoRoute: typeof AuthenticatedNovoRoute
   AuthenticatedOrcamentoRoute: typeof AuthenticatedOrcamentoRoute
+  AuthenticatedOrcamentoHorasRoute: typeof AuthenticatedOrcamentoHorasRoute
   AuthenticatedOrcamentosRoute: typeof AuthenticatedOrcamentosRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
@@ -404,6 +425,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMaisRoute: AuthenticatedMaisRoute,
   AuthenticatedNovoRoute: AuthenticatedNovoRoute,
   AuthenticatedOrcamentoRoute: AuthenticatedOrcamentoRoute,
+  AuthenticatedOrcamentoHorasRoute: AuthenticatedOrcamentoHorasRoute,
   AuthenticatedOrcamentosRoute: AuthenticatedOrcamentosRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,

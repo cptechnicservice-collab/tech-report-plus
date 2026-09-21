@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, FileText, Plus, Search, Trash2, Wrench } from "lucide-react";
+import { Clock3, Copy, FileText, Plus, Search, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -53,6 +53,7 @@ function OrcamentosPage() {
   });
   return (
     <PageShell title="Orçamentos" subtitle={`${orcamentos.length} documento(s)`} backTo="/mais" action={<Button asChild className="rounded-full px-4"><Link to="/orcamento" search={{ id: undefined }}><Plus className="mr-1 h-5 w-5" />Novo</Link></Button>}>
+      <Button asChild variant="secondary" className="h-12 w-full rounded-xl"><Link to="/orcamento-horas"><Clock3 className="mr-2 h-5 w-5" />Orçamento Horas</Link></Button>
       <div className="relative"><Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" /><Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar cliente" className="h-14 rounded-xl bg-card pl-12 shadow-card" /></div>
       <div className="flex gap-2 overflow-x-auto pb-1">{(["todos", "rascunho", "enviado", "aprovado", "recusado"] as const).map((value) => <Button key={value} size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full" onClick={() => setStatus(value)}>{value === "todos" ? "Todos" : statusInfo[value].label}</Button>)}</div>
       {isLoading ? <p className="text-sm text-muted-foreground">Carregando...</p> : list.length === 0 ? <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">Nenhum orçamento</p></div> : <Section title="Documentos"><ul className="-my-3 divide-y divide-border">{list.map((item) => <li key={item.id} className="py-4">
