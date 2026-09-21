@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarRange, Camera, Download, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
@@ -26,6 +26,7 @@ import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento
 type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: AnexoDespesa[] };
 
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
+const STATUS_FILTER_STORAGE_KEY = "cp-technic-relatorios-status";
 
 const attachmentContent = (anexo: AnexoDespesa) => typeof anexo === "string" ? anexo : anexo.conteudo;
 const attachmentIsPdf = (anexo: AnexoDespesa) => typeof anexo !== "string" && anexo.tipo === "pdf";
@@ -80,6 +81,23 @@ function RelatoriosSalvos() {
   const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+
+  useEffect(() => {
+    if (search.status) {
+      window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, search.status);
+      return;
+    }
+    const savedStatus = window.localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
+    if (savedStatus === "todos" || savedStatus === "aberto" || savedStatus === "pendente" || savedStatus === "parcial" || savedStatus === "pago") {
+      setStatus(savedStatus);
+    }
+  }, [search.status]);
+
+  const selectStatus = (value: "todos" | "aberto" | PagamentoStatus) => {
+    setStatus(value);
+    window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, value);
+  };
+
   const relatoriosVisiveis = useMemo(() => {
     const term = normalizeSearchText(busca);
     const agora = new Date();
@@ -313,7 +331,7 @@ function RelatoriosSalvos() {
 
       <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Status do pagamento">
         {(["todos", "aberto", "pendente", "parcial", "pago"] as const).map((value) => (
-          <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={status === value} onClick={() => setStatus(value)}>
+          <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={status === value} onClick={() => selectStatus(value)}>
             {value === "todos" ? "Todos" : value === "aberto" ? "Em aberto" : statusInfo[value].label}
           </Button>
         ))}
