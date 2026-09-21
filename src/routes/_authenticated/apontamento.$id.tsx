@@ -36,6 +36,7 @@ function EditarApontamento() {
     <PageShell
       title="Editar apontamento"
       subtitle={data ? `${formatDateBR(data.data)} · ${data.clientes?.nome ?? ""}` : undefined}
+      backTo="/historico"
     >
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>

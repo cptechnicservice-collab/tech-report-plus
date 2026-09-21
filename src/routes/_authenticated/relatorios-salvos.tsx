@@ -285,7 +285,7 @@ function RelatoriosSalvos() {
   };
 
   return (
-    <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`}>
+    <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`} backTo="/mais">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar cliente" className="h-14 rounded-xl bg-card pl-12 pr-12 shadow-card" />

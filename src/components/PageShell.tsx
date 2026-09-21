@@ -31,7 +31,7 @@ export function PageShell({
   };
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-28">
-      <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2 px-1 pb-5 pt-4">
+      <header className={`grid items-end px-1 pb-5 pt-4 ${backTo ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}>
         {backTo ? (
           <Button asChild variant="ghost" size="icon" className="mb-[-0.25rem] h-11 w-11 rounded-full" aria-label="Voltar" title="Voltar">
             <Link to={backTo}>

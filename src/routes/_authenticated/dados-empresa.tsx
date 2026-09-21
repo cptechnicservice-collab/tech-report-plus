@@ -42,7 +42,7 @@ function DadosEmpresaPage() {
     catch { toast.error("Não foi possível usar essa imagem"); }
   };
   return (
-    <PageShell title="Dados da empresa" subtitle="Identificação nos documentos">
+    <PageShell title="Dados da empresa" subtitle="Identificação nos documentos" backTo="/mais">
       <Section title="Logo">
         <div className="flex items-center gap-4">
           <img src={draft.logo_data_url ?? "/app-icon.png"} alt="Logo da empresa" className="h-20 w-20 rounded-xl border object-contain" />

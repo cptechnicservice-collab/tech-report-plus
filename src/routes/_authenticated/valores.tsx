@@ -86,7 +86,7 @@ function Valores() {
   ] as const;
 
   return (
-    <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"}>
+    <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"} backTo="/mais">
       <Section title="Novos valores">
         <div className="space-y-1.5">
           <Label htmlFor="vigencia">Data de vigência</Label>
