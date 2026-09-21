@@ -56,3 +56,4 @@
 - [x] Adicionar seta de retorno nas telas secundárias e nos editores, com destinos previsíveis.
 - [x] Validar a navegação de retorno no tamanho de tela do iPhone e confirmar compilação sem erros.
 - [x] Manter o filtro de recebimentos escolhido ao sair e retornar aos Relatórios salvos.
+- [x] Mostrar somente o valor por hora nos orçamentos, sem quantidade, subtotal ou soma no total.
