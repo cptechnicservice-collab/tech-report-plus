@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, PackagePlus, Save, Trash2 } from "lucide-react";
+import { FileText, PackagePlus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -179,9 +179,12 @@ function Relatorio() {
     if (latest) selectAtendimento(latest);
   };
 
-  const addPeca = () => {
-    const peca = pecas.find((item) => item.id === pecaId);
-    if (!peca) return;
+  const addPeca = (selectedId: string) => {
+    const peca = pecas.find((item) => item.id === selectedId);
+    if (!peca) {
+      toast.error("Selecione uma peça para adicionar.");
+      return;
+    }
     setPecasSelecionadas((current) => {
       const existing = current.find((item) => item.id === peca.id);
       if (existing) return current.map((item) => item.id === peca.id ? { ...item, quantidade: (typeof item.quantidade === "number" ? item.quantidade : 0) + 1 } : item);
@@ -317,12 +320,13 @@ function Relatorio() {
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
       </Section>
       <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2">
           <select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3" aria-label="Selecionar peça">
             <option value="">Selecione uma peça</option>
             {pecas.map((peca) => <option key={peca.id} value={peca.id}>{peca.descricao} · {formatCurrency(peca.preco)}</option>)}
           </select>
-          <Button type="button" size="icon" className="h-12 w-12 rounded-xl" aria-label="Adicionar peça" disabled={!pecaId} onClick={addPeca}><PackagePlus className="h-5 w-5" /></Button>
+          {pecaId ? <Button type="button" size="icon" variant="outline" className="h-12 w-12 rounded-xl" aria-label="Limpar peça selecionada" title="Limpar seleção" onClick={() => setPecaId("")}><X className="h-5 w-5" /></Button> : null}
+          <Button type="button" size="icon" className="h-12 w-12 rounded-xl" aria-label="Adicionar peça" title="Adicionar peça" disabled={!pecaId} onClick={() => addPeca(pecaId)}><PackagePlus className="h-5 w-5" /></Button>
         </div>
         {pecasSelecionadas.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma peça adicionada a este relatório.</p>
