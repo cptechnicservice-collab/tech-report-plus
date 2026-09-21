@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,13 @@ export function PageShell({
   title,
   subtitle,
   action,
+  backTo,
   children,
 }: {
   title: string;
   subtitle?: string | undefined;
   action?: ReactNode;
+  backTo?: "/mais" | "/historico" | "/relatorios-salvos" | "/orcamentos";
   children: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -29,7 +31,14 @@ export function PageShell({
   };
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-28">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 px-1 pb-5 pt-4">
+      <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-end gap-2 px-1 pb-5 pt-4">
+        {backTo ? (
+          <Button asChild variant="ghost" size="icon" className="mb-[-0.25rem] h-11 w-11 rounded-full" aria-label="Voltar" title="Voltar">
+            <Link to={backTo}>
+              <ChevronLeft className="h-7 w-7" />
+            </Link>
+          </Button>
+        ) : null}
         <div className="min-w-0">
           <p className="mb-1 text-xs font-semibold uppercase text-primary">CP TECHNIC</p>
           <h1 className="truncate text-[2rem] font-bold leading-none">{title}</h1>
