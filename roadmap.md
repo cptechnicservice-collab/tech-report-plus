@@ -58,3 +58,6 @@
 - [x] Manter o filtro de recebimentos escolhido ao sair e retornar aos Relatórios salvos.
 - [x] Mostrar somente o valor por hora nos orçamentos, sem quantidade, subtotal ou soma no total.
 - [ ] Gerar e apresentar uma prévia do orçamento com horas e peças antes da conclusão.
+- [ ] Restaurar o cálculo original do orçamento comum.
+- [ ] Criar a opção Orçamento Horas com tarifas vigentes e PDF baseado na referência enviada.
+- [ ] Apresentar uma prévia do novo PDF antes da conclusão.
