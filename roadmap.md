@@ -54,4 +54,4 @@
 - [x] Permitir anexar comprovantes em PDF de até 5 MB às despesas.
 - [x] Incluir todas as páginas de cada PDF ao final do relatório, começando em página exclusiva.
 - [x] Adicionar seta de retorno nas telas secundárias e nos editores, com destinos previsíveis.
-- [ ] Validar a navegação de retorno no tamanho de tela do iPhone e confirmar compilação sem erros.
+- [x] Validar a navegação de retorno no tamanho de tela do iPhone e confirmar compilação sem erros.
