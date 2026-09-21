@@ -785,10 +785,13 @@ export async function generateHourQuotePdf(input: {
       ["Meia diária (alimentação)", "dia", formatCurrency(input.valor.valor_meia_diaria)],
     ],
     columnStyles: { 0: { cellWidth: 105 }, 1: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 47, halign: "right", fontStyle: "bold" } },
-    didDrawPage: () => { doc.setDrawColor(0, 185, 254); doc.setLineWidth(0.7); doc.line(14, 121 + 6 * 8.5, width - 14, 121 + 6 * 8.5); },
   });
   const tableDoc = doc as typeof doc & { lastAutoTable?: { finalY: number } };
-  let y = (tableDoc.lastAutoTable?.finalY ?? 174) + 12;
+  const tableBottom = tableDoc.lastAutoTable?.finalY ?? 174;
+  doc.setDrawColor(0, 185, 254);
+  doc.setLineWidth(0.7);
+  doc.line(14, tableBottom, width - 14, tableBottom);
+  let y = tableBottom + 12;
   doc.setTextColor(92, 101, 108);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
