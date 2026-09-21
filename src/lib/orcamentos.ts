@@ -50,9 +50,13 @@ export type Orcamento = {
 
 export const formasPagamentoOrcamento: FormaPagamentoOrcamento[] = ["Pix", "Boleto", "Transferência", "Dinheiro", "Cartão"];
 
-export function calcularTotaisOrcamento(itens: Array<Pick<OrcamentoItem, "tipo" | "quantidade" | "valor_unitario">>, descontoTipo: DescontoTipo, descontoValor: number) {
+export function itemOrcamentoSomado(item: Pick<OrcamentoItem, "tipo" | "unidade">) {
+  return !(item.tipo === "servico" && item.unidade === "h");
+}
+
+export function calcularTotaisOrcamento(itens: Array<Pick<OrcamentoItem, "tipo" | "quantidade" | "unidade" | "valor_unitario">>, descontoTipo: DescontoTipo, descontoValor: number) {
   const produtos = itens.filter((item) => item.tipo === "produto").reduce((sum, item) => sum + item.quantidade * item.valor_unitario, 0);
-  const servicos = itens.filter((item) => item.tipo === "servico").reduce((sum, item) => sum + item.quantidade * item.valor_unitario, 0);
+  const servicos = itens.filter((item) => item.tipo === "servico" && itemOrcamentoSomado(item)).reduce((sum, item) => sum + item.quantidade * item.valor_unitario, 0);
   const subtotal = produtos + servicos;
   const desconto = descontoTipo === "percentual" ? subtotal * Math.min(100, descontoValor) / 100 : descontoValor;
   return { produtos, servicos, subtotal, desconto: Math.min(subtotal, desconto), total: Math.max(0, subtotal - desconto) };
