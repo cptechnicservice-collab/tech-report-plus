@@ -77,6 +77,7 @@ function RelatoriosSalvos() {
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
   const [relatorioObservacao, setRelatorioObservacao] = useState<RelatorioSalvo | null>(null);
   const [observacao, setObservacao] = useState("");
+  const [desconto, setDesconto] = useState("");
   const [despesas, setDespesas] = useState<DespesaEditavel[]>([]);
   const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -146,6 +147,7 @@ function RelatoriosSalvos() {
         item.observacao_relatorio,
         item.despesas_snapshot,
         item.numero_relatorio,
+        item.desconto,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
@@ -188,6 +190,7 @@ function RelatoriosSalvos() {
   const openObservacao = (item: RelatorioSalvo) => {
     setRelatorioObservacao(item);
     setObservacao(item.observacao_relatorio ?? "");
+    setDesconto(item.desconto > 0 ? String(item.desconto).replace(".", ",") : "");
     setDespesas((item.despesas_snapshot ?? []).map((despesa) => ({
       ...despesa,
       tipo: despesa.tipo ?? "diversos",
@@ -259,12 +262,17 @@ function RelatoriosSalvos() {
         throw new Error("Preencha a descrição e um valor maior que zero em cada despesa.");
       }
       const totalDespesas = despesasValidas.reduce((total, despesa) => total + despesa.valor, 0);
-      const totalGeral = relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + totalDespesas;
+      const subtotal = relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + totalDespesas;
+      const descontoNumerico = desconto.trim() ? Number(desconto.replace(",", ".")) : 0;
+      if (!Number.isFinite(descontoNumerico) || descontoNumerico < 0) throw new Error("Informe um desconto válido.");
+      if (descontoNumerico > subtotal) throw new Error("O desconto não pode ser maior que o total do relatório.");
+      const totalGeral = subtotal - descontoNumerico;
       return saveRelatorioOffline({
         ...relatorioObservacao,
         observacao_relatorio: observacao.trim(),
         despesas_snapshot: despesasValidas,
         total_despesas: totalDespesas,
+        desconto: descontoNumerico,
         total_geral: totalGeral,
         pagamento_status: statusPagamento(totalGeral, relatorioObservacao.valor_recebido),
       });
@@ -272,7 +280,7 @@ function RelatoriosSalvos() {
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
       setRelatorioObservacao(null);
-      toast.success(result.queued ? "Informações salvas no aparelho" : "Observação e despesas salvas");
+      toast.success(result.queued ? "Informações salvas no aparelho" : "Valores e informações salvos");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar as informações"),
   });
@@ -352,7 +360,7 @@ function RelatoriosSalvos() {
                       <p className="shrink-0 text-base font-bold tabular-nums text-primary">{formatCurrency(item.total_geral)}</p>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{formatDateBR(item.inicio)} a {formatDateBR(item.fim)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}{item.total_despesas > 0 ? ` · Despesas ${formatCurrency(item.total_despesas)}` : ""}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}{item.total_despesas > 0 ? ` · Despesas ${formatCurrency(item.total_despesas)}` : ""}{item.desconto > 0 ? ` · Desconto ${formatCurrency(item.desconto)}` : ""}</p>
                     {item.pagamento_status !== "pago" ? <p className="mt-1 text-xs font-medium text-warning-foreground">Saldo {formatCurrency(saldoRelatorio(item))}</p> : null}
                     {item.observacao_relatorio ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Obs.: {item.observacao_relatorio}</p> : null}
                   </div>
@@ -360,7 +368,7 @@ function RelatoriosSalvos() {
                 <div className="mt-3 grid grid-cols-2 gap-2 pl-[3.25rem]">
                   <Button asChild variant="outline" className="h-10 rounded-xl"><Link to="/relatorio" search={{ relatorio: item.id }}><FilePenLine className="mr-2 h-4 w-4" />Editar</Link></Button>
                   <Button variant="outline" className="h-10 rounded-xl" onClick={() => openRecebimento(item)}><HandCoins className="mr-2 h-4 w-4" />Recebimento</Button>
-                    <Button variant="outline" className="h-10 rounded-xl" onClick={() => openObservacao(item)}><MessageSquareText className="mr-2 h-4 w-4" />Obs. e despesas</Button>
+                    <Button variant="outline" className="h-10 rounded-xl" onClick={() => openObservacao(item)}><MessageSquareText className="mr-2 h-4 w-4" />Valores e obs.</Button>
                   <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === item.id} onClick={() => void generate(item)}><Download className="mr-2 h-4 w-4" />Relatório</Button>
                   {item.valor_recebido > 0 ? <Button variant="secondary" className="h-10 rounded-xl" disabled={generatingId === `recibo-${item.id}`} onClick={() => void generateReceipt(item)}><ReceiptText className="mr-2 h-4 w-4" />Recibo</Button> : <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}
                   {item.valor_recebido > 0 ? <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" className="col-span-2 h-10 rounded-xl text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir relatório?</AlertDialogTitle><AlertDialogDescription>O relatório salvo de {item.cliente_nome} será removido. Os apontamentos originais não serão apagados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : null}
@@ -390,10 +398,15 @@ function RelatoriosSalvos() {
       <Dialog open={Boolean(relatorioObservacao)} onOpenChange={(open) => { if (!open) setRelatorioObservacao(null); }}>
         <DialogContent className="bottom-3 left-3 right-3 top-[max(env(safe-area-inset-top),0.75rem)] flex w-auto max-w-lg translate-x-0 translate-y-0 grid-rows-none flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:left-1/2 sm:right-auto sm:w-[calc(100%-2rem)] sm:-translate-x-1/2">
           <DialogHeader className="shrink-0 border-b border-border px-4 py-4 pr-12 text-left">
-            <DialogTitle>Observação e despesas</DialogTitle>
+            <DialogTitle>Valores e observação</DialogTitle>
             <DialogDescription>{relatorioObservacao?.cliente_nome} · informações do PDF final</DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5">
+            <div>
+              <Label htmlFor="saved-report-discount">Desconto</Label>
+              <Input id="saved-report-discount" type="text" inputMode="decimal" className="mt-1.5 h-12 rounded-xl text-right tabular-nums" value={desconto} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDesconto(value); }} placeholder="0,00" />
+              <p className="mt-1 text-xs text-muted-foreground">Valor em reais descontado do total final.</p>
+            </div>
             <div>
               <Label htmlFor="saved-report-note">Observação</Label>
               <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Detalhes gerais do relatório" rows={4} />

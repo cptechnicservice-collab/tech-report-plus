@@ -63,5 +63,5 @@
 - [x] Corrigir a adição de peças no relatório e permitir limpar ou remover a escolha.
 - [x] Validar o fluxo de peças no tamanho do iPhone e confirmar compilação sem erros.
 
-- [ ] Adicionar desconto livre aos relatórios salvos, refletindo no valor final e no PDF.
+- [x] Adicionar desconto livre aos relatórios salvos, refletindo no valor final e no PDF.
 - [ ] Validar desconto no iPhone, PDF e compilação.

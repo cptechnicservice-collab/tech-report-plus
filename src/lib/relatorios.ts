@@ -38,6 +38,7 @@ export type RelatorioSalvo = {
   observacao_relatorio: string;
   despesas_snapshot: DespesaRelatorio[];
   total_despesas: number;
+  desconto: number;
   pagamento_status: PagamentoStatus;
   valor_recebido: number;
   data_recebimento: string | null;
@@ -95,6 +96,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     observacao_relatorio: item.observacao_relatorio ?? "",
     despesas_snapshot: despesas,
     total_despesas: Number(item.total_despesas ?? 0),
+    desconto: Number(item.desconto ?? 0),
   };
 }
 
