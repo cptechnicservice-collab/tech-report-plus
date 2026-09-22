@@ -64,4 +64,4 @@
 - [x] Validar o fluxo de peças no tamanho do iPhone e confirmar compilação sem erros.
 
 - [x] Adicionar desconto livre aos relatórios salvos, refletindo no valor final e no PDF.
-- [ ] Validar desconto no iPhone, PDF e compilação.
+- [x] Validar desconto no iPhone, PDF e compilação.
