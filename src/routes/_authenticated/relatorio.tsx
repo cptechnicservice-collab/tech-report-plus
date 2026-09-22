@@ -157,7 +157,8 @@ function Relatorio() {
     [pecasSelecionadas],
   );
   const totalDespesasSalvas = relatorioEmEdicao?.total_despesas ?? 0;
-  const totalRelatorio = financeiros.totalGeral + totalPecas + totalDespesasSalvas;
+  const descontoSalvo = relatorioEmEdicao?.desconto ?? 0;
+  const totalRelatorio = Math.max(0, financeiros.totalGeral + totalPecas + totalDespesasSalvas - descontoSalvo);
   const invalidPeriod = Boolean(inicio && fim && inicio > fim);
 
   const shortcut = (kind: "week" | "lastWeek" | "month") => {
@@ -223,6 +224,7 @@ function Relatorio() {
         observacao_relatorio: relatorioEmEdicao?.observacao_relatorio ?? "",
         despesas_snapshot: relatorioEmEdicao?.despesas_snapshot ?? [],
         total_despesas: relatorioEmEdicao?.total_despesas ?? 0,
+        desconto: descontoSalvo,
         pagamento_status: relatorioEmEdicao?.pagamento_status ?? "pendente" as const,
         valor_recebido: relatorioEmEdicao?.valor_recebido ?? 0,
         data_recebimento: relatorioEmEdicao?.data_recebimento ?? null,
@@ -262,6 +264,7 @@ function Relatorio() {
         relatorioEmEdicao?.observacao_relatorio ?? "",
         relatorioEmEdicao?.despesas_snapshot ?? [],
         relatorioEmEdicao?.numero_relatorio ?? numeroRelatorio(draftReportId.current),
+        descontoSalvo,
       );
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o PDF: ${error.message}` : "Não foi possível gerar o PDF");
@@ -363,6 +366,7 @@ function Relatorio() {
           <ValueRow label="Pedágios" value={financeiros.pedagios} />
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
           {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasSelecionadas.length} item(ns)`} value={totalPecas} /> : null}
+          {descontoSalvo > 0 ? <ValueRow label="Desconto" value={-descontoSalvo} /> : null}
           <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
             {totalDespesasSalvas > 0 ? <><dt>Despesas adicionais</dt><dd className="tabular-nums">{formatCurrency(totalDespesasSalvas)}</dd></> : null}
             <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(totalRelatorio)}</dd>

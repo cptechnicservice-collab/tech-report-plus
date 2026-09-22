@@ -454,6 +454,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at: string
           data_recebimento: string | null
+          desconto: number
           despesas_snapshot: Json
           fim: string
           financeiro_snapshot: Json
@@ -480,6 +481,7 @@ export type Database = {
           cliente_snapshot: Json
           created_at?: string
           data_recebimento?: string | null
+          desconto?: number
           despesas_snapshot?: Json
           fim: string
           financeiro_snapshot?: Json
@@ -506,6 +508,7 @@ export type Database = {
           cliente_snapshot?: Json
           created_at?: string
           data_recebimento?: string | null
+          desconto?: number
           despesas_snapshot?: Json
           fim?: string
           financeiro_snapshot?: Json

@@ -157,6 +157,7 @@ export async function generateClientReport(
   observacaoRelatorio = "",
   despesasRelatorio: DespesaRelatorio[] = [],
   numeroRelatorio?: string,
+  desconto = 0,
 ) {
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import("jspdf"),
@@ -269,7 +270,9 @@ export async function generateClientReport(
   const financial = financeiroSalvo ?? calcularValoresPeriodo(apontamentos, valores);
   const totalPecas = pecas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0);
   const totalDespesas = despesasRelatorio.reduce((total, despesa) => total + despesa.valor, 0);
-  const totalComPecas = financial.totalGeral + totalPecas + totalDespesas;
+  const subtotalComPecas = financial.totalGeral + totalPecas + totalDespesas;
+  const descontoAplicado = Math.min(Math.max(0, desconto), subtotalComPecas);
+  const totalComPecas = subtotalComPecas - descontoAplicado;
   const sortedEntries = [...apontamentos].sort((a, b) => a.data.localeCompare(b.data));
   autoTable(doc, {
     startY: 67,
@@ -422,7 +425,8 @@ export async function generateClientReport(
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", currencyNumber(financial.outrasDespesas)]] : []),
   ];
   const summaryWidth = 80;
-  const summaryHeight = totalDespesas > 0 ? 42 : 36;
+  const summaryRowCount = 2 + (totalDespesas > 0 ? 1 : 0) + (descontoAplicado > 0 ? 1 : 0);
+  const summaryHeight = 24 + summaryRowCount * 6;
   const servicesWidth = 100;
   const servicesEstimatedHeight = (financialRows.length + 2) * 6;
   const lowerBlocksY = pageHeight - 60 - Math.max(summaryHeight, servicesEstimatedHeight);
@@ -460,6 +464,7 @@ export async function generateClientReport(
     ["Serviços", financial.totalGeral],
     ["Peças", totalPecas],
     ...(totalDespesas > 0 ? [["Despesas", totalDespesas] as [string, number]] : []),
+    ...(descontoAplicado > 0 ? [["Desconto", -descontoAplicado] as [string, number]] : []),
   ] as [string, number][];
   summaryRows.forEach(([label, value], index) => {
     const y = cardY + 13 + index * 6;
@@ -480,7 +485,7 @@ export async function generateClientReport(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...colors.text2);
-  doc.text("TOTAL GERAL", cardX + 5, totalBandY + 7.5);
+   doc.text(descontoAplicado > 0 ? "VALOR FINAL" : "TOTAL GERAL", cardX + 5, totalBandY + 7.5);
   const totalValue = currencyNumber(totalComPecas);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);

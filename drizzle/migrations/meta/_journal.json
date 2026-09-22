@@ -120,6 +120,13 @@
       "when": 1789930729014,
       "tag": "0016_add_unique_report_number",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790088782012,
+      "tag": "0017_add_report_discount",
+      "breakpoints": true
     }
   ]
 }
