@@ -431,9 +431,10 @@ export async function generateClientReport(
   const servicesEstimatedHeight = (financialRows.length + 2) * 6;
   const lowerBlocksY = pageHeight - 60 - Math.max(summaryHeight, servicesEstimatedHeight);
   const upperContentFinalY = reportTable.lastAutoTable?.finalY ?? 30;
-  if (upperContentFinalY + 6 > lowerBlocksY) doc.addPage();
+  const valuesOnContinuationPage = upperContentFinalY + 6 > lowerBlocksY;
+  if (valuesOnContinuationPage) doc.addPage();
   doc.setPage(doc.getNumberOfPages());
-  const valuesStartY = pageHeight - 60 - servicesEstimatedHeight;
+  const valuesStartY = valuesOnContinuationPage ? 12 : pageHeight - 60 - servicesEstimatedHeight;
   autoTable(doc, {
     startY: valuesStartY,
     margin: { left: marginX, right: pageWidth - marginX - servicesWidth, bottom: 24 },
@@ -452,7 +453,7 @@ export async function generateClientReport(
     },
   });
   const cardX = pageWidth - marginX - summaryWidth;
-  const cardY = pageHeight - 60 - summaryHeight;
+  const cardY = valuesOnContinuationPage ? 12 : pageHeight - 60 - summaryHeight;
   doc.setDrawColor(...colors.divider);
   doc.setLineWidth(0.2);
   doc.roundedRect(cardX, cardY, summaryWidth, summaryHeight, 2, 2, "S");
