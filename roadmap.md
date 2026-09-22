@@ -65,3 +65,4 @@
 
 - [x] Adicionar desconto livre aos relatórios salvos, refletindo no valor final e no PDF.
 - [x] Validar desconto no iPhone, PDF e compilação.
+- [x] Remover o espaço em branco no início da segunda folha do relatório, posicionando os valores no topo.
