@@ -102,16 +102,16 @@ function Pecas() {
         <div className="ios-group px-5 py-10 text-center"><Package className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">Nenhuma peça encontrada</p><p className="mt-1 text-sm text-muted-foreground">Cadastre uma peça para começar.</p></div>
       ) : (
         <ul className="space-y-3">
-          {lista.map((item) => <li key={item.id} className="rounded-xl bg-foreground p-4 text-background shadow-card">
+          {lista.map((item) => <li key={item.id} className="ios-group p-4">
             <div className="flex items-start gap-3">
-               {item.foto_data_url ? <img src={item.foto_data_url} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-background/10 text-primary"><Package className="h-6 w-6" /></span>}
-              <div className="min-w-0 flex-1"><p className="font-semibold leading-snug">{item.descricao}</p><p className="mt-0.5 text-sm text-background/65">{item.codigo || "Sem código"}</p></div>
+               {item.foto_data_url ? <img src={item.foto_data_url} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Package className="h-6 w-6" /></span>}
+              <div className="min-w-0 flex-1"><p className="font-semibold leading-snug">{item.descricao}</p><p className="mt-0.5 text-sm text-muted-foreground">{item.codigo || "Sem código"}</p></div>
               <div className="flex shrink-0">
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-background hover:bg-background/10 hover:text-background" aria-label="Editar peça" onClick={() => { setDraft(draftFrom(item)); setEditing(item); }}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Editar peça" onClick={() => { setDraft(draftFrom(item)); setEditing(item); }}><Pencil className="h-4 w-4" /></Button>
                 <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-destructive" aria-label="Excluir peça"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl"><AlertDialogHeader><AlertDialogTitle>Excluir peça?</AlertDialogTitle><AlertDialogDescription>“{item.descricao}” será removida do catálogo.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => remove.mutate(item.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between gap-3 border-t border-background/10 pt-3"><div><p className="text-xs text-background/60">Preço por {item.unidade}</p><p className="mt-0.5 text-lg font-semibold text-primary">{money(item.preco)}</p></div>{item.observacoes ? <p className="max-w-[48%] truncate text-right text-xs text-background/60">{item.observacoes}</p> : null}</div>
+            <div className="mt-4 flex items-end justify-between gap-3 border-t border-border pt-3"><div><p className="text-xs text-muted-foreground">Preço por {item.unidade}</p><p className="mt-0.5 text-lg font-semibold text-primary">{money(item.preco)}</p></div>{item.observacoes ? <p className="max-w-[48%] truncate text-right text-xs text-muted-foreground">{item.observacoes}</p> : null}</div>
           </li>)}
         </ul>
       )}

@@ -394,7 +394,7 @@ function Relatorio() {
         )}
       </Section> : null}
       <Section title="Detalhamento financeiro">
-        <dl className="divide-y divide-border text-sm">
+        <dl className="text-sm">
           <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
           <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h × valores vigentes`} value={financeiros.valorViagem} />
           <ValueRow label={`KM · ${financeiros.km} × valores vigentes`} value={financeiros.valorKm} />
@@ -404,7 +404,7 @@ function Relatorio() {
           {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasCombinadas.length} item(ns)`} value={totalPecas} /> : null}
           {totalDespesasSalvas > 0 ? <ValueRow label="Despesas adicionais" value={totalDespesasSalvas} /> : null}
           {descontoSalvo > 0 ? <ValueRow label="Desconto" value={-descontoSalvo} /> : null}
-          <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-border pt-4 text-base font-bold">
             <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(totalRelatorio)}</dd>
           </div>
         </dl>
@@ -422,5 +422,5 @@ function Relatorio() {
 }
 
 function ValueRow({ label, value }: { label: string; value: number }) {
-  return <div className="flex items-start justify-between gap-3 py-3 first:pt-0"><dt className="text-muted-foreground">{label}</dt><dd className="shrink-0 font-medium tabular-nums">{formatCurrency(value)}</dd></div>;
+  return <div className="flex min-h-10 items-center justify-between gap-3 py-2 first:pt-0"><dt className="text-muted-foreground">{label}</dt><dd className="shrink-0 font-semibold tabular-nums">{formatCurrency(value)}</dd></div>;
 }
