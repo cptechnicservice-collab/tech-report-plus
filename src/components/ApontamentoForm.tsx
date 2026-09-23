@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, X } from "lucide-react";
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { PartPicker, type SelectedPart } from "@/components/PartPicker";
 import {
@@ -283,15 +282,16 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
-  const { data: apontamentoPecas = [] } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
+  const { data: apontamentoPecas = [], isFetched: partsFetched } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
 
-  if (apontamento && !partsInitialized && apontamentoPecas.length > 0) {
+  useEffect(() => {
+    if (!apontamento || !partsFetched || partsInitialized) return;
     setPecasSelecionadas(apontamentoPecas.filter((item) => item.apontamento_id === apontamento.id).map((item) => ({
       id: item.id, peca_id: item.peca_id, descricao: item.descricao, codigo: item.codigo, unidade: item.unidade,
       preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade,
     })));
     setPartsInitialized(true);
-  }
+  }, [apontamento, apontamentoPecas, partsFetched, partsInitialized]);
 
   const recentIds = useMemo(() => {
     const ids: string[] = [];
