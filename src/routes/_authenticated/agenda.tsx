@@ -26,8 +26,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { fetchAgendamentos, type AgendamentoComCliente } from "@/lib/agenda";
 import { fetchClientes, fetchValores, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
 import { valorVigente } from "@/lib/financeiro";

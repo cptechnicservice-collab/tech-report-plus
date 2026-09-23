@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTotais, todayISO, type ApontamentoComCliente } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";

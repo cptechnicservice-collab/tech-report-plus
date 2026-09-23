@@ -13,8 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { normalizeSearchText } from "@/lib/apontamentos";
 import { resizeImage } from "@/lib/image-resize";
