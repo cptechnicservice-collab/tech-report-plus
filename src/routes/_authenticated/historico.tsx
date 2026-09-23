@@ -202,15 +202,15 @@ function Historico() {
           {hasFilters ? <Button type="button" variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button> : null}
         </div>
       ) : (
-        <ul className="ios-group divide-y divide-border">
+        <ul className="space-y-3">
           {filtrados.map((a) => {
             const t = calcularTotais(a);
             return (
-              <li key={a.id}>
+              <li key={a.id} className="ios-group">
                 <Link
                   to="/apontamento/$id"
                   params={{ id: a.id }}
-                  className="press flex min-h-[4.5rem] items-center gap-3 px-4 py-3"
+                  className="press flex min-h-[5rem] items-center gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">

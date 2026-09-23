@@ -397,15 +397,15 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   );
 
   return (
-    <div className="space-y-4">
-      <section className="ios-group grid grid-cols-3 divide-x divide-border py-4 text-center">
-        <div className="px-1">
-           <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
+    <div className="space-y-5">
+      <section className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-brand-header px-1 py-4 text-brand-header-foreground shadow-card">
+            <p className="text-[0.65rem] font-semibold text-brand-header-foreground/60">
             Trabalho
           </p>
           <p className="mt-1 text-lg font-semibold tabular-nums">{formatMinutes(totais.trabalho)}</p>
         </div>
-        <div className="px-1">
+        <div className="ios-group px-1 py-4">
           <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
             Viagem
           </p>
@@ -414,7 +414,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
             Retorno KM {formatCurrency(retornoKm)}
           </p>
         </div>
-        <div className="px-1">
+        <div className="ios-group px-1 py-4">
           <p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">
             KM
           </p>

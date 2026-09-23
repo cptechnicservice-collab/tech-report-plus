@@ -200,7 +200,7 @@ function Agenda() {
       subtitle={`${agendamentos.filter((item) => !item.concluido).length} atendimento(s) pendente(s)`}
       action={<Button size="icon" className="rounded-full" aria-label="Novo agendamento" onClick={openNew}><Plus className="h-5 w-5" /></Button>}
     >
-      <div className="ios-group flex items-center justify-between gap-3 px-4 py-3">
+      <div className="ios-group flex items-center justify-between gap-3 px-4 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><CalendarCheck className="h-5 w-5" /></span>
           <div className="min-w-0">
@@ -221,9 +221,9 @@ function Agenda() {
         </div>
       ) : groups.map(([date, items]) => (
         <Section key={date} title={date === todayISO() ? `Hoje · ${formatDateBR(date)}` : formatDateBR(date)}>
-          <ul className="-my-2 divide-y divide-border">
+          <ul className="space-y-2">
             {items.map((item) => (
-              <li key={item.id} className={`py-3 ${item.concluido ? "opacity-55" : ""}`}>
+              <li key={item.id} className={`rounded-xl bg-secondary/55 p-3 ${item.concluido ? "opacity-55" : ""}`}>
                 <div className="flex items-start gap-3">
                   <Button
                     type="button"
