@@ -159,10 +159,10 @@ function Relatorio() {
     const ids = new Set(filtrados.map((item) => item.id));
     const grouped = new Map<string, ReportPartItem>();
     apontamentoPecas.filter((item) => ids.has(item.apontamento_id)).forEach((item) => {
-      const key = item.peca_id ?? `${item.descricao}|${item.codigo ?? ""}|${item.valor_unitario}`;
+      const key = `${item.peca_id ?? item.descricao}|${item.codigo ?? ""}|${item.unidade}|${item.valor_unitario}`;
       const current = grouped.get(key);
       if (current) current.quantidade += item.quantidade;
-      else grouped.set(key, { id: item.peca_id ?? item.id, descricao: item.descricao, codigo: item.codigo, unidade: item.unidade, preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade });
+      else grouped.set(key, { id: key, descricao: item.descricao, codigo: item.codigo, unidade: item.unidade, preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade });
     });
     return [...grouped.values()];
   }, [apontamentoPecas, filtrados, relatorioEmEdicao]);
@@ -170,9 +170,10 @@ function Relatorio() {
     const grouped = new Map<string, ReportPartItem>();
     [...pecasDosApontamentos, ...pecasSelecionadas].forEach((item) => {
       const quantity = item.quantidade === "" ? 0 : item.quantidade;
-      const current = grouped.get(item.id);
+      const key = `${item.id}|${item.codigo ?? ""}|${item.unidade}|${item.preco}`;
+      const current = grouped.get(key);
       if (current) current.quantidade += quantity;
-      else grouped.set(item.id, { ...item, quantidade: quantity });
+      else grouped.set(key, { ...item, id: key, quantidade: quantity });
     });
     return [...grouped.values()];
   }, [pecasDosApontamentos, pecasSelecionadas]);
@@ -226,8 +227,10 @@ function Relatorio() {
   const pecasParaSalvar = () => pecasCombinadas;
   const porCliente = useMemo(() => clientes.map((cliente) => {
     const items = filtrados.filter((item) => item.cliente_id === cliente.id);
-    return { cliente, items, financeiro: calcularValoresPeriodo(items, valoresDisponiveis) };
-  }).filter((entry) => entry.items.length > 0), [clientes, filtrados, valoresDisponiveis]);
+    const itemIds = new Set(items.map((item) => item.id));
+    const totalParts = apontamentoPecas.filter((part) => itemIds.has(part.apontamento_id)).reduce((sum, part) => sum + part.valor_unitario * part.quantidade, 0);
+    return { cliente, items, financeiro: calcularValoresPeriodo(items, valoresDisponiveis), totalParts };
+  }).filter((entry) => entry.items.length > 0), [apontamentoPecas, clientes, filtrados, valoresDisponiveis]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -350,7 +353,7 @@ function Relatorio() {
       </Section>
       {clienteId === "all" ? (
         <Section title="Resumo por cliente" hint={`${porCliente.length} cliente(s)`}>
-          {porCliente.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum apontamento no período.</p> : <ul className="divide-y divide-border">{porCliente.map(({ cliente, items, financeiro }) => <li key={cliente.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold">{cliente.nome}</p><p className="text-xs text-muted-foreground">{items.length} apontamento(s)</p></div><p className="shrink-0 font-semibold tabular-nums">{formatCurrency(financeiro.totalGeral)}</p></li>)}</ul>}
+          {porCliente.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum apontamento no período.</p> : <ul className="divide-y divide-border">{porCliente.map(({ cliente, items, financeiro, totalParts }) => <li key={cliente.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold">{cliente.nome}</p><p className="text-xs text-muted-foreground">{items.length} apontamento(s){totalParts > 0 ? ` · Peças ${formatCurrency(totalParts)}` : ""}</p></div><p className="shrink-0 font-semibold tabular-nums">{formatCurrency(financeiro.totalGeral + totalParts)}</p></li>)}</ul>}
           <p className="text-xs text-muted-foreground">Selecione um cliente específico para salvar ou gerar o PDF.</p>
         </Section>
       ) : null}

@@ -249,11 +249,15 @@ export async function saveApontamentoPecasOffline(apontamentoId: string, items: 
 
   if (!isOffline()) {
     try {
-      const removed = await supabase.from("apontamento_pecas").delete().eq("apontamento_id", apontamentoId).abortSignal(timeoutSignal());
-      if (removed.error) throw removed.error;
       if (payloads.length > 0) {
-        const inserted = await supabase.from("apontamento_pecas").insert(payloads).abortSignal(timeoutSignal());
+        const inserted = await supabase.from("apontamento_pecas").upsert(payloads, { onConflict: "id" }).abortSignal(timeoutSignal());
         if (inserted.error) throw inserted.error;
+      }
+      const nextIds = new Set(items.map((item) => item.id));
+      for (const oldItem of previous) {
+        if (nextIds.has(oldItem.id)) continue;
+        const removed = await supabase.from("apontamento_pecas").delete().eq("id", oldItem.id).abortSignal(timeoutSignal());
+        if (removed.error) throw removed.error;
       }
       await writeCached(CACHE_APONTAMENTO_PECAS, nextCache);
       return { records, queued: false };
@@ -648,6 +652,15 @@ export async function deleteApontamentoOffline(id: string) {
       }
     } catch (error) {
       if (!isNetworkError(error)) throw error;
+    }
+  }
+  if (typeof indexedDB !== "undefined") {
+    const db = await database();
+    const queued = await db.getAll("queue");
+    for (const item of queued) {
+      if (item.entity === "apontamento_pecas" && item.payload?.["apontamento_id"] === id && item.queueId != null) {
+        await db.delete("queue", item.queueId);
+      }
     }
   }
   await enqueue({ entity: "apontamentos", action: "delete", recordId: id, userId });
