@@ -6,8 +6,6 @@ import { toast } from "sonner";
 import { PageShell, Section } from "@/components/PageShell";
 import { FloatingInput } from "@/components/FloatingField";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { fetchValores, formatDateBR, todayISO } from "@/lib/apontamentos";
 import { formatCurrency, valorVigente, type ValorVigencia } from "@/lib/financeiro";
 import { saveValorOffline } from "@/lib/offline";
@@ -90,20 +88,19 @@ function Valores() {
   return (
     <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"} backTo="/mais">
       {!temValorVigente && (
-        <div className="mx-4 mb-2 rounded-xl border border-orange-200 bg-orange-50 p-3 text-xs text-orange-800 dark:border-orange-900/30 dark:bg-orange-900/10 dark:text-orange-400">
-          <p className="font-semibold text-orange-900 dark:text-orange-300">Nenhum valor vigente para hoje</p>
+        <div className="mx-4 mb-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs text-warning-foreground">
+          <p className="font-semibold">Nenhum valor vigente para hoje</p>
           <p>Os cálculos financeiros nos apontamentos dependem dos valores definidos aqui. Cadastre a vigência atual abaixo.</p>
         </div>
       )}
       <Section title="Novos valores">
-        <FloatingInput id="vigencia" label="Data de vigência" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
+        <FloatingInput id="vigencia" label="Vigente desde" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         {fields.map(([key, label, suffix]) => (
           <FloatingInput
             key={key}
             id={key}
             label={`${label} (${suffix})`}
             inputMode="decimal"
-            placeholder="0,00"
             value={draft[key]}
             onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
           />
