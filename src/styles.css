@@ -72,7 +72,7 @@
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 0.75rem;
   --font-app:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
   --background: oklch(0.961 0.002 286);
@@ -114,6 +114,8 @@
   --sidebar-accent-foreground: oklch(0.32 0.035 255);
   --sidebar-border: oklch(0.918 0.008 250);
   --sidebar-ring: oklch(0.53 0.135 252);
+  --brand-header: oklch(0.13 0.006 260);
+  --brand-header-foreground: oklch(0.99 0.002 250);
 }
 
 @layer base {
