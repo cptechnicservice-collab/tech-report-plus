@@ -93,6 +93,7 @@ function Valores() {
           <p>Os cálculos financeiros nos apontamentos dependem dos valores definidos aqui. Cadastre a vigência atual abaixo.</p>
         </div>
       )}
+      {maisRecente ? <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav"><p className="text-xs text-brand-header-foreground/65">Vigente desde {formatDateBR(maisRecente.vigencia)}</p><div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">{[["Hora trabalho", `${formatCurrency(maisRecente.valor_hora_trabalhada)}/h`], ["Hora viagem", `${formatCurrency(maisRecente.valor_hora_viagem)}/h`], ["Por KM", formatCurrency(maisRecente.valor_km)], ["Diária inteira", formatCurrency(maisRecente.valor_diaria_inteira)]].map(([label, value]) => <div key={label}><p className="text-xs text-brand-header-foreground/55">{label}</p><p className="mt-1 font-semibold tabular-nums">{value}</p></div>)}</div></section> : null}
       <Section title="Novos valores">
         <FloatingInput id="vigencia" label="Vigente desde" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         {fields.map(([key, label, suffix]) => (
@@ -112,10 +113,10 @@ function Valores() {
 
       <Section title="Histórico" hint={`${valores.length} alteração(ões)`}>
         {valores.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum valor cadastrado.</p> : (
-          <ul className="-my-1 divide-y divide-border">
+          <ul className="space-y-3">
             {valores.map((valor) => (
-              <li key={valor.id}>
-                <Button type="button" variant="ghost" className="h-auto w-full justify-start rounded-none px-0 py-3 text-left font-normal" onClick={() => edit(valor)}>
+              <li key={valor.id} className="rounded-xl bg-secondary/60 px-3">
+                <Button type="button" variant="ghost" className="h-auto w-full justify-start rounded-xl px-0 py-3 text-left font-normal" onClick={() => edit(valor)}>
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold">Vigência {formatDateBR(valor.vigencia)}</span>
                     <span className="mt-1 block whitespace-normal text-xs leading-5 text-muted-foreground">

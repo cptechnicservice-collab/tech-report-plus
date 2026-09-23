@@ -10,7 +10,7 @@ export function FloatingInput({ label, id, className, error, ...props }: Floatin
   return (
     <div className="space-y-1.5">
       <label className="relative block">
-        <Input id={id} placeholder=" " className={cn("peer h-14 px-3 pb-1 pt-5", className)} {...props} />
+        <Input id={id} placeholder=" " className={cn("peer h-14 rounded-xl bg-card px-3 pb-1 pt-5 shadow-none", className)} {...props} />
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground transition-all peer-focus:top-2.5 peer-focus:translate-y-0 peer-focus:text-[0.68rem] peer-focus:font-medium peer-focus:text-primary peer-[:not(:placeholder-shown)]:top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[0.68rem] peer-[:not(:placeholder-shown)]:font-medium">
           {label}
         </span>
@@ -25,7 +25,7 @@ type FloatingTextareaProps = ComponentProps<typeof Textarea> & { label: string }
 export function FloatingTextarea({ label, id, className, ...props }: FloatingTextareaProps) {
   return (
     <label className="relative block">
-      <Textarea id={id} placeholder=" " className={cn("peer min-h-28 px-3 pb-2 pt-6", className)} {...props} />
+      <Textarea id={id} placeholder=" " className={cn("peer min-h-28 rounded-xl bg-card px-3 pb-2 pt-6 shadow-none", className)} {...props} />
       <span className="pointer-events-none absolute left-3 top-4 text-base text-muted-foreground transition-all peer-focus:top-2 peer-focus:text-[0.68rem] peer-focus:font-medium peer-focus:text-primary peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[0.68rem] peer-[:not(:placeholder-shown)]:font-medium">
         {label}
       </span>

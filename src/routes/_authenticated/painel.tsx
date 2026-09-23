@@ -73,25 +73,8 @@ function Resumo() {
 
   return (
     <PageShell title="Painel" subtitle="CP TECHNIC Horas">
-      <section className="ios-group">
-        <div className="grid grid-cols-3 divide-x divide-border py-4 text-center">
-          <div className="px-2">
-            <Users className="mx-auto h-5 w-5 text-primary" />
-            <p className="mt-1 text-xl font-bold tabular-nums">{clientesAtendidos}</p>
-            <p className="text-[0.68rem] text-muted-foreground">Clientes</p>
-          </div>
-          <div className="px-2">
-            <BriefcaseBusiness className="mx-auto h-5 w-5 text-primary" />
-            <p className="mt-1 text-xl font-bold tabular-nums">{servicosInformados}</p>
-            <p className="text-[0.68rem] text-muted-foreground">Serviços</p>
-          </div>
-          <div className="px-2">
-            <Timer className="mx-auto h-5 w-5 text-primary" />
-            <p className="mt-1 text-xl font-bold tabular-nums">{doMes.length}</p>
-            <p className="text-[0.68rem] text-muted-foreground">Apontamentos</p>
-          </div>
-        </div>
-        <div className="flex h-14 items-center justify-between border-t border-border px-2">
+      <section>
+        <div className="flex h-12 items-center justify-between px-1">
           <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Mês anterior" onClick={() => moverMes(-1)}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -108,29 +91,18 @@ function Resumo() {
         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
       </Link>
 
-      <section className="ios-group overflow-hidden">
-        <div className="px-5 py-6 text-center">
-          <CircleDollarSign className="mx-auto h-6 w-6 text-primary" />
-          <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(financeiro.totalGeral)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">Total acumulado no mês</p>
+      <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav">
+        <p className="flex items-center gap-2 text-xs text-brand-header-foreground/65"><CircleDollarSign className="h-4 w-4" />Total do mês</p>
+        <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(financeiro.totalGeral)}</p>
+        <div className="mt-6 grid grid-cols-3 gap-2 text-xs">
+          <div><p className="text-brand-header-foreground/55">Trabalho</p><p className="mt-1 font-semibold tabular-nums">{formatCurrency(financeiro.valorTrabalho)}</p></div>
+          <div><p className="text-brand-header-foreground/55">Viagem</p><p className="mt-1 font-semibold tabular-nums">{formatCurrency(financeiro.valorViagem)}</p></div>
+          <div><p className="text-brand-header-foreground/55">KM + Diárias</p><p className="mt-1 font-semibold tabular-nums">{formatCurrency(financeiro.valorKm + financeiro.valorDiarias)}</p></div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-border border-t border-border bg-secondary/50 py-4 text-center">
-          <div className="px-1">
-            <Timer className="mx-auto h-4 w-4 text-muted-foreground" />
-            <p className="mt-1 text-xs text-muted-foreground">Trabalho</p>
-            <p className="mt-0.5 font-bold tabular-nums">{formatMinutes(totais.trabalho)}</p>
-          </div>
-          <div className="px-1">
-            <MapPin className="mx-auto h-4 w-4 text-muted-foreground" />
-            <p className="mt-1 text-xs text-muted-foreground">Viagem</p>
-            <p className="mt-0.5 font-bold tabular-nums">{formatMinutes(totais.viagem)}</p>
-          </div>
-          <div className="px-1">
-            <Gauge className="mx-auto h-4 w-4 text-muted-foreground" />
-            <p className="mt-1 text-xs text-muted-foreground">KM</p>
-            <p className="mt-0.5 font-bold tabular-nums">{totais.km}</p>
-          </div>
-        </div>
+      </section>
+
+      <section className="grid grid-cols-3 gap-2">
+        {[{ label: "Horas trab.", value: formatMinutes(totais.trabalho), icon: Timer }, { label: "Horas viagem", value: formatMinutes(totais.viagem), icon: MapPin }, { label: "KM rodados", value: String(totais.km), icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="ios-group p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-4 w-4" /></span><p className="mt-3 text-[0.68rem] text-muted-foreground">{label}</p><p className="mt-0.5 text-lg font-bold tabular-nums">{value}</p></div>)}
       </section>
 
       <Section title="Composição do valor">
