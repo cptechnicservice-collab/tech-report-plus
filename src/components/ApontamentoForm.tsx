@@ -523,28 +523,20 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         onClear={() => setForm((prev) => ({ ...prev, km_ida: "", km_volta: "" }))}
       >
         <div className="grid grid-cols-2 gap-3">
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="km-ida" className="text-xs text-muted-foreground">KM total ida</Label>
-            <Input
+          <FloatingInput
               id="km-ida"
+              label="KM total ida"
               inputMode="decimal"
               value={form.km_ida}
               onChange={(event) => set("km_ida", event.target.value)}
-              className="h-12 rounded-xl"
-              placeholder="Ex.: 265"
             />
-          </div>
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="km-volta" className="text-xs text-muted-foreground">KM total volta</Label>
-            <Input
+          <FloatingInput
               id="km-volta"
+              label="KM total volta"
               inputMode="decimal"
               value={form.km_volta}
               onChange={(event) => set("km_volta", event.target.value)}
-              className="h-12 rounded-xl"
-              placeholder="Ex.: 265"
             />
-          </div>
         </div>
       </OptionalSection>
 
@@ -563,19 +555,10 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
           </select>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="pedagio">Pedágio (R$)</Label>
-            <Input id="pedagio" inputMode="decimal" placeholder="0,00" value={form.pedagio} onChange={(event) => set("pedagio", event.target.value)} />
-          </div>
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor="outras-despesas">Outras despesas (R$)</Label>
-            <Input id="outras-despesas" inputMode="decimal" placeholder="0,00" value={form.outras_despesas} onChange={(event) => set("outras_despesas", event.target.value)} />
-          </div>
+          <FloatingInput id="pedagio" label="Pedágio (R$)" inputMode="decimal" value={form.pedagio} onChange={(event) => set("pedagio", event.target.value)} />
+          <FloatingInput id="outras-despesas" label="Outras despesas (R$)" inputMode="decimal" value={form.outras_despesas} onChange={(event) => set("outras_despesas", event.target.value)} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="outras-despesas-descricao">Descrição (opcional)</Label>
-          <Input id="outras-despesas-descricao" value={form.outras_despesas_descricao} onChange={(event) => set("outras_despesas_descricao", event.target.value)} placeholder="Ex.: estacionamento" />
-        </div>
+        <FloatingInput id="outras-despesas-descricao" label="Descrição (opcional)" value={form.outras_despesas_descricao} onChange={(event) => set("outras_despesas_descricao", event.target.value)} />
       </Section>
 
       <Section title="Peças utilizadas" hint={pecasSelecionadas.length ? `${pecasSelecionadas.length} item(ns)` : "opcional"}>

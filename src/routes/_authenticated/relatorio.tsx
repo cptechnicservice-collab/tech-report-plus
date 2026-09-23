@@ -354,7 +354,7 @@ function Relatorio() {
           <p className="text-xs text-muted-foreground">Selecione um cliente específico para salvar ou gerar o PDF.</p>
         </Section>
       ) : null}
-      <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
+      {clienteId !== "all" ? <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
         {pecasDosApontamentos.length > 0 ? <div className="rounded-lg bg-secondary p-3"><p className="text-xs font-semibold text-muted-foreground">VINCULADAS AOS APONTAMENTOS</p>{pecasDosApontamentos.map((part) => <div key={part.id} className="mt-2 flex justify-between gap-3 text-sm"><span className="truncate">{part.descricao} · {part.quantidade} {part.unidade}</span><span className="shrink-0 tabular-nums">{formatCurrency(part.preco * part.quantidade)}</span></div>)}</div> : null}
         <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2">
           <select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3" aria-label="Selecionar peça">
@@ -389,7 +389,7 @@ function Relatorio() {
             ))}
           </ul>
         )}
-      </Section>
+      </Section> : null}
       <Section title="Detalhamento financeiro">
         <dl className="divide-y divide-border text-sm">
           <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
