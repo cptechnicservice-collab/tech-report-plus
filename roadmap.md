@@ -66,3 +66,7 @@
 - [x] Adicionar desconto livre aos relatórios salvos, refletindo no valor final e no PDF.
 - [x] Validar desconto no iPhone, PDF e compilação.
 - [x] Remover o espaço em branco no início da segunda folha do relatório, posicionando os valores no topo.
+- [ ] Vincular peças aos apontamentos com valores congelados e funcionamento offline, sem controle de estoque.
+- [ ] Modernizar Peças, Agenda, Valores, Apontamentos e Relatório com labels flutuantes e identidade CP TECHNIC.
+- [ ] Adicionar “Todos os clientes” e detalhamento financeiro consolidado ao Relatório.
+- [ ] Validar os fluxos no iPhone, PDFs e compilação sem erros.
