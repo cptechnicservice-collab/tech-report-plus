@@ -21,6 +21,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
+import { PartPicker, type SelectedPart } from "@/components/PartPicker";
 import {
   calcularTotais,
   diffMinutes,
@@ -34,7 +36,9 @@ import {
   type Apontamento,
 } from "@/lib/apontamentos";
 import { formatCurrency, valorVigente } from "@/lib/financeiro";
-import { deleteApontamentoOffline, saveApontamentoOffline } from "@/lib/offline";
+import { fetchPecas } from "@/lib/pecas";
+import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
+import { deleteApontamentoOffline, saveApontamentoOffline, saveApontamentoPecasOffline } from "@/lib/offline";
 
 type FormState = {
   data: string;
@@ -266,6 +270,9 @@ function errorReason(error: unknown) {
 
 export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontamento; draft?: ApontamentoDraft }) {
   const [form, setForm] = useState<FormState>(() => initialState(apontamento, draft));
+  const [pecaId, setPecaId] = useState("");
+  const [pecasSelecionadas, setPecasSelecionadas] = useState<SelectedPart[]>([]);
+  const [partsInitialized, setPartsInitialized] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -275,6 +282,16 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
     queryFn: fetchApontamentos,
   });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
+  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
+  const { data: apontamentoPecas = [] } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
+
+  if (apontamento && !partsInitialized && apontamentoPecas.length > 0) {
+    setPecasSelecionadas(apontamentoPecas.filter((item) => item.apontamento_id === apontamento.id).map((item) => ({
+      id: item.id, peca_id: item.peca_id, descricao: item.descricao, codigo: item.codigo, unidade: item.unidade,
+      preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade,
+    })));
+    setPartsInitialized(true);
+  }
 
   const recentIds = useMemo(() => {
     const ids: string[] = [];
@@ -323,7 +340,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   const salvar = useMutation({
     mutationFn: async () => {
       const id = apontamento?.id ?? crypto.randomUUID();
-      return saveApontamentoOffline({
+      const saved = await saveApontamentoOffline({
         ...payload,
         id,
         sync_status: "pending",
@@ -331,9 +348,22 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         external_row_id: apontamento?.external_row_id ?? null,
         user_id: apontamento?.user_id ?? null,
       });
+      const parts = await saveApontamentoPecasOffline(id, pecasSelecionadas.map((part) => ({
+        id: part.id,
+        apontamento_id: id,
+        peca_id: part.peca_id,
+        descricao: part.descricao,
+        codigo: part.codigo,
+        unidade: part.unidade,
+        valor_unitario: part.preco,
+        quantidade: Number(part.quantidade),
+        foto_data_url: part.foto_data_url,
+      })));
+      return { ...saved, queued: saved.queued || parts.queued };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["apontamento-pecas"] });
       toast.success(
         result.queued
           ? "Salvo no aparelho — será enviado quando houver conexão"
@@ -362,7 +392,8 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   const podeSalvar = Boolean(
     form.cliente_id &&
       form.data &&
-      !validacoes.trabalhoIncompleto,
+      !validacoes.trabalhoIncompleto &&
+      pecasSelecionadas.every((part) => typeof part.quantidade === "number" && part.quantidade > 0),
   );
 
   return (
@@ -392,32 +423,25 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       </section>
 
       <Section title="Identificação">
-        <div className="space-y-1.5">
-          <Label htmlFor="data">Data</Label>
-          <Input
+        <FloatingInput
             id="data"
+            label="Data"
             type="date"
             value={form.data}
             onChange={(e) => set("data", e.target.value)}
-            className="h-12 rounded-xl"
           />
-        </div>
         <ClienteSelect
           clientes={clientes}
           value={form.cliente_id}
           onChange={(id) => set("cliente_id", id)}
           recentIds={recentIds}
         />
-        <div className="space-y-1.5">
-          <Label htmlFor="maquina">Máquina / Serviço (opcional)</Label>
-          <Input
+        <FloatingInput
             id="maquina"
+            label="Máquina / Serviço (opcional)"
             value={form.maquina_servico}
             onChange={(e) => set("maquina_servico", e.target.value)}
-            className="h-12 rounded-xl"
-            placeholder="Ex.: Seccionadora — troca de rolamento do eixo da serra"
           />
-        </div>
       </Section>
 
       <OptionalSection
@@ -554,13 +578,16 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         </div>
       </Section>
 
+      <Section title="Peças utilizadas" hint={pecasSelecionadas.length ? `${pecasSelecionadas.length} item(ns)` : "opcional"}>
+        <PartPicker catalog={pecas} selectedId={pecaId} onSelectedIdChange={setPecaId} items={pecasSelecionadas} onItemsChange={setPecasSelecionadas} emptyText="Nenhuma peça vinculada a este apontamento." />
+      </Section>
+
       <Section title="Observações" hint="opcional">
-        <Textarea
+        <FloatingTextarea
+          label="Observações"
           value={form.observacoes}
           onChange={(e) => set("observacoes", e.target.value)}
           rows={4}
-          className="rounded-xl"
-          placeholder="Peças usadas, pendências, contatos no local..."
         />
       </Section>
 
