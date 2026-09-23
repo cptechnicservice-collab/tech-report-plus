@@ -74,14 +74,14 @@ export function ClienteSelect({
   });
 
   return (
-    <div className="space-y-2">
-      <Label>Cliente</Label>
+    <div>
       <Button
         type="button"
         variant="outline"
         onClick={() => setOpen(true)}
-        className="ios-field min-h-12 w-full justify-between px-4 py-3 text-left text-base font-normal"
+        className="ios-field relative min-h-14 w-full justify-between px-3 pb-1 pt-5 text-left text-base font-normal"
       >
+        <span className="pointer-events-none absolute left-3 top-2 text-[0.68rem] font-medium text-muted-foreground">Cliente</span>
         <span className={selecionado ? "min-w-0 truncate" : "text-muted-foreground"}>
           {selecionado ? selecionado.nome : "Selecionar cliente"}
         </span>

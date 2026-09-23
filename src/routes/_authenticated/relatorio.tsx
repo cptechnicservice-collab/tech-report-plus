@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { fetchApontamentos, fetchClientes, fetchValores, formatMinutes, somarTotais, todayISO, type ApontamentoComCliente } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency, formatDecimalHours } from "@/lib/financeiro";
 import { generateClientReport } from "@/lib/pdf-report";
@@ -15,6 +14,8 @@ import type { ReportPartItem } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
 import { saveRelatorioOffline } from "@/lib/offline";
 import { fetchRelatoriosSalvos, numeroRelatorio } from "@/lib/relatorios";
+import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
+import { FloatingInput, FloatingSelect } from "@/components/FloatingField";
 
 export const Route = createFileRoute("/_authenticated/relatorio")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -125,6 +126,7 @@ function Relatorio() {
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
+  const { data: apontamentoPecas = [] } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
   const { data: relatoriosSalvos = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
   const relatorioEmEdicao = useMemo(
     () => relatoriosSalvos.find((item) => item.id === search.relatorio),
@@ -147,14 +149,37 @@ function Relatorio() {
     [apontamentosDisponiveis, clienteId],
   );
   const filtrados = useMemo(
-    () => apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId && item.data >= inicio && item.data <= fim),
+    () => apontamentosDisponiveis.filter((item) => (clienteId === "all" || item.cliente_id === clienteId) && item.data >= inicio && item.data <= fim),
     [apontamentosDisponiveis, clienteId, inicio, fim],
   );
   const totais = somarTotais(filtrados);
   const financeiros = useMemo(() => calcularValoresPeriodo(filtrados, valoresDisponiveis), [filtrados, valoresDisponiveis]);
+  const pecasDosApontamentos = useMemo(() => {
+    if (relatorioEmEdicao) return [];
+    const ids = new Set(filtrados.map((item) => item.id));
+    const grouped = new Map<string, ReportPartItem>();
+    apontamentoPecas.filter((item) => ids.has(item.apontamento_id)).forEach((item) => {
+      const key = `${item.peca_id ?? item.descricao}|${item.codigo ?? ""}|${item.unidade}|${item.valor_unitario}`;
+      const current = grouped.get(key);
+      if (current) current.quantidade += item.quantidade;
+      else grouped.set(key, { id: key, descricao: item.descricao, codigo: item.codigo, unidade: item.unidade, preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade });
+    });
+    return [...grouped.values()];
+  }, [apontamentoPecas, filtrados, relatorioEmEdicao]);
+  const pecasCombinadas = useMemo(() => {
+    const grouped = new Map<string, ReportPartItem>();
+    [...pecasDosApontamentos, ...pecasSelecionadas].forEach((item) => {
+      const quantity = item.quantidade === "" ? 0 : item.quantidade;
+      const key = `${item.id}|${item.codigo ?? ""}|${item.unidade}|${item.preco}`;
+      const current = grouped.get(key);
+      if (current) current.quantidade += quantity;
+      else grouped.set(key, { ...item, id: key, quantidade: quantity });
+    });
+    return [...grouped.values()];
+  }, [pecasDosApontamentos, pecasSelecionadas]);
   const totalPecas = useMemo(
-    () => pecasSelecionadas.reduce((total, peca) => total + peca.preco * (peca.quantidade === "" ? 0 : peca.quantidade), 0),
-    [pecasSelecionadas],
+    () => pecasCombinadas.reduce((total, peca) => total + peca.preco * peca.quantidade, 0),
+    [pecasCombinadas],
   );
   const totalDespesasSalvas = relatorioEmEdicao?.total_despesas ?? 0;
   const descontoSalvo = relatorioEmEdicao?.desconto ?? 0;
@@ -199,12 +224,18 @@ function Relatorio() {
   };
 
   const pecasValidas = pecasSelecionadas.every((item) => typeof item.quantidade === "number" && item.quantidade > 0);
-  const pecasParaSalvar = () => pecasSelecionadas.map((item) => ({ ...item, quantidade: Number(item.quantidade) }));
+  const pecasParaSalvar = () => pecasCombinadas;
+  const porCliente = useMemo(() => clientes.map((cliente) => {
+    const items = filtrados.filter((item) => item.cliente_id === cliente.id);
+    const itemIds = new Set(items.map((item) => item.id));
+    const totalParts = apontamentoPecas.filter((part) => itemIds.has(part.apontamento_id)).reduce((sum, part) => sum + part.valor_unitario * part.quantidade, 0);
+    return { cliente, items, financeiro: calcularValoresPeriodo(items, valoresDisponiveis), totalParts };
+  }).filter((entry) => entry.items.length > 0), [apontamentoPecas, clientes, filtrados, valoresDisponiveis]);
 
   const save = useMutation({
     mutationFn: async () => {
       const cliente = relatorioEmEdicao?.cliente_snapshot ?? clientes.find((item) => item.id === clienteId);
-      if (!cliente || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
+      if (!cliente || clienteId === "all" || !inicio || !fim || invalidPeriod || filtrados.length === 0) throw new Error("Selecione um cliente com apontamentos no período.");
       if (!pecasValidas) throw new Error("Informe uma quantidade maior que zero para cada peça.");
       const report = {
         id: relatorioEmEdicao?.id ?? draftReportId.current,
@@ -276,15 +307,13 @@ function Relatorio() {
   return (
     <PageShell title={relatorioEmEdicao ? "Editar relatório" : "Relatório"} subtitle={relatorioEmEdicao ? "Documento salvo" : "Cliente e período"} backTo={relatorioEmEdicao ? "/relatorios-salvos" : "/historico"}>
       <Section title="Dados do relatório">
-        <div className="space-y-1.5">
-          <Label htmlFor="report-client">Cliente</Label>
-          <select id="report-client" value={clienteId} disabled={Boolean(relatorioEmEdicao)} onChange={(event) => selectCliente(event.target.value)} className="ios-field h-12 w-full border px-3">
+        <FloatingSelect label="Cliente" id="report-client" value={clienteId} disabled={Boolean(relatorioEmEdicao)} onChange={(event) => selectCliente(event.target.value)}>
             <option value="">Selecione o cliente</option>
+            {!relatorioEmEdicao ? <option value="all">Todos os clientes</option> : null}
             {relatorioEmEdicao && !clientes.some((item) => item.id === clienteId) ? <option value={clienteId}>{relatorioEmEdicao.cliente_nome}</option> : null}
             {clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome}</option>)}
-          </select>
-        </div>
-        {clienteId && atendimentos.length > 0 && (
+        </FloatingSelect>
+        {clienteId !== "all" && clienteId && atendimentos.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Atendimentos recentes</p>
             <div className="divide-y divide-border overflow-hidden rounded-xl border bg-card">
@@ -316,13 +345,20 @@ function Relatorio() {
           <Button type="button" variant="ghost" size="sm" className={activePeriod === "custom" ? "bg-card" : ""} aria-pressed={activePeriod === "custom"} onClick={() => { setActivePeriod("custom"); document.getElementById("report-start")?.focus(); }}>Personalizado</Button>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5"><Label htmlFor="report-start">De</Label><Input id="report-start" type="date" value={inicio} onChange={(event) => { setInicio(event.target.value); setActivePeriod("custom"); }} className="h-12 rounded-xl" /></div>
-          <div className="space-y-1.5"><Label htmlFor="report-end">Até</Label><Input id="report-end" type="date" value={fim} onChange={(event) => { setFim(event.target.value); setActivePeriod("custom"); }} className="h-12 rounded-xl" /></div>
+          <FloatingInput id="report-start" label="De" type="date" value={inicio} onChange={(event) => { setInicio(event.target.value); setActivePeriod("custom"); }} />
+          <FloatingInput id="report-end" label="Até" type="date" value={fim} onChange={(event) => { setFim(event.target.value); setActivePeriod("custom"); }} />
         </div>
         {invalidPeriod && <p className="text-sm font-medium text-destructive">A data “De” deve ser anterior ou igual à data “Até”.</p>}
         <p className="text-xs text-muted-foreground">{filtrados.length} apontamento(s) · {formatMinutes(totais.trabalho)} trabalho · {formatMinutes(totais.viagem)} viagem · {totais.km} km</p>
       </Section>
-      <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
+      {clienteId === "all" ? (
+        <Section title="Resumo por cliente" hint={`${porCliente.length} cliente(s)`}>
+          {porCliente.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum apontamento no período.</p> : <ul className="divide-y divide-border">{porCliente.map(({ cliente, items, financeiro, totalParts }) => <li key={cliente.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold">{cliente.nome}</p><p className="text-xs text-muted-foreground">{items.length} apontamento(s){totalParts > 0 ? ` · Peças ${formatCurrency(totalParts)}` : ""}</p></div><p className="shrink-0 font-semibold tabular-nums">{formatCurrency(financeiro.totalGeral + totalParts)}</p></li>)}</ul>}
+          <p className="text-xs text-muted-foreground">Selecione um cliente específico para salvar ou gerar o PDF.</p>
+        </Section>
+      ) : null}
+      {clienteId !== "all" ? <Section title="Peças utilizadas" hint={totalPecas > 0 ? formatCurrency(totalPecas) : ""}>
+        {pecasDosApontamentos.length > 0 ? <div className="rounded-lg bg-secondary p-3"><p className="text-xs font-semibold text-muted-foreground">VINCULADAS AOS APONTAMENTOS</p>{pecasDosApontamentos.map((part) => <div key={part.id} className="mt-2 flex justify-between gap-3 text-sm"><span className="truncate">{part.descricao} · {part.quantidade} {part.unidade}</span><span className="shrink-0 tabular-nums">{formatCurrency(part.preco * part.quantidade)}</span></div>)}</div> : null}
         <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2">
           <select value={pecaId} onChange={(event) => setPecaId(event.target.value)} className="ios-field h-12 min-w-0 border px-3" aria-label="Selecionar peça">
             <option value="">Selecione uma peça</option>
@@ -356,8 +392,8 @@ function Relatorio() {
             ))}
           </ul>
         )}
-      </Section>
-      <Section title="Valores do período">
+      </Section> : null}
+      <Section title="Detalhamento financeiro">
         <dl className="divide-y divide-border text-sm">
           <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
           <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h × valores vigentes`} value={financeiros.valorViagem} />
@@ -365,19 +401,19 @@ function Relatorio() {
           <ValueRow label={`Diárias · ${financeiros.diariasInteiras} inteira(s), ${financeiros.meiasDiarias} meia(s)`} value={financeiros.valorDiarias} />
           <ValueRow label="Pedágios" value={financeiros.pedagios} />
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
-          {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasSelecionadas.length} item(ns)`} value={totalPecas} /> : null}
+          {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasCombinadas.length} item(ns)`} value={totalPecas} /> : null}
+          {totalDespesasSalvas > 0 ? <ValueRow label="Despesas adicionais" value={totalDespesasSalvas} /> : null}
           {descontoSalvo > 0 ? <ValueRow label="Desconto" value={-descontoSalvo} /> : null}
           <div className="flex items-center justify-between gap-3 pt-4 text-base font-bold">
-            {totalDespesasSalvas > 0 ? <><dt>Despesas adicionais</dt><dd className="tabular-nums">{formatCurrency(totalDespesasSalvas)}</dd></> : null}
             <dt>TOTAL GERAL</dt><dd className="tabular-nums text-primary">{formatCurrency(totalRelatorio)}</dd>
           </div>
         </dl>
       </Section>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || filtrados.length === 0 || !pecasValidas || save.isPending} onClick={() => save.mutate()}>
+        <Button variant="outline" className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || clienteId === "all" || !inicio || !fim || invalidPeriod || filtrados.length === 0 || !pecasValidas || save.isPending} onClick={() => save.mutate()}>
           <Save className="mr-2 h-5 w-5" /> {save.isPending ? "Salvando..." : relatorioEmEdicao ? "Atualizar" : "Salvar relatório"}
         </Button>
-        <Button className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || !inicio || !fim || invalidPeriod || generating} onClick={() => void generate()}>
+        <Button className="h-14 rounded-xl text-base font-semibold" disabled={!clienteId || clienteId === "all" || !inicio || !fim || invalidPeriod || generating} onClick={() => void generate()}>
           <FileText className="mr-2 h-5 w-5" /> {generating ? "Gerando..." : "Gerar PDF"}
         </Button>
       </div>

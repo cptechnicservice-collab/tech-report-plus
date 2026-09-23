@@ -127,6 +127,13 @@
       "when": 1790088782012,
       "tag": "0017_add_report_discount",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790160895585,
+      "tag": "0018_create_apontamento_pecas",
+      "breakpoints": true
     }
   ]
 }

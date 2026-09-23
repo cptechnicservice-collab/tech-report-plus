@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { CalendarCheck, CalendarIcon, Check, Clock3, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { ClienteSelect } from "@/components/ClienteSelect";
 import { PageShell, Section } from "@/components/PageShell";
 import {
@@ -25,7 +26,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
 import { fetchAgendamentos, type AgendamentoComCliente } from "@/lib/agenda";
 import { fetchClientes, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
 import { deleteAgendamentoOffline, saveAgendamentoOffline } from "@/lib/offline";
@@ -288,10 +288,10 @@ function Agenda() {
                 onChange={(dataFim) => setDraft((current) => ({ ...current, dataFim }))}
               />
             </div>
-            <div className="space-y-1.5"><Label htmlFor="agenda-hora">Horário (opcional)</Label><Input id="agenda-hora" type="time" value={draft.horario} onChange={(event) => setDraft((current) => ({ ...current, horario: event.target.value }))} className="h-12 rounded-xl" /></div>
+            <FloatingInput id="agenda-hora" label="Horário previsto (opcional)" type="time" value={draft.horario} onChange={(event) => setDraft((current) => ({ ...current, horario: event.target.value }))} />
             {invalidPeriod ? <p role="alert" className="text-sm font-medium text-destructive">A data final não pode ser anterior à data de início.</p> : null}
-            <div className="space-y-1.5"><Label htmlFor="agenda-servico">Máquina / Serviço</Label><Input id="agenda-servico" value={draft.servico} onChange={(event) => setDraft((current) => ({ ...current, servico: event.target.value }))} placeholder="Ex.: Revisão da seccionadora" className="h-12 rounded-xl" /></div>
-            <div className="space-y-1.5"><Label htmlFor="agenda-obs">Observações</Label><Textarea id="agenda-obs" value={draft.observacoes} onChange={(event) => setDraft((current) => ({ ...current, observacoes: event.target.value }))} rows={3} className="rounded-xl" /></div>
+            <FloatingInput id="agenda-servico" label="Máquina / Serviço" value={draft.servico} onChange={(event) => setDraft((current) => ({ ...current, servico: event.target.value }))} />
+            <FloatingTextarea id="agenda-obs" label="Observações" value={draft.observacoes} onChange={(event) => setDraft((current) => ({ ...current, observacoes: event.target.value }))} rows={3} />
             <div className="grid grid-cols-2 gap-2">
               <Button variant="ghost" className="h-12 rounded-xl" onClick={() => setEditing(null)}>Cancelar</Button>
               <Button className="h-12 rounded-xl" disabled={!draft.clienteId || !draft.data || !draft.dataFim || invalidPeriod || save.isPending} onClick={() => save.mutate()}>Salvar</Button>

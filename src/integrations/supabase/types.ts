@@ -64,6 +64,66 @@ export type Database = {
           },
         ]
       }
+      apontamento_pecas: {
+        Row: {
+          apontamento_id: string
+          codigo: string | null
+          created_at: string
+          descricao: string
+          foto_data_url: string | null
+          id: string
+          peca_id: string | null
+          quantidade: number
+          unidade: string
+          updated_at: string
+          user_id: string
+          valor_unitario: number
+        }
+        Insert: {
+          apontamento_id: string
+          codigo?: string | null
+          created_at?: string
+          descricao: string
+          foto_data_url?: string | null
+          id?: string
+          peca_id?: string | null
+          quantidade?: number
+          unidade?: string
+          updated_at?: string
+          user_id: string
+          valor_unitario?: number
+        }
+        Update: {
+          apontamento_id?: string
+          codigo?: string | null
+          created_at?: string
+          descricao?: string
+          foto_data_url?: string | null
+          id?: string
+          peca_id?: string | null
+          quantidade?: number
+          unidade?: string
+          updated_at?: string
+          user_id?: string
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apontamento_pecas_apontamento_id_fkey"
+            columns: ["apontamento_id"]
+            isOneToOne: false
+            referencedRelation: "apontamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apontamento_pecas_peca_id_fkey"
+            columns: ["peca_id"]
+            isOneToOne: false
+            referencedRelation: "pecas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       apontamentos: {
         Row: {
           cliente_id: string

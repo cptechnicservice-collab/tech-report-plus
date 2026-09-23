@@ -10,8 +10,9 @@ import type { Peca } from "@/lib/pecas";
 import type { RelatorioSalvo } from "@/lib/relatorios";
 import type { DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
+import type { ApontamentoPeca } from "@/lib/apontamento-pecas";
 
-type Entity = "clientes" | "apontamentos" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
+type Entity = "clientes" | "apontamentos" | "apontamento_pecas" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -34,6 +35,7 @@ interface OfflineDB extends DBSchema {
 const DB_NAME = "cp-technic-horas";
 const CACHE_CLIENTES = "clientes";
 const CACHE_APONTAMENTOS = "apontamentos";
+const CACHE_APONTAMENTO_PECAS = "apontamento-pecas";
 const CACHE_VALORES = "valores-vigencia";
 const CACHE_AGENDAMENTOS = "agendamentos";
 const CACHE_PECAS = "pecas";
@@ -232,6 +234,47 @@ export async function saveApontamentoOffline(payload: ApontamentoWrite) {
   await enqueue({ entity: "apontamentos", action: "upsert", recordId: record.id, payload: dbPayload, userId });
   await writeCached(CACHE_APONTAMENTOS, nextCache);
   return { record, queued: true };
+}
+
+type ApontamentoPecaWrite = Omit<ApontamentoPeca, "created_at" | "updated_at" | "user_id">;
+
+export async function saveApontamentoPecasOffline(apontamentoId: string, items: ApontamentoPecaWrite[]) {
+  const userId = await requireUserId();
+  const now = new Date().toISOString();
+  const cached = (await readCached<ApontamentoPeca[]>(CACHE_APONTAMENTO_PECAS)) ?? [];
+  const previous = cached.filter((item) => item.apontamento_id === apontamentoId);
+  const payloads: TablesInsert<"apontamento_pecas">[] = items.map((item) => ({ ...item, apontamento_id: apontamentoId, user_id: userId }));
+  const records: ApontamentoPeca[] = items.map((item) => ({ ...item, apontamento_id: apontamentoId, user_id: userId, created_at: now, updated_at: now }));
+  const nextCache = [...cached.filter((item) => item.apontamento_id !== apontamentoId), ...records];
+
+  if (!isOffline()) {
+    try {
+      if (payloads.length > 0) {
+        const inserted = await supabase.from("apontamento_pecas").upsert(payloads, { onConflict: "id" }).abortSignal(timeoutSignal());
+        if (inserted.error) throw inserted.error;
+      }
+      const nextIds = new Set(items.map((item) => item.id));
+      for (const oldItem of previous) {
+        if (nextIds.has(oldItem.id)) continue;
+        const removed = await supabase.from("apontamento_pecas").delete().eq("id", oldItem.id).abortSignal(timeoutSignal());
+        if (removed.error) throw removed.error;
+      }
+      await writeCached(CACHE_APONTAMENTO_PECAS, nextCache);
+      return { records, queued: false };
+    } catch (error) {
+      if (!isNetworkError(error)) throw error;
+    }
+  }
+
+  const nextIds = new Set(items.map((item) => item.id));
+  for (const oldItem of previous) {
+    if (!nextIds.has(oldItem.id)) await enqueue({ entity: "apontamento_pecas", action: "delete", recordId: oldItem.id, userId });
+  }
+  for (const item of payloads) {
+    await enqueue({ entity: "apontamento_pecas", action: "upsert", recordId: item.id ?? crypto.randomUUID(), payload: item, userId });
+  }
+  await writeCached(CACHE_APONTAMENTO_PECAS, nextCache);
+  return { records, queued: true };
 }
 
 type ValorWrite = Omit<ValorVigencia, "created_at" | "updated_at" | "user_id"> &
@@ -592,6 +635,7 @@ export async function deleteRelatorioOffline(id: string) {
 export async function deleteApontamentoOffline(id: string) {
   const userId = await requireUserId();
   const cached = (await readCached<ApontamentoComCliente[]>(CACHE_APONTAMENTOS)) ?? [];
+  const cachedParts = (await readCached<ApontamentoPeca[]>(CACHE_APONTAMENTO_PECAS)) ?? [];
   if (!isOffline()) {
     try {
       const { error } = await supabase
@@ -603,14 +647,25 @@ export async function deleteApontamentoOffline(id: string) {
         if (!isNetworkError(error)) throw error;
       } else {
         await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
+        await writeCached(CACHE_APONTAMENTO_PECAS, cachedParts.filter((item) => item.apontamento_id !== id));
         return { queued: false };
       }
     } catch (error) {
       if (!isNetworkError(error)) throw error;
     }
   }
+  if (typeof indexedDB !== "undefined") {
+    const db = await database();
+    const queued = await db.getAll("queue");
+    for (const item of queued) {
+      if (item.entity === "apontamento_pecas" && item.payload?.["apontamento_id"] === id && item.queueId != null) {
+        await db.delete("queue", item.queueId);
+      }
+    }
+  }
   await enqueue({ entity: "apontamentos", action: "delete", recordId: id, userId });
   await writeCached(CACHE_APONTAMENTOS, cached.filter((item) => item.id !== id));
+  await writeCached(CACHE_APONTAMENTO_PECAS, cachedParts.filter((item) => item.apontamento_id !== id));
   return { queued: true };
 }
 
@@ -630,7 +685,7 @@ export async function syncOfflineQueue() {
   const db = await database();
   const items = await db.getAll("queue");
   items.sort((a, b) => {
-    const priority = (item: QueueItem) => item.entity === "valores_vigencia" || item.entity === "dados_empresa" ? 0 : item.entity === "clientes" ? 1 : item.entity === "orcamentos" ? 2 : item.entity === "orcamento_itens" ? 3 : 4;
+    const priority = (item: QueueItem) => item.entity === "valores_vigencia" || item.entity === "dados_empresa" ? 0 : item.entity === "clientes" ? 1 : item.entity === "orcamentos" || item.entity === "apontamentos" ? 2 : item.entity === "orcamento_itens" || item.entity === "apontamento_pecas" ? 3 : 4;
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
   });
   for (const item of items) {
@@ -652,6 +707,11 @@ export async function syncOfflineQueue() {
         result = await supabase
           .from("apontamentos")
           .upsert((item.payload ?? {}) as TablesInsert<"apontamentos">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else if (item.entity === "apontamento_pecas") {
+        result = await supabase
+          .from("apontamento_pecas")
+          .upsert((item.payload ?? {}) as TablesInsert<"apontamento_pecas">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
       } else if (item.entity === "valores_vigencia") {
         result = await supabase
@@ -699,6 +759,7 @@ export async function syncOfflineQueue() {
 export const offlineCacheKeys = {
   clientes: CACHE_CLIENTES,
   apontamentos: CACHE_APONTAMENTOS,
+  apontamentoPecas: CACHE_APONTAMENTO_PECAS,
   valores: CACHE_VALORES,
   agendamentos: CACHE_AGENDAMENTOS,
   pecas: CACHE_PECAS,
