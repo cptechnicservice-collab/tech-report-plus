@@ -40,7 +40,7 @@ export function PageShell({
           </Button>
         ) : null}
         <div className="min-w-0">
-          <p className="mb-1 text-[0.65rem] font-bold uppercase text-primary">CP TECHNIC</p>
+          <p className="mb-2 inline-flex rounded-md bg-brand-header px-2 py-1 text-[0.62rem] font-bold uppercase text-brand-header-foreground">CP <span className="ml-1 text-primary">TECHNIC</span></p>
           <h1 className="truncate text-[1.65rem] font-bold leading-none">{title}</h1>
           {subtitle ? <p className="mt-1.5 truncate text-sm text-muted-foreground">{subtitle}</p> : null}
         </div>

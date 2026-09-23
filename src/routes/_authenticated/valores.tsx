@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -41,6 +42,7 @@ const numberValue = (value: string) => Number(value.replace(",", ".")) || 0;
 function Valores() {
   const [draft, setDraft] = useState<Draft>(blank);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const maisRecente = useMemo(() => valores[0], [valores]);
@@ -61,12 +63,14 @@ function Valores() {
       toast.success(result.queued ? "Salvo no aparelho — será enviado quando houver conexão" : "Novos valores salvos");
       setDraft(blank());
       setEditingId(null);
+      setShowForm(false);
     },
     onError: (error) => toast.error(error instanceof Error ? `Não foi possível salvar: ${error.message}` : "Não foi possível salvar"),
   });
 
   const edit = (valor: ValorVigencia) => {
     setEditingId(valor.id);
+    setShowForm(true);
     setDraft({
       vigencia: valor.vigencia,
       valor_hora_trabalhada: String(valor.valor_hora_trabalhada),
@@ -86,7 +90,7 @@ function Valores() {
   ] as const;
 
   return (
-    <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"} backTo="/mais">
+    <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"} backTo="/mais" action={<Button size="icon" className="rounded-xl bg-brand-header text-brand-header-foreground" aria-label="Cadastrar novos valores" onClick={() => { setDraft(blank()); setEditingId(null); setShowForm(true); }}><Plus className="h-5 w-5" /></Button>}>
       {!temValorVigente && (
         <div className="mx-4 mb-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs text-warning-foreground">
           <p className="font-semibold">Nenhum valor vigente para hoje</p>
@@ -94,7 +98,7 @@ function Valores() {
         </div>
       )}
       {maisRecente ? <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav"><p className="text-xs text-brand-header-foreground/65">Vigente desde {formatDateBR(maisRecente.vigencia)}</p><div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">{[["Hora trabalho", `${formatCurrency(maisRecente.valor_hora_trabalhada)}/h`], ["Hora viagem", `${formatCurrency(maisRecente.valor_hora_viagem)}/h`], ["Por KM", formatCurrency(maisRecente.valor_km)], ["Diária inteira", formatCurrency(maisRecente.valor_diaria_inteira)]].map(([label, value]) => <div key={label}><p className="text-xs text-brand-header-foreground/55">{label}</p><p className="mt-1 font-semibold tabular-nums">{value}</p></div>)}</div></section> : null}
-      <Section title="Novos valores">
+      {showForm ? <Section title={editingId ? "Editar valores" : "Novos valores"}>
         <FloatingInput id="vigencia" label="Vigente desde" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         {fields.map(([key, label, suffix]) => (
           <FloatingInput
@@ -109,7 +113,7 @@ function Valores() {
         <Button className="h-14 w-full rounded-2xl text-base font-semibold" disabled={!draft.vigencia || salvar.isPending} onClick={() => salvar.mutate()}>
           {editingId ? "Salvar alterações" : "Salvar novos valores"}
         </Button>
-      </Section>
+      </Section> : null}
 
       <Section title="Histórico" hint={`${valores.length} alteração(ões)`}>
         {valores.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum valor cadastrado.</p> : (

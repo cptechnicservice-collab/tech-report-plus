@@ -83,12 +83,6 @@ function Resumo() {
         </div>
       </section>
 
-      <Link to="/relatorios-salvos" search={{ status: "aberto" }} className="press ios-group flex items-center gap-4 p-5">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-warning/15 text-warning-foreground"><HandCoins className="h-6 w-6" /></span>
-        <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-muted-foreground">A receber</span><span className="mt-0.5 block text-2xl font-bold tabular-nums">{formatCurrency(totalAReceber)}</span><span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} relatório(s) em aberto</span></span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-      </Link>
-
       <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav">
         <p className="flex items-center gap-2 text-xs text-brand-header-foreground/65"><CircleDollarSign className="h-4 w-4" />Total do mês</p>
         <p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(financeiro.totalGeral)}</p>
@@ -102,6 +96,12 @@ function Resumo() {
       <section className="grid grid-cols-3 gap-2">
         {[{ label: "Horas trab.", value: formatMinutes(totais.trabalho), icon: Timer }, { label: "Horas viagem", value: formatMinutes(totais.viagem), icon: MapPin }, { label: "KM rodados", value: String(totais.km), icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="ios-group p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-4 w-4" /></span><p className="mt-3 text-[0.68rem] text-muted-foreground">{label}</p><p className="mt-0.5 text-lg font-bold tabular-nums">{value}</p></div>)}
       </section>
+
+      <Link to="/relatorios-salvos" search={{ status: "aberto" }} className="press ios-group flex items-center gap-4 p-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-highlight text-highlight-foreground"><HandCoins className="h-6 w-6" /></span>
+        <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-muted-foreground">A receber</span><span className="mt-0.5 block text-xl font-bold tabular-nums">{formatCurrency(totalAReceber)}</span><span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} relatório(s) em aberto</span></span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </Link>
 
       <Section title="Composição do valor">
         <dl className="-my-2 divide-y divide-border">
