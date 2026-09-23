@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BriefcaseBusiness, CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer, Users } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -53,8 +53,6 @@ function Resumo() {
   const totais = somarTotais(doMes);
   const financeiro = calcularValoresPeriodo(doMes, valores);
   const ultimos = doMes.slice(0, 5);
-  const clientesAtendidos = new Set(doMes.map((item) => item.cliente_id)).size;
-  const servicosInformados = doMes.filter((item) => Boolean(item.maquina_servico?.trim())).length;
   const relatoriosAbertos = relatorios.filter((item) => saldoRelatorio(item) > 0);
   const totalAReceber = relatoriosAbertos.reduce((total, item) => total + saldoRelatorio(item), 0);
 
