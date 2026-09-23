@@ -4,11 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
+import { FloatingInput } from "@/components/FloatingField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fetchValores, formatDateBR, todayISO } from "@/lib/apontamentos";
-import { formatCurrency, type ValorVigencia } from "@/lib/financeiro";
+import { formatCurrency, valorVigente, type ValorVigencia } from "@/lib/financeiro";
 import { saveValorOffline } from "@/lib/offline";
 
 export const Route = createFileRoute("/_authenticated/valores")({
@@ -45,6 +46,7 @@ function Valores() {
   const queryClient = useQueryClient();
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const maisRecente = useMemo(() => valores[0], [valores]);
+  const temValorVigente = !!valorVigente(todayISO(), valores);
 
   const salvar = useMutation({
     mutationFn: () => saveValorOffline({
@@ -87,16 +89,27 @@ function Valores() {
 
   return (
     <PageShell title="Valores" subtitle={maisRecente ? `Última vigência: ${formatDateBR(maisRecente.vigencia)}` : "Defina os valores cobrados"} backTo="/mais">
+      {!temValorVigente && (
+        <div className="mx-4 mb-2 rounded-xl border border-orange-200 bg-orange-50 p-3 text-xs text-orange-800 dark:border-orange-900/30 dark:bg-orange-900/10 dark:text-orange-400">
+          <p className="font-semibold text-orange-900 dark:text-orange-300">Nenhum valor vigente para hoje</p>
+          <p>Os cálculos financeiros nos apontamentos dependem dos valores definidos aqui. Cadastre a vigência atual abaixo.</p>
+        </div>
+      )}
       <Section title="Novos valores">
         <div className="space-y-1.5">
           <Label htmlFor="vigencia">Data de vigência</Label>
           <Input id="vigencia" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         </div>
         {fields.map(([key, label, suffix]) => (
-          <div key={key} className="space-y-1.5">
-            <Label htmlFor={key}>{label} ({suffix})</Label>
-            <Input id={key} inputMode="decimal" placeholder="0,00" value={draft[key]} onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} />
-          </div>
+          <FloatingInput
+            key={key}
+            id={key}
+            label={`${label} (${suffix})`}
+            inputMode="decimal"
+            placeholder="0,00"
+            value={draft[key]}
+            onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
+          />
         ))}
         <Button className="h-14 w-full rounded-2xl text-base font-semibold" disabled={!draft.vigencia || salvar.isPending} onClick={() => salvar.mutate()}>
           {editingId ? "Salvar alterações" : "Salvar novos valores"}
