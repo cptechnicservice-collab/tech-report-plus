@@ -71,3 +71,4 @@
 - [x] Adicionar “Todos os clientes” e detalhamento financeiro consolidado ao Relatório.
 - [x] Validar os fluxos no iPhone, preservar os PDFs e confirmar compilação sem erros.
 - [ ] Reformular visualmente Painel, Novo apontamento, Relatório, Histórico, Peças, Valores e Agenda conforme o app de referência, preservando funções e sem estoque.
+- [ ] Substituir também a barra inferior antiga pelo padrão flutuante da referência.
