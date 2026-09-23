@@ -31,22 +31,22 @@ export function PageShell({
   };
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-28">
-      <header className={`grid items-end px-1 pb-5 pt-4 ${backTo ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}>
+      <header className={`mb-5 grid items-center rounded-xl bg-brand-header px-3 py-4 text-brand-header-foreground shadow-card ${backTo ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}>
         {backTo ? (
-          <Button asChild variant="ghost" size="icon" className="mb-[-0.25rem] h-11 w-11 rounded-full" aria-label="Voltar" title="Voltar">
+          <Button asChild variant="ghost" size="icon" className="h-11 w-11 rounded-full text-brand-header-foreground hover:bg-brand-header-foreground/10 hover:text-brand-header-foreground" aria-label="Voltar" title="Voltar">
             <Link to={backTo}>
               <ChevronLeft className="h-7 w-7" />
             </Link>
           </Button>
         ) : null}
         <div className="min-w-0">
-          <p className="mb-1 text-xs font-semibold uppercase text-primary">CP TECHNIC</p>
+          <p className="mb-1 text-xs font-bold uppercase text-primary">CP TECHNIC</p>
           <h1 className="truncate text-[2rem] font-bold leading-none">{title}</h1>
-          {subtitle ? <p className="mt-2 truncate text-sm text-muted-foreground">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-2 truncate text-sm text-brand-header-foreground/65">{subtitle}</p> : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {action}
-          <Button type="button" variant="ghost" size="icon" aria-label="Sair" title="Sair" onClick={signOut}>
+          <Button type="button" variant="ghost" size="icon" className="text-brand-header-foreground hover:bg-brand-header-foreground/10 hover:text-brand-header-foreground" aria-label="Sair" title="Sair" onClick={signOut}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>

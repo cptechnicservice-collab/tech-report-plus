@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { normalizeSearchText } from "@/lib/apontamentos";
 import { resizeImage } from "@/lib/image-resize";
 import { deletePecaOffline, savePecaOffline } from "@/lib/offline";
@@ -130,10 +131,10 @@ function Pecas() {
                 {draft.foto_data_url ? <Button type="button" variant="ghost" className="h-9 rounded-xl text-destructive" onClick={() => setDraft((current) => ({ ...current, foto_data_url: null }))}><Trash2 className="mr-2 h-4 w-4" />Remover foto</Button> : null}
               </div>
             </div>
-            <div className="space-y-1.5"><Label htmlFor="peca-descricao">Descrição</Label><Input id="peca-descricao" value={draft.descricao} onChange={(event) => setDraft({ ...draft, descricao: event.target.value })} className="h-12 rounded-xl" autoFocus /></div>
-            <div className="space-y-1.5"><Label htmlFor="peca-codigo">Código (opcional)</Label><Input id="peca-codigo" value={draft.codigo} onChange={(event) => setDraft({ ...draft, codigo: event.target.value })} className="h-12 rounded-xl" /></div>
-            <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label htmlFor="peca-unidade">Unidade</Label><Input id="peca-unidade" value={draft.unidade} onChange={(event) => setDraft({ ...draft, unidade: event.target.value })} placeholder="unidade" className="h-12 rounded-xl" /></div><div className="space-y-1.5"><Label htmlFor="peca-preco">Preço</Label><Input id="peca-preco" value={draft.preco} onChange={(event) => setDraft({ ...draft, preco: event.target.value })} placeholder="0,00" inputMode="decimal" className="h-12 rounded-xl" /></div></div>
-            <div className="space-y-1.5"><Label htmlFor="peca-observacoes">Observações (opcional)</Label><Textarea id="peca-observacoes" value={draft.observacoes} onChange={(event) => setDraft({ ...draft, observacoes: event.target.value })} rows={3} className="rounded-xl" /></div>
+            <FloatingInput id="peca-descricao" label="Nome da peça" value={draft.descricao} onChange={(event) => setDraft({ ...draft, descricao: event.target.value })} autoFocus />
+            <FloatingInput id="peca-codigo" label="Código (opcional)" value={draft.codigo} onChange={(event) => setDraft({ ...draft, codigo: event.target.value })} />
+            <div className="grid grid-cols-2 gap-3"><FloatingInput id="peca-unidade" label="Unidade" value={draft.unidade} onChange={(event) => setDraft({ ...draft, unidade: event.target.value })} /><FloatingInput id="peca-preco" label="Valor" value={draft.preco} onChange={(event) => setDraft({ ...draft, preco: event.target.value })} inputMode="decimal" /></div>
+            <FloatingTextarea id="peca-observacoes" label="Observações (opcional)" value={draft.observacoes} onChange={(event) => setDraft({ ...draft, observacoes: event.target.value })} rows={3} />
             <div className="grid grid-cols-2 gap-2"><Button variant="ghost" className="h-12 rounded-xl" onClick={() => setEditing(null)}>Cancelar</Button><Button className="h-12 rounded-xl" disabled={!draft.descricao.trim() || !Number.isFinite(parsedPrice) || parsedPrice < 0 || save.isPending} onClick={() => save.mutate()}>Salvar</Button></div>
           </div>
         </DialogContent>
