@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { FloatingInput } from "@/components/FloatingField";
+import { FloatingInput } from "@/components/FloatingField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,10 +97,7 @@ function Valores() {
         </div>
       )}
       <Section title="Novos valores">
-        <div className="space-y-1.5">
-          <Label htmlFor="vigencia">Data de vigência</Label>
-          <Input id="vigencia" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
-        </div>
+        <FloatingInput id="vigencia" label="Data de vigência" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         {fields.map(([key, label, suffix]) => (
           <FloatingInput
             key={key}

@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { CalendarCheck, CalendarIcon, Check, Clock3, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { ClienteSelect } from "@/components/ClienteSelect";
 import { PageShell, Section } from "@/components/PageShell";
 import {
@@ -28,7 +29,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { fetchAgendamentos, type AgendamentoComCliente } from "@/lib/agenda";
-import { fetchClientes, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
+import { fetchClientes, fetchValores, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
+import { valorVigente } from "@/lib/financeiro";
 import { deleteAgendamentoOffline, saveAgendamentoOffline } from "@/lib/offline";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
@@ -135,6 +137,7 @@ function Agenda() {
   const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: agendamentos = [], isLoading } = useQuery({ queryKey: ["agendamentos"], queryFn: fetchAgendamentos });
+  const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
 
   const visible = useMemo(
     () => agendamentos.filter((item) => showCompleted || !item.concluido),
@@ -146,6 +149,7 @@ function Agenda() {
     return [...grouped.entries()];
   }, [visible]);
   const invalidPeriod = draft.dataFim < draft.data;
+  const temValorVigente = !!valorVigente(todayISO(), valores);
 
   const save = useMutation({
     mutationFn: () => saveAgendamentoOffline({
@@ -201,6 +205,12 @@ function Agenda() {
       subtitle={`${agendamentos.filter((item) => !item.concluido).length} atendimento(s) pendente(s)`}
       action={<Button size="icon" className="rounded-full" aria-label="Novo agendamento" onClick={openNew}><Plus className="h-5 w-5" /></Button>}
     >
+      {!temValorVigente && (
+        <div className="mx-4 mb-2 rounded-xl border border-orange-200 bg-orange-50 p-3 text-xs text-orange-800 dark:border-orange-900/30 dark:bg-orange-900/10 dark:text-orange-400">
+          <p className="font-semibold text-orange-900 dark:text-orange-300">Valores não configurados</p>
+          <p>Os cálculos financeiros não estarão disponíveis nos apontamentos. <Link to="/valores" className="underline font-medium">Configurar agora</Link></p>
+        </div>
+      )}
       <div className="ios-group flex items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><CalendarCheck className="h-5 w-5" /></span>
