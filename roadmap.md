@@ -72,3 +72,4 @@
 - [x] Validar os fluxos no iPhone, preservar os PDFs e confirmar compilação sem erros.
 - [x] Reformular visualmente Painel, Novo apontamento, Relatório, Histórico, Peças, Valores e Agenda conforme o app de referência, preservando funções e sem estoque.
 - [x] Substituir também a barra inferior antiga pelo padrão flutuante da referência.
+- [x] Levar automaticamente a foto cadastrada da peça para a seleção e o item do orçamento.
