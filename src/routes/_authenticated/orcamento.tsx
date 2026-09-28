@@ -66,6 +66,15 @@ function OrcamentoPage() {
     } else if (!search.id && !numero && orcamentos.length >= 0) setNumero(proximoNumeroOrcamento(orcamentos));
   }, [numero, orcamentos, search.id, source]);
 
+  useEffect(() => {
+    if (!source || pecas.length === 0) return;
+    setItens((current) => current.map((item) => {
+      if (item.foto_data_url) return item;
+      const catalogPart = pecas.find((part) => part.id === item.peca_id || (item.codigo && part.codigo === item.codigo));
+      return catalogPart?.foto_data_url ? { ...item, foto_data_url: catalogPart.foto_data_url } : item;
+    }));
+  }, [pecas, source]);
+
   const numericItems = useMemo(() => itens.map((item) => ({ ...item, quantidade: numberValue(item.quantidadeTexto), valor_unitario: numberValue(item.valorTexto) })), [itens]);
   const totals = useMemo(() => calcularTotaisOrcamento(numericItems, descontoTipo, numberValue(desconto)), [desconto, descontoTipo, numericItems]);
   const cliente = clientes.find((entry) => entry.id === clienteId) ?? source?.cliente_snapshot;

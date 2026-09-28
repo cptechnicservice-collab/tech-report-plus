@@ -73,3 +73,4 @@
 - [x] Reformular visualmente Painel, Novo apontamento, Relatório, Histórico, Peças, Valores e Agenda conforme o app de referência, preservando funções e sem estoque.
 - [x] Substituir também a barra inferior antiga pelo padrão flutuante da referência.
 - [x] Levar automaticamente a foto cadastrada da peça para a seleção e o item do orçamento.
+- [x] Exibir no PDF as fotos do catálogo também em orçamentos antigos vinculados às peças.
