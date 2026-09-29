@@ -525,6 +525,7 @@ export type Database = {
           observacao_relatorio: string
           pagamento_status: string
           pecas_snapshot: Json
+          status_relatorio: string
           total_despesas: number
           total_geral: number
           total_pecas: number
@@ -552,6 +553,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          status_relatorio?: string
           total_despesas?: number
           total_geral?: number
           total_pecas?: number
@@ -579,6 +581,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          status_relatorio?: string
           total_despesas?: number
           total_geral?: number
           total_pecas?: number
