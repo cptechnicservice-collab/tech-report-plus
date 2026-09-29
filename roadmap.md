@@ -74,3 +74,5 @@
 - [x] Substituir também a barra inferior antiga pelo padrão flutuante da referência.
 - [x] Levar automaticamente a foto cadastrada da peça para a seleção e o item do orçamento.
 - [x] Exibir no PDF as fotos do catálogo também em orçamentos antigos vinculados às peças.
+- [x] Adicionar status Pendente, Aguardando pagamento e Concluído aos relatórios salvos, com atualização offline.
+- [x] Ocultar concluídos da lista normal e disponibilizá-los no filtro Concluídos.

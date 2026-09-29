@@ -39,6 +39,7 @@ export type RelatorioSalvo = {
   despesas_snapshot: DespesaRelatorio[];
   total_despesas: number;
   desconto: number;
+  status_relatorio: StatusRelatorio;
   pagamento_status: PagamentoStatus;
   valor_recebido: number;
   data_recebimento: string | null;
@@ -54,6 +55,13 @@ export function numeroRelatorio(id: string, date = new Date()) {
 
 export type PagamentoStatus = "pendente" | "parcial" | "pago";
 export type FormaPagamento = "pix" | "transferencia" | "dinheiro" | "boleto" | "outro";
+export type StatusRelatorio = "pendente" | "aguardando_pagamento" | "concluido";
+
+export const statusRelatorioOptions: Array<{ value: StatusRelatorio; label: string }> = [
+  { value: "pendente", label: "Pendente" },
+  { value: "aguardando_pagamento", label: "Aguardando pagamento" },
+  { value: "concluido", label: "Concluído" },
+];
 
 export const formasPagamento: Array<{ value: FormaPagamento; label: string }> = [
   { value: "pix", label: "Pix" },
@@ -97,6 +105,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     despesas_snapshot: despesas,
     total_despesas: Number(item.total_despesas ?? 0),
     desconto: Number(item.desconto ?? 0),
+    status_relatorio: item.status_relatorio ?? "pendente",
   };
 }
 

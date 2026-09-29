@@ -539,8 +539,8 @@ export async function deleteOrcamentoOffline(id: string) {
   return { queued: true };
 }
 
-type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto"> &
-  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto">>;
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto">>;
 
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
@@ -563,6 +563,7 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     despesas_snapshot: (payload.despesas_snapshot ?? []) as unknown as Json,
     total_despesas: payload.total_despesas ?? 0,
     desconto: payload.desconto ?? 0,
+    status_relatorio: payload.status_relatorio ?? "pendente",
     pagamento_status: payload.pagamento_status ?? "pendente",
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
@@ -576,6 +577,7 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
   const now = new Date().toISOString();
   const record: RelatorioSalvo = {
     ...payload,
+    status_relatorio: payload.status_relatorio ?? "pendente",
     pagamento_status: payload.pagamento_status ?? "pendente",
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
