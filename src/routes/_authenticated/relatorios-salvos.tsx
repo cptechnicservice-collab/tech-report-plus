@@ -21,7 +21,7 @@ import { formatCurrency } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo } from "@/lib/relatorios";
+import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, statusRelatorioOptions, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo, type StatusRelatorio } from "@/lib/relatorios";
 
 type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: AnexoDespesa[] };
 
@@ -71,6 +71,7 @@ function RelatoriosSalvos() {
   const [periodo, setPeriodo] = useState<"ultimos" | "30" | "60" | "todos">("ultimos");
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [status, setStatus] = useState<"todos" | "aberto" | PagamentoStatus>(search.status ?? "todos");
+  const [statusRelatorio, setStatusRelatorio] = useState<"ativos" | StatusRelatorio>("ativos");
   const [recebimento, setRecebimento] = useState<RelatorioSalvo | null>(null);
   const [valorRecebido, setValorRecebido] = useState("");
   const [dataRecebimento, setDataRecebimento] = useState("");
@@ -106,6 +107,8 @@ function RelatoriosSalvos() {
     return [...relatorios]
       .filter((item) => {
         if (term && !normalizeSearchText(item.cliente_nome).includes(term)) return false;
+        if (statusRelatorio === "ativos" && item.status_relatorio === "concluido") return false;
+        if (statusRelatorio !== "ativos" && item.status_relatorio !== statusRelatorio) return false;
         if (status === "aberto" && item.pagamento_status === "pago") return false;
         if (status !== "todos" && status !== "aberto" && item.pagamento_status !== status) return false;
         if (limiteDias == null) return true;
@@ -115,7 +118,7 @@ function RelatoriosSalvos() {
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, periodo === "ultimos" ? 12 : undefined);
-  }, [busca, periodo, relatorios, status]);
+  }, [busca, periodo, relatorios, status, statusRelatorio]);
 
   const filtros = [
     { id: "ultimos", label: "Últimos" },
@@ -185,6 +188,16 @@ function RelatoriosSalvos() {
       toast.success(result.queued ? "Recebimento salvo no aparelho" : "Recebimento registrado");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível registrar o recebimento"),
+  });
+
+  const saveStatusRelatorio = useMutation({
+    mutationFn: ({ item, value }: { item: RelatorioSalvo; value: StatusRelatorio }) =>
+      saveRelatorioOffline({ ...item, status_relatorio: value }),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
+      toast.success(result.queued ? "Status salvo no aparelho" : "Status atualizado");
+    },
+    onError: () => toast.error("Não foi possível atualizar o status"),
   });
 
   const openObservacao = (item: RelatorioSalvo) => {
@@ -345,6 +358,17 @@ function RelatoriosSalvos() {
         ))}
       </div>
 
+      <div className="space-y-2">
+        <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Situação do relatório</p>
+        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Situação do relatório">
+          {(["ativos", "pendente", "aguardando_pagamento", "concluido"] as const).map((value) => (
+            <Button key={value} type="button" size="sm" variant={statusRelatorio === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={statusRelatorio === value} onClick={() => setStatusRelatorio(value)}>
+              {value === "ativos" ? "Ativos" : statusRelatorioOptions.find((option) => option.value === value)?.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {isLoading ? <p className="px-1 text-sm text-muted-foreground">Carregando...</p> : relatoriosVisiveis.length === 0 ? (
         <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">Nenhum relatório salvo</p><p className="mt-1 text-sm text-muted-foreground">Salve um relatório para consultá-lo aqui.</p></div>
       ) : (
@@ -356,7 +380,7 @@ function RelatoriosSalvos() {
                   <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-secondary text-primary"><CalendarRange className="h-5 w-5" /></span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><p className="font-semibold leading-snug">{item.cliente_nome}</p><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${statusInfo[item.pagamento_status].className}`}>{statusInfo[item.pagamento_status].label}</span></div>
+                      <div className="min-w-0"><p className="font-semibold leading-snug">{item.cliente_nome}</p><div className="mt-1 flex flex-wrap gap-1"><span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${statusInfo[item.pagamento_status].className}`}>{statusInfo[item.pagamento_status].label}</span><span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[0.68rem] font-semibold text-secondary-foreground">{statusRelatorioOptions.find((option) => option.value === item.status_relatorio)?.label}</span></div></div>
                       <p className="shrink-0 text-base font-bold tabular-nums text-primary">{formatCurrency(item.total_geral)}</p>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{formatDateBR(item.inicio)} a {formatDateBR(item.fim)}</p>
@@ -364,6 +388,12 @@ function RelatoriosSalvos() {
                     {item.pagamento_status !== "pago" ? <p className="mt-1 text-xs font-medium text-warning-foreground">Saldo {formatCurrency(saldoRelatorio(item))}</p> : null}
                     {item.observacao_relatorio ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Obs.: {item.observacao_relatorio}</p> : null}
                   </div>
+                </div>
+                <div className="mt-3 pl-[3.25rem]">
+                  <label htmlFor={`report-status-${item.id}`} className="mb-1 block text-xs font-medium text-muted-foreground">Situação</label>
+                  <select id={`report-status-${item.id}`} aria-label={`Situação do relatório de ${item.cliente_nome}`} value={item.status_relatorio} disabled={saveStatusRelatorio.isPending} onChange={(event) => saveStatusRelatorio.mutate({ item, value: event.target.value as StatusRelatorio })} className="ios-field h-11 w-full border px-3 text-sm font-medium">
+                    {statusRelatorioOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 pl-[3.25rem]">
                   <Button asChild variant="outline" className="h-10 rounded-xl"><Link to="/relatorio" search={{ relatorio: item.id }}><FilePenLine className="mr-2 h-4 w-4" />Editar</Link></Button>

@@ -256,6 +256,7 @@ function Relatorio() {
         despesas_snapshot: relatorioEmEdicao?.despesas_snapshot ?? [],
         total_despesas: relatorioEmEdicao?.total_despesas ?? 0,
         desconto: descontoSalvo,
+        status_relatorio: relatorioEmEdicao?.status_relatorio ?? "pendente" as const,
         pagamento_status: relatorioEmEdicao?.pagamento_status ?? "pendente" as const,
         valor_recebido: relatorioEmEdicao?.valor_recebido ?? 0,
         data_recebimento: relatorioEmEdicao?.data_recebimento ?? null,

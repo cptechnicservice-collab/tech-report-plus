@@ -134,6 +134,13 @@
       "when": 1790160895585,
       "tag": "0018_create_apontamento_pecas",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790724017552,
+      "tag": "0019_add_report_workflow_status",
+      "breakpoints": true
     }
   ]
 }
