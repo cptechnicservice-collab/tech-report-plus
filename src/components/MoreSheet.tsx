@@ -61,7 +61,6 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
         overlayClassName="bg-foreground/35 backdrop-blur-sm"
         className="bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] rounded-[2rem] border-border bg-card shadow-nav sm:mx-auto sm:max-w-md"
       >
-        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-muted-foreground/25" />
         <DrawerHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 px-5 pb-3 pt-3 text-left">
           <div className="min-w-0">
             <DrawerDescription className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-primary">
