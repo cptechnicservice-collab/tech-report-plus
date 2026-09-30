@@ -15,10 +15,21 @@ function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | n
       if (target instanceof HTMLInputElement && target.type === "file") return;
       if (timer !== null) window.clearTimeout(timer);
       timer = window.setTimeout(() => {
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         target.scrollIntoView({
           block: "center",
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          behavior: reducedMotion ? "auto" : "smooth",
         });
+        const visibleHeight = Number.parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue("--vvh"),
+        ) || window.visualViewport?.height || window.innerHeight;
+        const visibleTop = window.visualViewport?.offsetTop ?? 0;
+        const targetRect = target.getBoundingClientRect();
+        const panelRect = container.getBoundingClientRect();
+        const visibleBottom = Math.min(panelRect.bottom, visibleTop + visibleHeight);
+        const visiblePanelTop = Math.max(panelRect.top, visibleTop);
+        const delta = targetRect.top + targetRect.height / 2 - (visiblePanelTop + visibleBottom) / 2;
+        if (Math.abs(delta) > 1) container.scrollBy({ top: delta, behavior: reducedMotion ? "auto" : "smooth" });
       }, 250);
     };
 
