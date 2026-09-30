@@ -37,10 +37,9 @@ import {
 import { formatCurrency, valorVigente } from "@/lib/financeiro";
 import { fetchPecas } from "@/lib/pecas";
 import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
-import { deleteApontamentoOffline, saveApontamentoOffline, saveApontamentoPecasOffline } from "@/lib/offline";
+import { deleteApontamentoOffline, saveAgendamentoOffline, saveApontamentoOffline, saveApontamentoPecasOffline } from "@/lib/offline";
 import { fetchAgendamento } from "@/lib/agenda";
 import { fetchOrcamento } from "@/lib/orcamentos";
-import { saveAgendamentoOffline } from "@/lib/offline";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
@@ -291,9 +290,10 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: apontamentoPecas = [], isFetched: partsFetched } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
   const { data: sourceAgenda } = useQuery({ queryKey: ["agendamento", draft?.agendaId], queryFn: () => fetchAgendamento(draft?.agendaId ?? ""), enabled: Boolean(draft?.agendaId) });
-  const { data: sourceQuote } = useQuery({ queryKey: ["orcamento", draft?.orcamentoId], queryFn: () => fetchOrcamento(draft?.orcamentoId ?? ""), enabled: Boolean(draft?.orcamentoId) });
+  const { data: sourceQuote, isFetched: sourceQuoteFetched } = useQuery({ queryKey: ["orcamento", draft?.orcamentoId], queryFn: () => fetchOrcamento(draft?.orcamentoId ?? ""), enabled: Boolean(draft?.orcamentoId) });
+  const draftReady = apontamento ? partsFetched && partsInitialized : draft?.orcamentoId ? sourceQuoteFetched && partsInitialized : true;
   const draftState = useMemo(() => ({ form, pecasSelecionadas }), [form, pecasSelecionadas]);
-  const { clearDraft, isDirty } = useFormDraft({ key: `apontamento:${apontamento?.id ?? draft?.agendaId ?? draft?.orcamentoId ?? "novo"}`, value: draftState, restore: (saved) => { setForm(saved.form); setPecasSelecionadas(saved.pecasSelecionadas); } });
+  const { clearDraft, isDirty } = useFormDraft({ key: `apontamento:${apontamento?.id ?? draft?.agendaId ?? draft?.orcamentoId ?? "novo"}`, value: draftState, restore: (saved) => { setForm(saved.form); setPecasSelecionadas(saved.pecasSelecionadas); }, enabled: draftReady });
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
@@ -379,7 +379,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       })));
       return { ...saved, queued: saved.queued || parts.queued };
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       clearDraft();
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
       queryClient.invalidateQueries({ queryKey: ["apontamento-pecas"] });
@@ -391,9 +391,10 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
             : "Apontamento salvo",
       );
       if (sourceAgenda && !sourceAgenda.concluido && window.confirm("Apontamento salvo. Marcar este agendamento como concluído?")) {
-        void saveAgendamentoOffline({ id: sourceAgenda.id, cliente_id: sourceAgenda.cliente_id, data: sourceAgenda.data, data_fim: sourceAgenda.data_fim, horario: sourceAgenda.horario, maquina_servico: sourceAgenda.maquina_servico, observacoes: sourceAgenda.observacoes, concluido: true }).then(() => queryClient.invalidateQueries({ queryKey: ["agendamentos"] }));
+        await saveAgendamentoOffline({ id: sourceAgenda.id, cliente_id: sourceAgenda.cliente_id, data: sourceAgenda.data, data_fim: sourceAgenda.data_fim, horario: sourceAgenda.horario, maquina_servico: sourceAgenda.maquina_servico, observacoes: sourceAgenda.observacoes, concluido: true });
+        await queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
       }
-      navigate({ to: "/historico" });
+      await navigate({ to: "/historico" });
     },
     onError: (error) => toast.error(`Não foi possível salvar${errorReason(error)}`),
   });

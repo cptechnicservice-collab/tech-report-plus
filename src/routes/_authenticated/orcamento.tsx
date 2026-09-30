@@ -42,13 +42,14 @@ function OrcamentoPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: orcamentos = [] } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
+  const { data: orcamentos = [], isFetched: orcamentosFetched } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const source = orcamentos.find((entry) => entry.id === search.id);
   const idRef = useRef(search.id ?? crypto.randomUUID());
   const initialized = useRef<string | null>(null);
+  const [formReady, setFormReady] = useState(false);
   const [numero, setNumero] = useState("");
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [data, setData] = useState(todayISO());
@@ -66,14 +67,18 @@ function OrcamentoPage() {
     key: `orcamento:${search.id ?? idRef.current}`,
     value: draftValue,
     restore: (saved) => { setNumero(saved.numero); setClienteId(saved.clienteId); setData(saved.data); setValidade(saved.validade); setStatus(saved.status); setDescontoTipo(saved.descontoTipo); setDesconto(saved.desconto); setFormas(saved.formas); setCondicoes(saved.condicoes); setObservacoes(saved.observacoes); setItens(saved.itens); },
+    enabled: formReady,
   });
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
     if (source && initialized.current !== source.id) {
-      initialized.current = source.id; idRef.current = source.id; setNumero(source.numero); setClienteId(source.cliente_id); setData(source.data); setValidade(String(source.validade_dias)); setStatus(source.status); setDescontoTipo(source.desconto_tipo); setDesconto(source.desconto_valor ? String(source.desconto_valor).replace(".", ",") : ""); setFormas(source.formas_pagamento); setCondicoes(source.condicoes_pagamento ?? ""); setObservacoes(source.observacoes ?? ""); setItens(source.itens.map((item) => ({ ...item, quantidadeTexto: String(item.quantidade).replace(".", ","), valorTexto: String(item.valor_unitario).replace(".", ",") })));
-    } else if (!search.id && !numero && orcamentos.length >= 0) setNumero(proximoNumeroOrcamento(orcamentos));
-  }, [numero, orcamentos, search.id, source]);
+      initialized.current = source.id; idRef.current = source.id; setNumero(source.numero); setClienteId(source.cliente_id); setData(source.data); setValidade(String(source.validade_dias)); setStatus(source.status); setDescontoTipo(source.desconto_tipo); setDesconto(source.desconto_valor ? String(source.desconto_valor).replace(".", ",") : ""); setFormas(source.formas_pagamento); setCondicoes(source.condicoes_pagamento ?? ""); setObservacoes(source.observacoes ?? ""); setItens(source.itens.map((item) => ({ ...item, quantidadeTexto: String(item.quantidade).replace(".", ","), valorTexto: String(item.valor_unitario).replace(".", ",") }))); setFormReady(true);
+    } else if (!search.id && orcamentosFetched && !numero) {
+      setNumero(proximoNumeroOrcamento(orcamentos));
+      setFormReady(true);
+    }
+  }, [numero, orcamentos, orcamentosFetched, search.id, source]);
 
   useEffect(() => {
     if (!source || pecas.length === 0) return;
