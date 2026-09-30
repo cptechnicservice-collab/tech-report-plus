@@ -106,6 +106,32 @@ export async function recoverAppIdentity(): Promise<SessionRecovery> {
   }
 }
 
+/** Renews and validates the saved session before queued writes resume. */
+export async function renewAppSession(): Promise<SessionRecovery> {
+  const fallback = localIdentity();
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return { status: "transient", identity: fallback };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (data.session?.user) {
+      rememberConfirmedUser(data.session.user.id);
+      return {
+        status: "authenticated",
+        identity: { user: data.session.user, userId: data.session.user.id, offline: false },
+      };
+    }
+    if (error && isTransientAuthError(error)) return { status: "transient", identity: fallback };
+    clearConfirmedUser();
+    return { status: "unauthenticated", identity: null };
+  } catch (error) {
+    if (isTransientAuthError(error)) return { status: "transient", identity: fallback };
+    clearConfirmedUser();
+    return { status: "unauthenticated", identity: null };
+  }
+}
+
 export async function activeAppUserId() {
   const fallbackUserId = getConfirmedUserId();
   if (typeof navigator !== "undefined" && !navigator.onLine) return fallbackUserId;

@@ -42,7 +42,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { recoverAppIdentity } from "@/lib/auth-session";
+import { renewAppSession } from "@/lib/auth-session";
 
 const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
   clientes: "Cliente",
@@ -123,7 +123,7 @@ export function OfflineStatus() {
       syncingRef.current = true;
       setSyncing(true);
       try {
-        const recovery = await recoverAppIdentity();
+        const recovery = await renewAppSession();
         if (!recovery.identity || recovery.status === "transient") return;
         const changedKeys = await syncOfflineQueue({ force });
         await Promise.all(
