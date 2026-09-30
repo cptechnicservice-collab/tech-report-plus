@@ -63,7 +63,7 @@ export function OfflineStatus() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [discarding, setDiscarding] = useState<QueueItem | null>(null);
   const syncingRef = useRef(false);
-  const previousPending = useRef<number>();
+  const previousPending = useRef<number | undefined>(undefined);
   const attentionShown = useRef(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();

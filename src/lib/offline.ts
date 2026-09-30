@@ -158,7 +158,8 @@ export async function retryQueueItem(queueId: number) {
   const db = await database();
   const item = await db.get("queue", queueId);
   if (!item || item.userId !== userId) return false;
-  await db.put("queue", { ...item, attempts: 0, lastError: undefined, nextAttemptAt: undefined });
+  const { lastError: _lastError, nextAttemptAt: _nextAttemptAt, ...retryableItem } = item;
+  await db.put("queue", { ...retryableItem, attempts: 0 });
   emitChange();
   return true;
 }
@@ -836,7 +837,7 @@ async function runOfflineQueue(force: boolean): Promise<string[]> {
       if (isNetworkError(error)) break;
       if (item.queueId != null) {
         const attempts = (item.attempts ?? 0) + 1;
-        const delay = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)];
+        const delay = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)] ?? RETRY_DELAYS[RETRY_DELAYS.length - 1];
         await db.put("queue", {
           ...item,
           attempts,
