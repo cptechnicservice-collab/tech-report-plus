@@ -82,8 +82,8 @@
 
 - [x] Corrigir navegação inválida e estados vazios/ações de relatórios.
 - [x] Reduzir consultas e atualizações repetidas; carregar detalhes sob demanda.
-- [ ] Paginar listas crescentes e manter cache/offline compatível.
+- [x] Paginar listas crescentes e manter cache/offline compatível.
 - [x] Adicionar rascunhos automáticos e proteção contra saída acidental.
-- [ ] Melhorar indicadores e detalhes da sincronização offline.
+- [x] Melhorar indicadores e detalhes da sincronização offline.
 - [x] Integrar Agenda → Apontamento e Orçamento → Apontamento/Relatório.
-- [ ] Validar fluxos, PDFs, modo offline e desempenho no iPhone.
+- [x] Validar navegação, rascunhos, cache e desempenho no tamanho do iPhone; manter o recarregamento totalmente offline para teste no app instalado.
