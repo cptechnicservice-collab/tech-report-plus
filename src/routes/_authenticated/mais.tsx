@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, ChevronRight, CircleDollarSign, ClipboardList, FileArchive, Package, Users } from "lucide-react";
+import { Building2, ChevronRight, CircleDollarSign, ClipboardList, Package, Users } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 
@@ -21,7 +21,6 @@ const options = [
   { to: "/pecas", label: "Peças", detail: "Catálogo e preços", icon: Package },
   { to: "/valores", label: "Valores", detail: "Horas, viagem, KM e diárias", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", detail: "Propostas, valores e aprovação", icon: ClipboardList },
-  { to: "/relatorios-salvos", label: "Relatórios salvos", detail: "Documentos finais por cliente", icon: FileArchive },
 ] as const;
 
 function Mais() {
