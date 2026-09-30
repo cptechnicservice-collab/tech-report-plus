@@ -13,7 +13,10 @@ export const Route = createFileRoute("/")({
       { title: "CP TECHNIC Horas" },
       { name: "description", content: "Acesse seus apontamentos técnicos com segurança." },
       { property: "og:title", content: "CP TECHNIC Horas" },
-      { property: "og:description", content: "Apontamentos técnicos privados e disponíveis no iPhone." },
+      {
+        property: "og:description",
+        content: "Apontamentos técnicos privados e disponíveis no iPhone.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

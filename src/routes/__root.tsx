@@ -144,13 +144,17 @@ function RootComponent() {
       if (event === "SIGNED_OUT") clearConfirmedUser();
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       void router.invalidate();
-      if (event === "SIGNED_IN" && session) void queryClient.invalidateQueries({ refetchType: "active" });
+      if (event === "SIGNED_IN" && session)
+        void queryClient.invalidateQueries({ refetchType: "active" });
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient, router]);
 
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 7 }}
+    >
       <ServiceWorkerRegistration />
       {!isPublicAuth ? <OfflineStatus /> : null}
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

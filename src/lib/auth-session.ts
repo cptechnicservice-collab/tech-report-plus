@@ -31,12 +31,17 @@ export function clearConfirmedUser() {
 export function isTransientAuthError(error: unknown) {
   if (typeof navigator !== "undefined" && !navigator.onLine) return true;
   if (isAuthRetryableFetchError(error)) return true;
-  if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError"))
+  if (
+    error instanceof DOMException &&
+    (error.name === "AbortError" || error.name === "TimeoutError")
+  )
     return true;
   if (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
     return true;
   const message = error instanceof Error ? error.message : String(error ?? "");
-  return /failed to fetch|load failed|networkerror|network request failed|timed? ?out/i.test(message);
+  return /failed to fetch|load failed|networkerror|network request failed|timed? ?out/i.test(
+    message,
+  );
 }
 
 function localIdentity(): AppIdentity | null {
