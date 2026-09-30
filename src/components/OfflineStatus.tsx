@@ -42,6 +42,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { renewAppSession } from "@/lib/auth-session";
 
 const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
   clientes: "Cliente",
@@ -122,6 +123,8 @@ export function OfflineStatus() {
       syncingRef.current = true;
       setSyncing(true);
       try {
+        const recovery = await renewAppSession();
+        if (!recovery.identity || recovery.status === "transient") return;
         const changedKeys = await syncOfflineQueue({ force });
         await Promise.all(
           changedKeys.map((key) => queryClient.invalidateQueries({ queryKey: [key] })),

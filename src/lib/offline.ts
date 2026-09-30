@@ -11,6 +11,7 @@ import type { RelatorioSalvo } from "@/lib/relatorios";
 import type { DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
 import type { ApontamentoPeca } from "@/lib/apontamento-pecas";
+import { activeAppUserId } from "@/lib/auth-session";
 
 export type OfflineEntity =
   | "clientes"
@@ -70,8 +71,7 @@ function database() {
 }
 
 async function activeUserId() {
-  const { data } = await supabase.auth.getSession();
-  return data.session?.user.id ?? null;
+  return activeAppUserId();
 }
 
 async function scopedKey(key: string) {
@@ -1130,9 +1130,7 @@ async function runOfflineQueue(force: boolean): Promise<string[]> {
       if (isNetworkError(error)) break;
       if (item.queueId != null) {
         const attempts = (item.attempts ?? 0) + 1;
-        const delay =
-          RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)] ??
-          900_000;
+        const delay = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)] ?? 900_000;
         await db.put("queue", {
           ...item,
           attempts,

@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,6 +8,7 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
 
 - O status operacional do relatório (`status_relatorio`) é separado do status financeiro (`pagamento_status`), pois conclusão e recebimento são fluxos independentes.
@@ -15,3 +17,4 @@
 - Formulários longos mantêm rascunho local por registro e avisam antes de abandonar alterações não salvas.
 - Agenda e orçamento mantêm sua origem ao iniciar um apontamento; peças do orçamento são copiadas como snapshots editáveis.
 - A fila offline usa execução única, backoff por operação e intervenção manual após três falhas, preservando prioridade e coalescência.
+- A autenticação no aparelho preserva somente o último userId confirmado durante falhas de rede; rejeições explícitas online encerram o acesso, mantendo cache e fila isolados por usuário.
