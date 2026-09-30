@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getOfflineQueueStatus, subscribeOfflineStatus, syncOfflineQueue } from "@/lib/offline";
+import { getOfflineQueueStatus, subscribeOfflineStatus, syncOfflineQueue, type OfflineEntity } from "@/lib/offline";
 import { Button } from "@/components/ui/button";
 
 export function OfflineStatus() {
@@ -12,6 +12,12 @@ export function OfflineStatus() {
   const [firstError, setFirstError] = useState<string>();
   const syncing = useRef(false);
   const queryClient = useQueryClient();
+  const queryKeys: Partial<Record<OfflineEntity, string[]>> = {
+    clientes: ["clientes"], apontamentos: ["apontamentos"], apontamento_pecas: ["apontamento-pecas"],
+    valores_vigencia: ["valores"], agendamentos: ["agendamentos"], pecas: ["pecas"],
+    relatorios_salvos: ["relatorios-salvos"], dados_empresa: ["dados-empresa"],
+    orcamentos: ["orcamentos"], orcamento_itens: ["orcamentos"],
+  };
 
   const refresh = useCallback(() => {
     setOnline(navigator.onLine);
@@ -26,17 +32,10 @@ export function OfflineStatus() {
     if (syncing.current) return;
     syncing.current = true;
     try {
-      await syncOfflineQueue();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["clientes"] }),
-        queryClient.invalidateQueries({ queryKey: ["apontamentos"] }),
-        queryClient.invalidateQueries({ queryKey: ["valores"] }),
-        queryClient.invalidateQueries({ queryKey: ["agendamentos"] }),
-        queryClient.invalidateQueries({ queryKey: ["pecas"] }),
-        queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] }),
-        queryClient.invalidateQueries({ queryKey: ["dados-empresa"] }),
-        queryClient.invalidateQueries({ queryKey: ["orcamentos"] }),
-      ]);
+      const changed = await syncOfflineQueue();
+      const uniqueKeys = new Set<string>();
+      changed.forEach((entity) => queryKeys[entity]?.forEach((key) => uniqueKeys.add(key)));
+      await Promise.all([...uniqueKeys].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
     } finally {
       syncing.current = false;
       refresh();

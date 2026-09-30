@@ -12,7 +12,8 @@ import type { DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
 import type { ApontamentoPeca } from "@/lib/apontamento-pecas";
 
-type Entity = "clientes" | "apontamentos" | "apontamento_pecas" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
+export type OfflineEntity = "clientes" | "apontamentos" | "apontamento_pecas" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
+type Entity = OfflineEntity;
 type QueueAction = "upsert" | "delete";
 
 type QueueItem = {
@@ -104,6 +105,15 @@ export async function getOfflineQueueStatus() {
     failed: failedItems.length,
     firstError: failedItems[0]?.lastError,
   };
+}
+
+export async function getPendingRecordIds(entity: Entity) {
+  if (typeof indexedDB === "undefined") return new Set<string>();
+  const userId = await activeUserId();
+  if (!userId) return new Set<string>();
+  const items = (await (await database()).getAllFromIndex("queue", "entity", entity))
+    .filter((item) => item.userId === userId);
+  return new Set(items.map((item) => item.recordId));
 }
 
 export function subscribeOfflineStatus(listener: () => void) {
@@ -683,11 +693,13 @@ export async function getPendingApontamentoIds() {
 }
 
 export async function syncOfflineQueue() {
-  if (isOffline() || typeof indexedDB === "undefined") return;
+  const changed = new Set<OfflineEntity>();
+  if (isOffline() || typeof indexedDB === "undefined") return changed;
   const userId = await activeUserId();
-  if (!userId) return;
+  if (!userId) return changed;
   const db = await database();
   const items = await db.getAll("queue");
+  if (!items.some((item) => item.userId === userId)) return changed;
   items.sort((a, b) => {
     const priority = (item: QueueItem) => item.entity === "valores_vigencia" || item.entity === "dados_empresa" ? 0 : item.entity === "clientes" ? 1 : item.entity === "orcamentos" || item.entity === "apontamentos" ? 2 : item.entity === "orcamento_itens" || item.entity === "apontamento_pecas" ? 3 : 4;
     return priority(a) - priority(b) || a.createdAt - b.createdAt;
@@ -745,7 +757,10 @@ export async function syncOfflineQueue() {
         result = await supabase.from("orcamento_itens").upsert((item.payload ?? {}) as TablesInsert<"orcamento_itens">, { onConflict: "id" }).abortSignal(timeoutSignal());
       }
       if (result.error) throw result.error;
-      if (item.queueId != null) await db.delete("queue", item.queueId);
+      if (item.queueId != null) {
+        await db.delete("queue", item.queueId);
+        changed.add(item.entity);
+      }
     } catch (error) {
       if (isNetworkError(error)) break;
       if (item.queueId != null) {
@@ -758,6 +773,7 @@ export async function syncOfflineQueue() {
     }
   }
   emitChange();
+  return changed;
 }
 
 export const offlineCacheKeys = {
