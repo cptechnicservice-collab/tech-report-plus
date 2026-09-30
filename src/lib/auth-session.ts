@@ -56,6 +56,12 @@ function localIdentity(): AppIdentity | null {
 export async function recoverAppIdentity(): Promise<SessionRecovery> {
   const fallback = localIdentity();
 
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return fallback
+      ? { status: "transient", identity: fallback }
+      : { status: "unauthenticated", identity: null };
+  }
+
   try {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData.session;
@@ -102,6 +108,7 @@ export async function recoverAppIdentity(): Promise<SessionRecovery> {
 
 export async function activeAppUserId() {
   const fallbackUserId = getConfirmedUserId();
+  if (typeof navigator !== "undefined" && !navigator.onLine) return fallbackUserId;
   try {
     const { data, error } = await supabase.auth.getSession();
     if (data.session?.user.id) {
