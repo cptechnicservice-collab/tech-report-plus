@@ -16,7 +16,7 @@ export function useKeyboardInset() {
 
       root.style.setProperty("--kb-inset", `${inset}px`);
       root.style.setProperty("--vvh", `${height}px`);
-      root.dataset.keyboardOpen = inset > KEYBOARD_OPEN_THRESHOLD ? "true" : "false";
+      root.dataset["keyboardOpen"] = inset > KEYBOARD_OPEN_THRESHOLD ? "true" : "false";
     };
 
     const scheduleUpdate = () => {
@@ -36,7 +36,7 @@ export function useKeyboardInset() {
       window.removeEventListener("resize", scheduleUpdate);
       root.style.setProperty("--kb-inset", "0px");
       root.style.setProperty("--vvh", `${window.innerHeight}px`);
-      delete root.dataset.keyboardOpen;
+      delete root.dataset["keyboardOpen"];
     };
   }, []);
 }

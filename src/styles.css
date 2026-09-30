@@ -171,7 +171,6 @@
     top: auto;
     bottom: var(--kb-inset, 0px);
     max-height: calc(var(--vvh, 100dvh) - 0.75rem);
-    transform: translateX(-50%);
     transition: bottom 150ms ease, max-height 150ms ease;
   }
 
