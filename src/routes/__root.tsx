@@ -141,7 +141,9 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user.id) rememberConfirmedUser(session.user.id);
-      if (event === "SIGNED_OUT") clearConfirmedUser();
+      if (event === "SIGNED_OUT" && (typeof navigator === "undefined" || navigator.onLine)) {
+        clearConfirmedUser();
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       void router.invalidate();
       if (event === "SIGNED_IN" && session)
