@@ -20,8 +20,7 @@ Deixar o CP TECHNIC mais rápido no iPhone, mais confiável com internet instáv
 - Ao abrir o app, voltar para ele ou sincronizar, várias listas são atualizadas juntas, mesmo quando nenhuma delas mudou.
 - O cache dura sete dias, mas não há um intervalo curto de “dados ainda recentes”; por isso telas já visitadas podem consultar a rede novamente.
 - Fotos e PDFs ficam dentro dos próprios registros, aumentando o tamanho da lista, do cache e da fila offline.
-- Há um erro recente de navegação registrado com caminho `//`, que pode causar uma abertura em branco/interrompida.
-- Em Relatórios salvos há uma composição duplicada da ação de exclusão quando existe recebimento.
+- Há um erro recente de navegação registrado com caminho `//`; a origem ainda precisa ser reproduzida antes da correção.
 - Formulários longos não protegem contra saída acidental antes de salvar.
 
 ## Fase 1 — Rapidez e estabilidade imediatas
@@ -31,7 +30,7 @@ Deixar o CP TECHNIC mais rápido no iPhone, mais confiável com internet instáv
 - Definir um pequeno período de atualização para dados recém-carregados, mantendo a leitura imediata do cache e a atualização em segundo plano.
 - Fazer a sincronização informar exatamente quais áreas mudaram e atualizar somente essas áreas, em vez de recarregar Clientes, Apontamentos, Valores, Agenda, Peças, Relatórios, Empresa e Orçamentos em conjunto.
 - Evitar uma nova sincronização quando a fila estiver vazia.
-- Corrigir a origem do caminho inválido `//` e validar abertura, login, retorno do segundo plano e navegação pela barra inferior.
+- Reproduzir o caminho inválido `//`, identificar sua origem e então corrigir; validar abertura, login, retorno do segundo plano e navegação pela barra inferior.
 
 ### Listas leves
 
@@ -82,7 +81,7 @@ Deixar o CP TECHNIC mais rápido no iPhone, mais confiável com internet instáv
 
 ### Relatórios salvos
 
-- Corrigir a ação duplicada de exclusão e manter **Recibo** e **Excluir** claramente separados.
+- Reorganizar as ações **Recibo**, **Relatório** e **Excluir** para reduzir excesso visual e evitar toques acidentais.
 - Quando filtros não encontrarem resultados, mostrar “Nenhum resultado para estes filtros” e um botão para limpar, em vez de indicar que não existem relatórios.
 - Manter os filtros escolhidos ao sair e retornar, incluindo situação operacional.
 
@@ -105,7 +104,7 @@ Deixar o CP TECHNIC mais rápido no iPhone, mais confiável com internet instáv
 
 ## Ordem de implementação
 
-1. Corrigir navegação `//`, ação duplicada e estados vazios.
+1. Diagnosticar/corrigir a navegação `//`, reorganizar ações e melhorar estados vazios.
 2. Reduzir atualizações repetidas e configurar cache recente.
 3. Tornar Relatórios salvos e Orçamentos leves, carregando detalhes sob demanda.
 4. Limitar Painel, Histórico e Agenda por período/página.
