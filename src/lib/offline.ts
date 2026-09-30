@@ -13,10 +13,10 @@ import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
 import type { ApontamentoPeca } from "@/lib/apontamento-pecas";
 
 export type OfflineEntity = "clientes" | "apontamentos" | "apontamento_pecas" | "valores_vigencia" | "agendamentos" | "pecas" | "relatorios_salvos" | "dados_empresa" | "orcamentos" | "orcamento_itens";
-type Entity = OfflineEntity;
-type QueueAction = "upsert" | "delete";
+export type Entity = OfflineEntity;
+export type QueueAction = "upsert" | "delete";
 
-type QueueItem = {
+export type QueueItem = {
   queueId?: number;
   entity: Entity;
   action: QueueAction;
