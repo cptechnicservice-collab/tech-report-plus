@@ -163,26 +163,26 @@
   }
 
   html[data-keyboard-open="true"] .keyboard-overlay {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 
   html[data-keyboard-open="true"] .keyboard-panel[data-keyboard-position="bottom"] {
-    top: auto;
-    bottom: var(--kb-inset, 0px);
-    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+    top: auto !important;
+    bottom: var(--kb-inset, 0px) !important;
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem) !important;
     transition: bottom 150ms ease, max-height 150ms ease;
   }
 
   html[data-keyboard-open="true"] .keyboard-panel[data-keyboard-position="center"] {
-    top: calc(100dvh - var(--kb-inset, 0px) - (var(--vvh, 100dvh) / 2));
-    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+    top: calc(100dvh - var(--kb-inset, 0px) - (var(--vvh, 100dvh) / 2)) !important;
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem) !important;
     transition: top 150ms ease, max-height 150ms ease;
   }
 
   html[data-keyboard-open="true"] .keyboard-panel:not([data-keyboard-position]) {
-    bottom: var(--kb-inset, 0px);
-    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+    bottom: var(--kb-inset, 0px) !important;
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem) !important;
   }
 }
 
