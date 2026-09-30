@@ -100,6 +100,13 @@ function RelatoriosSalvos() {
     window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, value);
   };
 
+  const clearFilters = () => {
+    setBusca("");
+    setPeriodo("ultimos");
+    selectStatus("todos");
+    setStatusRelatorio("ativos");
+  };
+
   const relatoriosVisiveis = useMemo(() => {
     const term = normalizeSearchText(busca);
     const agora = new Date();
@@ -370,7 +377,7 @@ function RelatoriosSalvos() {
       </div>
 
       {isLoading ? <p className="px-1 text-sm text-muted-foreground">Carregando...</p> : relatoriosVisiveis.length === 0 ? (
-        <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">Nenhum relatório salvo</p><p className="mt-1 text-sm text-muted-foreground">Salve um relatório para consultá-lo aqui.</p></div>
+        <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">{relatorios.length ? "Nenhum resultado para estes filtros" : "Nenhum relatório salvo"}</p><p className="mt-1 text-sm text-muted-foreground">{relatorios.length ? "Ajuste ou limpe os filtros para ver outros relatórios." : "Salve um relatório para consultá-lo aqui."}</p>{relatorios.length ? <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={clearFilters}>Limpar filtros</Button> : null}</div>
       ) : (
         <Section title="Documentos" hint={`${relatoriosVisiveis.length} exibido(s)`}>
           <ul className="-my-4 divide-y divide-border">

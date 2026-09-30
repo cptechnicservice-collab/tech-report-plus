@@ -40,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/historico")({
 });
 
 function Historico() {
+  const [visibleCount, setVisibleCount] = useState(40);
   const [busca, setBusca] = useState("");
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
@@ -203,7 +204,7 @@ function Historico() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {filtrados.map((a) => {
+           {filtrados.slice(0, visibleCount).map((a) => {
             const t = calcularTotais(a);
             return (
               <li key={a.id} className="ios-group">
@@ -233,8 +234,9 @@ function Historico() {
               </li>
             );
           })}
-        </ul>
+         </ul>
       )}
+      {filtrados.length > visibleCount ? <Button type="button" variant="outline" className="h-12 w-full rounded-xl" onClick={() => setVisibleCount((count) => count + 40)}>Carregar mais {Math.min(40, filtrados.length - visibleCount)}</Button> : null}
     </PageShell>
   );
 }

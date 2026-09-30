@@ -35,3 +35,13 @@ export async function fetchAgendamentos(): Promise<AgendamentoComCliente[]> {
   await writeCached(offlineCacheKeys.agendamentos, result);
   return result;
 }
+
+export async function fetchAgendamento(id: string): Promise<AgendamentoComCliente> {
+  const { data, error } = await supabase.from("agendamentos").select("*, clientes(*)").eq("id", id).maybeSingle();
+  if (data) return data as unknown as AgendamentoComCliente;
+  const cached = await readCached<AgendamentoComCliente[]>(offlineCacheKeys.agendamentos);
+  const item = cached?.find((entry) => entry.id === id);
+  if (item) return item;
+  if (error) throw error;
+  throw new Error("Agendamento não encontrado");
+}

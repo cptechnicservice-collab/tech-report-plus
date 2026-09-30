@@ -80,3 +80,16 @@ export async function fetchOrcamentos(): Promise<Orcamento[]> {
     throw error;
   }
 }
+
+export async function fetchOrcamento(id: string): Promise<Orcamento> {
+  try {
+    const { data, error } = await supabase.from("orcamentos").select("*, orcamento_itens(*)").eq("id", id).maybeSingle();
+    if (error || !data) throw error ?? new Error("Orçamento não encontrado");
+    return { ...data, itens: [...(data.orcamento_itens ?? [])].sort((a, b) => a.ordem - b.ordem) } as unknown as Orcamento;
+  } catch (error) {
+    const cached = await readCached<Orcamento[]>(offlineCacheKeys.orcamentos);
+    const item = cached?.find((entry) => entry.id === id);
+    if (item) return item;
+    throw error;
+  }
+}

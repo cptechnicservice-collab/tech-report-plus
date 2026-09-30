@@ -11,3 +11,6 @@
 
 - O status operacional do relatório (`status_relatorio`) é separado do status financeiro (`pagamento_status`), pois conclusão e recebimento são fluxos independentes.
 - Cada orçamento pode originar no máximo um relatório salvo, ligado por `source_orcamento_id`, para impedir duplicação acidental.
+- Consultas usam cache recente de três minutos e a sincronização invalida somente as áreas alteradas, reduzindo rede sem comprometer o modo offline.
+- Formulários longos mantêm rascunho local por registro e avisam antes de abandonar alterações não salvas.
+- Agenda e orçamento mantêm sua origem ao iniciar um apontamento; peças do orçamento são copiadas como snapshots editáveis.

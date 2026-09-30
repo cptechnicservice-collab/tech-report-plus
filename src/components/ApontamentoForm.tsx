@@ -38,6 +38,11 @@ import { formatCurrency, valorVigente } from "@/lib/financeiro";
 import { fetchPecas } from "@/lib/pecas";
 import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
 import { deleteApontamentoOffline, saveApontamentoOffline, saveApontamentoPecasOffline } from "@/lib/offline";
+import { fetchAgendamento } from "@/lib/agenda";
+import { fetchOrcamento } from "@/lib/orcamentos";
+import { saveAgendamentoOffline } from "@/lib/offline";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 type FormState = {
   data: string;
@@ -64,6 +69,8 @@ type ApontamentoDraft = {
   data?: string | undefined;
   clienteId?: string | undefined;
   servico?: string | undefined;
+  agendaId?: string | undefined;
+  orcamentoId?: string | undefined;
 };
 
 function initialState(a?: Apontamento, draft?: ApontamentoDraft): FormState {
@@ -283,6 +290,11 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: apontamentoPecas = [], isFetched: partsFetched } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
+  const { data: sourceAgenda } = useQuery({ queryKey: ["agendamento", draft?.agendaId], queryFn: () => fetchAgendamento(draft?.agendaId ?? ""), enabled: Boolean(draft?.agendaId) });
+  const { data: sourceQuote } = useQuery({ queryKey: ["orcamento", draft?.orcamentoId], queryFn: () => fetchOrcamento(draft?.orcamentoId ?? ""), enabled: Boolean(draft?.orcamentoId) });
+  const draftState = useMemo(() => ({ form, pecasSelecionadas }), [form, pecasSelecionadas]);
+  const { clearDraft, isDirty } = useFormDraft({ key: `apontamento:${apontamento?.id ?? draft?.agendaId ?? draft?.orcamentoId ?? "novo"}`, value: draftState, restore: (saved) => { setForm(saved.form); setPecasSelecionadas(saved.pecasSelecionadas); } });
+  useUnsavedChanges(isDirty);
 
   useEffect(() => {
     if (!apontamento || !partsFetched || partsInitialized) return;
@@ -292,6 +304,12 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
     })));
     setPartsInitialized(true);
   }, [apontamento, apontamentoPecas, partsFetched, partsInitialized]);
+
+  useEffect(() => {
+    if (!sourceQuote || apontamento || partsInitialized) return;
+    setPecasSelecionadas(sourceQuote.itens.filter((item) => item.tipo === "produto").map((item) => ({ id: crypto.randomUUID(), peca_id: item.peca_id, descricao: item.nome, codigo: item.codigo, unidade: item.unidade, preco: item.valor_unitario, foto_data_url: item.foto_data_url, quantidade: item.quantidade })));
+    setPartsInitialized(true);
+  }, [apontamento, partsInitialized, sourceQuote]);
 
   const recentIds = useMemo(() => {
     const ids: string[] = [];
@@ -362,6 +380,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       return { ...saved, queued: saved.queued || parts.queued };
     },
     onSuccess: (result) => {
+      clearDraft();
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
       queryClient.invalidateQueries({ queryKey: ["apontamento-pecas"] });
       toast.success(
@@ -371,6 +390,9 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
             ? "Apontamento atualizado"
             : "Apontamento salvo",
       );
+      if (sourceAgenda && !sourceAgenda.concluido && window.confirm("Apontamento salvo. Marcar este agendamento como concluído?")) {
+        void saveAgendamentoOffline({ id: sourceAgenda.id, cliente_id: sourceAgenda.cliente_id, data: sourceAgenda.data, data_fim: sourceAgenda.data_fim, horario: sourceAgenda.horario, maquina_servico: sourceAgenda.maquina_servico, observacoes: sourceAgenda.observacoes, concluido: true }).then(() => queryClient.invalidateQueries({ queryKey: ["agendamentos"] }));
+      }
       navigate({ to: "/historico" });
     },
     onError: (error) => toast.error(`Não foi possível salvar${errorReason(error)}`),
@@ -382,6 +404,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       return deleteApontamentoOffline(apontamento.id);
     },
     onSuccess: (result) => {
+      clearDraft();
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
       toast.success(result?.queued ? "Exclusão salva no aparelho — será enviada quando houver conexão" : "Apontamento excluído");
       navigate({ to: "/historico" });
