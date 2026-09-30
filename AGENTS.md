@@ -14,3 +14,4 @@
 - Consultas usam cache recente de três minutos e a sincronização invalida somente as áreas alteradas, reduzindo rede sem comprometer o modo offline.
 - Formulários longos mantêm rascunho local por registro e avisam antes de abandonar alterações não salvas.
 - Agenda e orçamento mantêm sua origem ao iniciar um apontamento; peças do orçamento são copiadas como snapshots editáveis.
+- A fila offline usa execução única, backoff por operação e intervenção manual após três falhas, preservando prioridade e coalescência.

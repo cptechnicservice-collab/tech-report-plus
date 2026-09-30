@@ -25,6 +25,7 @@ export type QueueItem = {
   createdAt: number;
   attempts?: number;
   lastError?: string;
+  nextAttemptAt?: number;
   userId: string;
 };
 
@@ -44,6 +45,9 @@ const CACHE_RELATORIOS = "relatorios-salvos";
 const CACHE_EMPRESA = "dados-empresa";
 const CACHE_ORCAMENTOS = "orcamentos";
 const OFFLINE_EVENT = "cp-offline-change";
+const LAST_SYNC_KEY = "cp-technic-last-successful-sync";
+const RETRY_DELAYS = [5_000, 15_000, 60_000, 300_000, 900_000] as const;
+let syncInProgress: Promise<string[]> | null = null;
 
 function database() {
   return openDB<OfflineDB>(DB_NAME, 1, {
@@ -126,9 +130,9 @@ export async function isRecordPending(entity: Entity, recordId: string): Promise
 }
 
 export async function getOfflineQueueStatus() {
-  if (typeof indexedDB === "undefined") return { pending: 0, failed: 0, firstError: undefined, byEntity: {} as Record<Entity, number> };
+  if (typeof indexedDB === "undefined") return { authenticated: false, pending: 0, failed: 0, attention: 0, firstError: undefined, lastSuccessfulSync: undefined, byEntity: {} as Record<Entity, number> };
   const userId = await activeUserId();
-  if (!userId) return { pending: 0, failed: 0, firstError: undefined, byEntity: {} as Record<Entity, number> };
+  if (!userId) return { authenticated: false, pending: 0, failed: 0, attention: 0, firstError: undefined, lastSuccessfulSync: undefined, byEntity: {} as Record<Entity, number> };
   const items = (await (await database()).getAll("queue")).filter((item) => item.userId === userId);
   const failedItems = items.filter((item) => item.lastError);
   
@@ -138,11 +142,36 @@ export async function getOfflineQueueStatus() {
   }, {} as Record<Entity, number>);
 
   return {
+    authenticated: true,
     pending: items.length,
     failed: failedItems.length,
+    attention: items.filter((item) => (item.attempts ?? 0) >= 3).length,
     firstError: failedItems[0]?.lastError,
+    lastSuccessfulSync: typeof localStorage === "undefined" ? undefined : localStorage.getItem(`${LAST_SYNC_KEY}:${userId}`) ?? undefined,
     byEntity,
   };
+}
+
+export async function retryQueueItem(queueId: number) {
+  const userId = await activeUserId();
+  if (!userId) return false;
+  const db = await database();
+  const item = await db.get("queue", queueId);
+  if (!item || item.userId !== userId) return false;
+  await db.put("queue", { ...item, attempts: 0, lastError: undefined, nextAttemptAt: undefined });
+  emitChange();
+  return true;
+}
+
+export async function discardQueueItem(queueId: number) {
+  const userId = await activeUserId();
+  if (!userId) return false;
+  const db = await database();
+  const item = await db.get("queue", queueId);
+  if (!item || item.userId !== userId) return false;
+  await db.delete("queue", queueId);
+  emitChange();
+  return true;
 }
 
 export async function getPendingRecordIds(entity: Entity) {
@@ -730,7 +759,7 @@ export async function getPendingApontamentoIds() {
   return new Set(items.map((item) => item.recordId));
 }
 
-export async function syncOfflineQueue(): Promise<string[]> {
+async function runOfflineQueue(force: boolean): Promise<string[]> {
   const syncedQueryKeys = new Set<string>();
   if (isOffline() || typeof indexedDB === "undefined") return [];
   const userId = await activeUserId();
@@ -746,6 +775,7 @@ export async function syncOfflineQueue(): Promise<string[]> {
   });
 
   for (const item of items) {
+    if (!force && item.nextAttemptAt && item.nextAttemptAt > Date.now()) continue;
     try {
       let result;
       if (item.action === "delete") {
@@ -805,16 +835,31 @@ export async function syncOfflineQueue(): Promise<string[]> {
     } catch (error) {
       if (isNetworkError(error)) break;
       if (item.queueId != null) {
+        const attempts = (item.attempts ?? 0) + 1;
+        const delay = RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)];
         await db.put("queue", {
           ...item,
-          attempts: (item.attempts ?? 0) + 1,
+          attempts,
           lastError: errorMessage(error),
+          nextAttemptAt: Date.now() + delay,
         });
       }
     }
   }
+  const remaining = (await db.getAll("queue")).filter((item) => item.userId === userId);
+  if (remaining.length === 0 && typeof localStorage !== "undefined") {
+    localStorage.setItem(`${LAST_SYNC_KEY}:${userId}`, new Date().toISOString());
+  }
   emitChange();
   return Array.from(syncedQueryKeys);
+}
+
+export async function syncOfflineQueue(options?: { force?: boolean }): Promise<string[]> {
+  if (syncInProgress) return syncInProgress;
+  syncInProgress = runOfflineQueue(options?.force ?? false).finally(() => {
+    syncInProgress = null;
+  });
+  return syncInProgress;
 }
 
 export const offlineCacheKeys = {

@@ -88,3 +88,4 @@
 - [x] Integrar Agenda → Apontamento e Orçamento → Apontamento/Relatório.
 - [x] Validar navegação, rascunhos, cache e desempenho no tamanho do iPhone; manter o recarregamento totalmente offline para teste no app instalado.
 - [x] Substituir Agenda por Histórico e colocar Relatórios salvos na barra inferior.
+- [x] Automatizar novas tentativas da fila offline com backoff, status de sincronização e painel para falhas persistentes.
