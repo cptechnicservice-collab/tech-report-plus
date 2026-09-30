@@ -10,19 +10,22 @@ export function useFormDraft<T>({ key, value, restore, enabled = true }: {
   enabled?: boolean;
 }) {
   const [ready, setReady] = useState(false);
-  const initial = useRef("");
+  const [baseline, setBaseline] = useState("");
+  const restoreRef = useRef(restore);
   const storageKey = `${PREFIX}${key}`;
   const serialized = JSON.stringify(value);
+  restoreRef.current = restore;
 
   useEffect(() => {
-    initial.current = JSON.stringify(value);
+    const startingValue = JSON.stringify(value);
+    setBaseline(startingValue);
     if (!enabled) { setReady(true); return; }
     try {
       const saved = window.localStorage.getItem(storageKey);
-      if (saved && saved !== initial.current) {
-        restore(JSON.parse(saved) as T);
+      if (saved && saved !== startingValue) {
+        restoreRef.current(JSON.parse(saved) as T);
         toast.info("Rascunho recuperado", {
-          action: { label: "Descartar", onClick: () => { window.localStorage.removeItem(storageKey); restore(JSON.parse(initial.current) as T); } },
+          action: { label: "Descartar", onClick: () => { window.localStorage.removeItem(storageKey); restoreRef.current(JSON.parse(startingValue) as T); } },
         });
       }
     } catch { window.localStorage.removeItem(storageKey); }
@@ -30,15 +33,15 @@ export function useFormDraft<T>({ key, value, restore, enabled = true }: {
   }, [enabled, storageKey]);
 
   useEffect(() => {
-    if (!enabled || !ready || serialized === initial.current) return;
+    if (!enabled || !ready || serialized === baseline) return;
     const timer = window.setTimeout(() => window.localStorage.setItem(storageKey, serialized), 400);
     return () => window.clearTimeout(timer);
   }, [enabled, ready, serialized, storageKey]);
 
   const clearDraft = useCallback(() => {
     window.localStorage.removeItem(storageKey);
-    initial.current = serialized;
+    setBaseline(serialized);
   }, [serialized, storageKey]);
 
-  return { clearDraft, isDirty: ready && serialized !== initial.current };
+  return { clearDraft, isDirty: ready && serialized !== baseline };
 }

@@ -29,6 +29,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { fetchAgendamentos, type AgendamentoComCliente } from "@/lib/agenda";
 import { fetchClientes, formatDateBR, normalizeTime, todayISO } from "@/lib/apontamentos";
 import { deleteAgendamentoOffline, saveAgendamentoOffline } from "@/lib/offline";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   head: () => ({
@@ -134,6 +136,8 @@ function Agenda() {
   const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: agendamentos = [], isLoading } = useQuery({ queryKey: ["agendamentos"], queryFn: fetchAgendamentos });
+  const { clearDraft, isDirty } = useFormDraft({ key: `agenda:${editing === "new" ? "novo" : editing?.id ?? "fechado"}`, value: draft, restore: setDraft, enabled: editing !== null });
+  useUnsavedChanges(editing !== null && isDirty);
 
   const visible = useMemo(
     () => agendamentos.filter((item) => showCompleted || !item.concluido),
@@ -158,6 +162,7 @@ function Agenda() {
       concluido: editing && editing !== "new" ? editing.concluido : false,
     }),
     onSuccess: (result) => {
+      clearDraft();
       void queryClient.invalidateQueries({ queryKey: ["agendamentos"] });
       setEditing(null);
       toast.success(result.queued ? "Salvo no aparelho — será enviado quando houver conexão" : "Agendamento salvo");
@@ -293,7 +298,7 @@ function Agenda() {
             <FloatingInput id="agenda-servico" label="Máquina / Serviço" value={draft.servico} onChange={(event) => setDraft((current) => ({ ...current, servico: event.target.value }))} />
             <FloatingTextarea id="agenda-obs" label="Observações" value={draft.observacoes} onChange={(event) => setDraft((current) => ({ ...current, observacoes: event.target.value }))} rows={3} />
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="ghost" className="h-12 rounded-xl" onClick={() => setEditing(null)}>Cancelar</Button>
+              <Button variant="ghost" className="h-12 rounded-xl" onClick={() => { clearDraft(); setEditing(null); }}>Cancelar</Button>
               <Button className="h-12 rounded-xl" disabled={!draft.clienteId || !draft.data || !draft.dataFim || invalidPeriod || save.isPending} onClick={() => save.mutate()}>Salvar</Button>
             </div>
           </div>

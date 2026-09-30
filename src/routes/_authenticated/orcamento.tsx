@@ -18,6 +18,8 @@ import { saveOrcamentoOffline } from "@/lib/offline";
 import { calcularTotaisOrcamento, fetchOrcamentos, formasPagamentoOrcamento, proximoNumeroOrcamento, type DescontoTipo, type FormaPagamentoOrcamento, type OrcamentoItem, type OrcamentoItemTipo, type OrcamentoStatus, type UnidadeOrcamento } from "@/lib/orcamentos";
 import { generateQuotePdf } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 export const Route = createFileRoute("/_authenticated/orcamento")({
   validateSearch: (search: Record<string, unknown>) => ({ id: typeof search["id"] === "string" ? search["id"] : undefined }),
@@ -59,6 +61,13 @@ function OrcamentoPage() {
   const [observacoes, setObservacoes] = useState("");
   const [itens, setItens] = useState<DraftItem[]>([]);
   const [pecaId, setPecaId] = useState("");
+  const draftValue = useMemo(() => ({ numero, clienteId, data, validade, status, descontoTipo, desconto, formas, condicoes, observacoes, itens }), [clienteId, condicoes, data, desconto, descontoTipo, formas, itens, numero, observacoes, status, validade]);
+  const { clearDraft, isDirty } = useFormDraft({
+    key: `orcamento:${search.id ?? idRef.current}`,
+    value: draftValue,
+    restore: (saved) => { setNumero(saved.numero); setClienteId(saved.clienteId); setData(saved.data); setValidade(saved.validade); setStatus(saved.status); setDescontoTipo(saved.descontoTipo); setDesconto(saved.desconto); setFormas(saved.formas); setCondicoes(saved.condicoes); setObservacoes(saved.observacoes); setItens(saved.itens); },
+  });
+  useUnsavedChanges(isDirty);
 
   useEffect(() => {
     if (source && initialized.current !== source.id) {
@@ -85,7 +94,7 @@ function OrcamentoPage() {
     if (!cliente) throw new Error("Selecione o cliente.");
     return { id: idRef.current, numero: numero.trim(), cliente_id: cliente.id, cliente_snapshot: structuredClone(cliente) as Cliente, data, validade_dias: Number(validade), desconto_tipo: descontoTipo, desconto_valor: numberValue(desconto), formas_pagamento: formas, condicoes_pagamento: condicoes.trim() || null, observacoes: observacoes.trim() || null, status, total_produtos: totals.produtos, total_servicos: totals.servicos, subtotal: totals.subtotal, total: totals.total, ...(source ? { created_at: source.created_at } : {}), itens: numericItems.map(({ quantidadeTexto: _q, valorTexto: _v, ...item }, index) => ({ ...item, ordem: index })) };
   };
-  const save = useMutation({ mutationFn: () => saveOrcamentoOffline(payload()), onSuccess: (result) => { void queryClient.invalidateQueries({ queryKey: ["orcamentos"] }); toast.success(result.queued ? "Orçamento salvo no aparelho" : "Orçamento salvo"); void navigate({ to: "/orcamentos" }); }, onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar") });
+  const save = useMutation({ mutationFn: () => saveOrcamentoOffline(payload()), onSuccess: (result) => { clearDraft(); void queryClient.invalidateQueries({ queryKey: ["orcamentos"] }); toast.success(result.queued ? "Orçamento salvo no aparelho" : "Orçamento salvo"); void navigate({ to: "/orcamentos" }); }, onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar") });
   const addCatalogItem = () => { const part = pecas.find((entry) => entry.id === pecaId); if (!part) return; setItens((current) => [...current, { ...newItem(idRef.current), peca_id: part.id, nome: part.descricao, codigo: part.codigo, unidade: part.unidade === "unidade" ? "un" : (part.unidade as UnidadeOrcamento), valor_unitario: part.preco, valorTexto: String(part.preco).replace(".", ","), foto_data_url: part.foto_data_url }]); setPecaId(""); };
   const addServiceItem = (nome: string, unidade: UnidadeOrcamento, valor: number) => {
     setItens((current) => [...current, { ...newItem(idRef.current), tipo: "servico", nome, unidade, valor_unitario: valor, valorTexto: String(valor).replace(".", ",") }]);
