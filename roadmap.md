@@ -90,4 +90,4 @@
 - [x] Substituir Agenda por Histórico e colocar Relatórios salvos na barra inferior.
 - [x] Automatizar novas tentativas da fila offline com backoff, status de sincronização e painel para falhas persistentes.
 - [x] Permitir abrir, consultar e salvar no modo avião após o token expirar, renovando e sincronizando ao reconectar.
-- [ ] Manter formulários flutuantes visíveis e roláveis acima do teclado do iPhone, inclusive em modo avião.
+- [x] Manter formulários flutuantes visíveis e roláveis acima do teclado do iPhone, inclusive em modo avião.
