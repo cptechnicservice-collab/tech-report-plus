@@ -19,6 +19,7 @@ import { OfflineStatus } from "../components/OfflineStatus";
 import { ServiceWorkerRegistration } from "../components/ServiceWorkerRegistration";
 import { queryPersister } from "../lib/offline";
 import { supabase } from "../integrations/supabase/client";
+import { clearConfirmedUser, rememberConfirmedUser } from "../lib/auth-session";
 
 function NotFoundComponent() {
   return (
@@ -139,6 +140,8 @@ function RootComponent() {
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user.id) rememberConfirmedUser(session.user.id);
+      if (event === "SIGNED_OUT") clearConfirmedUser();
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       void router.invalidate();
       if (event === "SIGNED_IN" && session) void queryClient.invalidateQueries({ refetchType: "active" });

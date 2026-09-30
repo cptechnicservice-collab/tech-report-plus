@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { clearOfflineUserData } from "@/lib/offline";
+import { clearConfirmedUser } from "@/lib/auth-session";
 
 export function PageShell({
   title,
@@ -26,6 +27,7 @@ export function PageShell({
     await queryClient.cancelQueries();
     queryClient.clear();
     await clearOfflineUserData();
+    clearConfirmedUser();
     await supabase.auth.signOut();
     await navigate({ to: "/auth", replace: true });
   };

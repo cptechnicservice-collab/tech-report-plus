@@ -15,3 +15,4 @@
 - Formulários longos mantêm rascunho local por registro e avisam antes de abandonar alterações não salvas.
 - Agenda e orçamento mantêm sua origem ao iniciar um apontamento; peças do orçamento são copiadas como snapshots editáveis.
 - A fila offline usa execução única, backoff por operação e intervenção manual após três falhas, preservando prioridade e coalescência.
+- A autenticação no aparelho preserva somente o último userId confirmado durante falhas de rede; rejeições explícitas online encerram o acesso, mantendo cache e fila isolados por usuário.
