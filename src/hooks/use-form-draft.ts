@@ -19,7 +19,10 @@ export function useFormDraft<T>({ key, value, restore, enabled = true }: {
   useEffect(() => {
     const startingValue = JSON.stringify(value);
     setBaseline(startingValue);
-    if (!enabled) { setReady(true); return; }
+    if (!enabled) {
+      setReady(false);
+      return;
+    }
     try {
       const saved = window.localStorage.getItem(storageKey);
       if (saved && saved !== startingValue) {
@@ -34,9 +37,15 @@ export function useFormDraft<T>({ key, value, restore, enabled = true }: {
 
   useEffect(() => {
     if (!enabled || !ready || serialized === baseline) return;
-    const timer = window.setTimeout(() => window.localStorage.setItem(storageKey, serialized), 400);
+    const timer = window.setTimeout(() => {
+      try {
+        window.localStorage.setItem(storageKey, serialized);
+      } catch {
+        toast.error("O rascunho ficou grande demais para salvar no aparelho");
+      }
+    }, 400);
     return () => window.clearTimeout(timer);
-  }, [enabled, ready, serialized, storageKey]);
+  }, [baseline, enabled, ready, serialized, storageKey]);
 
   const clearDraft = useCallback(() => {
     window.localStorage.removeItem(storageKey);
