@@ -148,6 +148,13 @@
       "when": 1790733750729,
       "tag": "0020_extend_quote_status_and_link_saved_report",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790735992890,
+      "tag": "0021_add_missing_query_indexes",
+      "breakpoints": true
     }
   ]
 }
