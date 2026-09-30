@@ -157,6 +157,34 @@
   select {
     font-size: 16px;
   }
+
+  .keyboard-panel {
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+  }
+
+  html[data-keyboard-open="true"] .keyboard-overlay {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html[data-keyboard-open="true"] .keyboard-panel[data-keyboard-position="bottom"] {
+    top: auto;
+    bottom: var(--kb-inset, 0px);
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+    transform: translateX(-50%);
+    transition: bottom 150ms ease, max-height 150ms ease;
+  }
+
+  html[data-keyboard-open="true"] .keyboard-panel[data-keyboard-position="center"] {
+    top: calc(100dvh - var(--kb-inset, 0px) - (var(--vvh, 100dvh) / 2));
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+    transition: top 150ms ease, max-height 150ms ease;
+  }
+
+  html[data-keyboard-open="true"] .keyboard-panel:not([data-keyboard-position]) {
+    bottom: var(--kb-inset, 0px);
+    max-height: calc(var(--vvh, 100dvh) - 0.75rem);
+  }
 }
 
 @utility card-surface {

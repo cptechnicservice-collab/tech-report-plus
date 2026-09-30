@@ -416,7 +416,7 @@ function RelatoriosSalvos() {
         </Section>
       )}
       <Drawer open={Boolean(recebimento)} onOpenChange={(open) => { if (!open) setRecebimento(null); }}>
-        <DrawerContent className="mx-auto max-w-lg rounded-t-3xl pb-[max(env(safe-area-inset-bottom),1rem)]">
+        <DrawerContent onOpenAutoFocus={(event) => event.preventDefault()} className="mx-auto max-w-lg rounded-t-3xl pb-[max(env(safe-area-inset-bottom),1rem)]">
           <DrawerHeader className="text-left">
             <DrawerTitle>Registrar recebimento</DrawerTitle>
             <DrawerDescription>{recebimento?.cliente_nome} · Total {recebimento ? formatCurrency(recebimento.total_geral) : ""}</DrawerDescription>
@@ -433,7 +433,7 @@ function RelatoriosSalvos() {
         </DrawerContent>
       </Drawer>
       <Dialog open={Boolean(relatorioObservacao)} onOpenChange={(open) => { if (!open) setRelatorioObservacao(null); }}>
-        <DialogContent className="bottom-3 left-3 right-3 top-[max(env(safe-area-inset-top),0.75rem)] flex w-auto max-w-lg translate-x-0 translate-y-0 grid-rows-none flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:left-1/2 sm:right-auto sm:w-[calc(100%-2rem)] sm:-translate-x-1/2">
+        <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-3 left-3 right-3 top-[max(env(safe-area-inset-top),0.75rem)] flex w-auto max-w-lg translate-x-0 translate-y-0 grid-rows-none flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:left-1/2 sm:right-auto sm:w-[calc(100%-2rem)] sm:-translate-x-1/2">
           <DialogHeader className="shrink-0 border-b border-border px-4 py-4 pr-12 text-left">
             <DialogTitle>Valores e observação</DialogTitle>
             <DialogDescription>{relatorioObservacao?.cliente_nome} · informações do PDF final</DialogDescription>

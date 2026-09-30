@@ -3,6 +3,38 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
+function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | null>) {
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let timer: number | null = null;
+
+    const handleFocus = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+      if (target instanceof HTMLInputElement && target.type === "file") return;
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        target.scrollIntoView({
+          block: "center",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        });
+      }, 250);
+    };
+
+    container.addEventListener("focusin", handleFocus);
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      container.removeEventListener("focusin", handleFocus);
+    };
+  }, [containerRef]);
+}
+
+function setForwardedRef<T>(forwardedRef: React.ForwardedRef<T>, value: T | null) {
+  if (typeof forwardedRef === "function") forwardedRef(value);
+  else if (forwardedRef) forwardedRef.current = value;
+}
+
 const Drawer = ({
   shouldScaleBackground = true,
   ...props
@@ -23,7 +55,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/80", className)}
+    className={cn("keyboard-overlay fixed inset-0 z-50 bg-foreground/80", className)}
     {...props}
   />
 ));
@@ -32,22 +64,30 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { overlayClassName?: string }
->(({ className, children, overlayClassName, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay className={overlayClassName} />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-        className,
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-));
+>(({ className, children, overlayClassName, ...props }, ref) => {
+  const contentRef = React.useRef<React.ElementRef<typeof DrawerPrimitive.Content>>(null);
+  useFocusedFieldVisibility(contentRef);
+
+  return (
+    <DrawerPortal>
+      <DrawerOverlay className={overlayClassName} />
+      <DrawerPrimitive.Content
+        ref={(node) => {
+          contentRef.current = node;
+          setForwardedRef(ref, node);
+        }}
+        className={cn(
+          "keyboard-panel fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[calc(var(--vvh,100dvh)-0.75rem)] flex-col overflow-y-auto overscroll-contain rounded-t-[10px] border bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-[bottom,max-height] duration-150",
+          className,
+        )}
+        {...props}
+      >
+        <div className="mx-auto mt-4 h-2 w-[100px] shrink-0 rounded-full bg-muted" />
+        {children}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+});
 DrawerContent.displayName = "DrawerContent";
 
 const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

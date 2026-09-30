@@ -119,7 +119,7 @@ function Pecas() {
       <Button className="sticky bottom-24 z-20 h-14 w-full rounded-xl shadow-lg" onClick={openNew}><Package className="mr-2 h-5 w-5" /> Cadastrar peça</Button>
 
       <Dialog open={editing !== null} onOpenChange={(open) => { if (!open) setEditing(null); }}>
-        <DialogContent className="bottom-0 top-auto max-h-[92dvh] max-w-md translate-y-0 overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
+        <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[92dvh] max-w-md translate-y-0 overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
           <DialogHeader><DialogTitle>{editing === "new" ? "Cadastrar peça" : "Editar peça"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ function Pecas() {
                 {draft.foto_data_url ? <Button type="button" variant="ghost" className="h-9 rounded-xl text-destructive" onClick={() => setDraft((current) => ({ ...current, foto_data_url: null }))}><Trash2 className="mr-2 h-4 w-4" />Remover foto</Button> : null}
               </div>
             </div>
-            <FloatingInput id="peca-descricao" label="Nome da peça" value={draft.descricao} onChange={(event) => setDraft({ ...draft, descricao: event.target.value })} autoFocus />
+            <FloatingInput id="peca-descricao" label="Nome da peça" value={draft.descricao} onChange={(event) => setDraft({ ...draft, descricao: event.target.value })} />
             <FloatingInput id="peca-codigo" label="Código (opcional)" value={draft.codigo} onChange={(event) => setDraft({ ...draft, codigo: event.target.value })} />
             <div className="grid grid-cols-2 gap-3"><FloatingInput id="peca-unidade" label="Unidade" value={draft.unidade} onChange={(event) => setDraft({ ...draft, unidade: event.target.value })} /><FloatingInput id="peca-preco" label="Valor" value={draft.preco} onChange={(event) => setDraft({ ...draft, preco: event.target.value })} inputMode="decimal" /></div>
             <FloatingTextarea id="peca-observacoes" label="Observações (opcional)" value={draft.observacoes} onChange={(event) => setDraft({ ...draft, observacoes: event.target.value })} rows={3} />
