@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - O status operacional do relatório (`status_relatorio`) é separado do status financeiro (`pagamento_status`), pois conclusão e recebimento são fluxos independentes.
+- Cada orçamento pode originar no máximo um relatório salvo, ligado por `source_orcamento_id`, para impedir duplicação acidental.

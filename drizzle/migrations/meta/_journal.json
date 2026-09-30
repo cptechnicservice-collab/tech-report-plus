@@ -141,6 +141,13 @@
       "when": 1790724017552,
       "tag": "0019_add_report_workflow_status",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790733750729,
+      "tag": "0020_extend_quote_status_and_link_saved_report",
+      "breakpoints": true
     }
   ]
 }

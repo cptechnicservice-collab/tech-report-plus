@@ -76,3 +76,4 @@
 - [x] Exibir no PDF as fotos do catálogo também em orçamentos antigos vinculados às peças.
 - [x] Adicionar status Pendente, Aguardando pagamento e Concluído aos relatórios salvos, com atualização offline.
 - [x] Ocultar concluídos da lista normal e disponibilizá-los no filtro Concluídos.
+- [x] Adicionar Aguardando confirmação e Concluído aos Orçamentos e permitir enviá-los uma única vez para Relatórios salvos.
