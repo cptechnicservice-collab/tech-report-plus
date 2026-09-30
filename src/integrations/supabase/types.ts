@@ -525,6 +525,7 @@ export type Database = {
           observacao_relatorio: string
           pagamento_status: string
           pecas_snapshot: Json
+          source_orcamento_id: string | null
           status_relatorio: string
           total_despesas: number
           total_geral: number
@@ -553,6 +554,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          source_orcamento_id?: string | null
           status_relatorio?: string
           total_despesas?: number
           total_geral?: number
@@ -581,6 +583,7 @@ export type Database = {
           observacao_relatorio?: string
           pagamento_status?: string
           pecas_snapshot?: Json
+          source_orcamento_id?: string | null
           status_relatorio?: string
           total_despesas?: number
           total_geral?: number
@@ -597,6 +600,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_salvos_source_orcamento_id_fkey"
+            columns: ["source_orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
             referencedColumns: ["id"]
           },
         ]
