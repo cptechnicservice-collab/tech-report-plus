@@ -8,6 +8,8 @@ export const Route = createFileRoute("/_authenticated/novo")({
     data: typeof search["data"] === "string" ? search["data"] : undefined,
     cliente: typeof search["cliente"] === "string" ? search["cliente"] : undefined,
     servico: typeof search["servico"] === "string" ? search["servico"] : undefined,
+    agenda: typeof search["agenda"] === "string" ? search["agenda"] : undefined,
+    orcamento: typeof search["orcamento"] === "string" ? search["orcamento"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -33,7 +35,7 @@ function NovoApontamento() {
   const search = Route.useSearch();
   return (
     <PageShell title="Novo apontamento" subtitle="Horários preenchidos manualmente">
-      <ApontamentoForm draft={{ data: search.data, clienteId: search.cliente, servico: search.servico }} />
+      <ApontamentoForm draft={{ data: search.data, clienteId: search.cliente, servico: search.servico, agendaId: search.agenda, orcamentoId: search.orcamento }} />
     </PageShell>
   );
 }

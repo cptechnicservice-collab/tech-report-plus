@@ -121,7 +121,7 @@ function Resumo() {
       </Section>
 
       <Button asChild className="h-14 w-full rounded-2xl text-base">
-        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined }}>
+        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}>
           <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
         </Link>
       </Button>
