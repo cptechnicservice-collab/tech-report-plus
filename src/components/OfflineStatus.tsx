@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { renewAppSession } from "@/lib/auth-session";
+import { OPEN_SYNC_PANEL_EVENT } from "@/lib/offline-events";
 
 const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
   clientes: "Cliente",
@@ -161,6 +162,15 @@ export function OfflineStatus() {
       unsubscribe();
     };
   }, [refresh, sync]);
+
+  useEffect(() => {
+    const openPanel = () => {
+      void refresh();
+      setDrawerOpen(true);
+    };
+    window.addEventListener(OPEN_SYNC_PANEL_EVENT, openPanel);
+    return () => window.removeEventListener(OPEN_SYNC_PANEL_EVENT, openPanel);
+  }, [refresh]);
 
   const retry = async (item: QueueItem) => {
     if (item.queueId == null) return;
