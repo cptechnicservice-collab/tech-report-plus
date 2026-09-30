@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Cliente } from "@/lib/apontamentos";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 
-export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado";
+export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "aguardando_confirmacao" | "concluido";
 export type DescontoTipo = "valor" | "percentual";
 export type OrcamentoItemTipo = "produto" | "servico";
 export type UnidadeOrcamento = "un" | "h" | "km" | "pç" | "cj";

@@ -539,8 +539,8 @@ export async function deleteOrcamentoOffline(id: string) {
   return { queued: true };
 }
 
-type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto"> &
-  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto">>;
+type RelatorioWrite = Omit<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto" | "source_orcamento_id"> &
+  Partial<Pick<RelatorioSalvo, "created_at" | "updated_at" | "user_id" | "status_relatorio" | "pagamento_status" | "valor_recebido" | "data_recebimento" | "forma_pagamento" | "observacao_relatorio" | "despesas_snapshot" | "total_despesas" | "desconto" | "source_orcamento_id">>;
 
 function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert<"relatorios_salvos"> {
   return {
@@ -568,6 +568,7 @@ function relatorioPayload(payload: RelatorioWrite, userId: string): TablesInsert
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
+    source_orcamento_id: payload.source_orcamento_id ?? null,
   };
 }
 
@@ -582,6 +583,7 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
     valor_recebido: payload.valor_recebido ?? 0,
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
+    source_orcamento_id: payload.source_orcamento_id ?? null,
     observacao_relatorio: payload.observacao_relatorio ?? "",
     despesas_snapshot: payload.despesas_snapshot ?? [],
     total_despesas: payload.total_despesas ?? 0,

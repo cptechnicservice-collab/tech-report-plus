@@ -105,7 +105,7 @@ function OrcamentoPage() {
     <Section title="Dados do orçamento">
       <div className="grid grid-cols-2 gap-3"><Field label="Número" value={numero} onChange={setNumero} /><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={data} onChange={(event) => setData(event.target.value)} className="h-12 rounded-xl" /></div></div>
       <ClienteSelect clientes={clientes} value={clienteId} onChange={setClienteId} />
-      <div className="grid grid-cols-2 gap-3"><Field label="Validade (dias)" value={validade} onChange={setValidade} inputMode="numeric" /><div className="space-y-1.5"><Label>Status</Label><select value={status} onChange={(event) => setStatus(event.target.value as OrcamentoStatus)} className="ios-field h-12 w-full border px-3"><option value="rascunho">Rascunho</option><option value="enviado">Enviado</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option></select></div></div>
+      <div className="grid grid-cols-2 gap-3"><Field label="Validade (dias)" value={validade} onChange={setValidade} inputMode="numeric" /><div className="space-y-1.5"><Label>Status</Label><select value={status} onChange={(event) => setStatus(event.target.value as OrcamentoStatus)} className="ios-field h-12 w-full border px-3"><option value="rascunho">Rascunho</option><option value="enviado">Enviado</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="aguardando_confirmacao">Aguardando confirmação</option><option value="concluido">Concluído</option></select></div></div>
     </Section>
     <Section title="Itens" hint={`${itens.length} item(ns)`}>
       <div className="space-y-2">

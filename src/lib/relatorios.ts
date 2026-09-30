@@ -44,6 +44,7 @@ export type RelatorioSalvo = {
   valor_recebido: number;
   data_recebimento: string | null;
   forma_pagamento: FormaPagamento | null;
+  source_orcamento_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -101,6 +102,7 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     valor_recebido: recebido,
     data_recebimento: item.data_recebimento ?? null,
     forma_pagamento: item.forma_pagamento ?? null,
+    source_orcamento_id: item.source_orcamento_id ?? null,
     observacao_relatorio: item.observacao_relatorio ?? "",
     despesas_snapshot: despesas,
     total_despesas: Number(item.total_despesas ?? 0),
