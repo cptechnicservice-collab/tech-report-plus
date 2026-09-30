@@ -77,3 +77,13 @@
 - [x] Adicionar status Pendente, Aguardando pagamento e Concluído aos relatórios salvos, com atualização offline.
 - [x] Ocultar concluídos da lista normal e disponibilizá-los no filtro Concluídos.
 - [x] Adicionar Aguardando confirmação e Concluído aos Orçamentos e permitir enviá-los uma única vez para Relatórios salvos.
+
+## Melhoria de velocidade e funcionalidade
+
+- [ ] Corrigir navegação inválida e estados vazios/ações de relatórios.
+- [ ] Reduzir consultas e atualizações repetidas; carregar detalhes sob demanda.
+- [ ] Paginar listas crescentes e manter cache/offline compatível.
+- [ ] Adicionar rascunhos automáticos e proteção contra saída acidental.
+- [ ] Melhorar indicadores e detalhes da sincronização offline.
+- [ ] Integrar Agenda → Apontamento e Orçamento → Apontamento/Relatório.
+- [ ] Validar fluxos, PDFs, modo offline e desempenho no iPhone.
