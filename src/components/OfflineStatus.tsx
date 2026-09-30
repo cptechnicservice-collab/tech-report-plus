@@ -137,7 +137,7 @@ export function OfflineStatus() {
                     disabled={!online || syncing.current}
                     className="h-8 gap-1.5"
                   >
-                    <RefreshCw className={} />
+                    <RefreshCw className={`h-3.5 w-3.5 ${syncing.current ? "animate-spin" : ""}`} />
                     Sincronizar
                   </Button>
                 </div>
@@ -199,7 +199,7 @@ export function OfflineStatus() {
           </Sheet>
         ) : null}
 
-        {failed > 0 && !pending > 0 ? (
+        {failed > 0 ? (
           <>
             {(!online || pending > 0) ? <span className="mx-1.5 h-3 w-px bg-border" /> : null}
             <Button
