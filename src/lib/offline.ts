@@ -1132,7 +1132,7 @@ async function runOfflineQueue(force: boolean): Promise<string[]> {
         const attempts = (item.attempts ?? 0) + 1;
         const delay =
           RETRY_DELAYS[Math.min(attempts - 1, RETRY_DELAYS.length - 1)] ??
-          RETRY_DELAYS[RETRY_DELAYS.length - 1];
+          900_000;
         await db.put("queue", {
           ...item,
           attempts,
