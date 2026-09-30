@@ -96,6 +96,19 @@ export async function recoverAppIdentity(): Promise<SessionRecovery> {
 }
 
 export async function activeAppUserId() {
-  const recovery = await recoverAppIdentity();
-  return recovery.identity?.userId ?? null;
+  const fallbackUserId = getConfirmedUserId();
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (data.session?.user.id) {
+      rememberConfirmedUser(data.session.user.id);
+      return data.session.user.id;
+    }
+    if (error && isTransientAuthError(error)) return fallbackUserId;
+    clearConfirmedUser();
+    return null;
+  } catch (error) {
+    if (isTransientAuthError(error)) return fallbackUserId;
+    clearConfirmedUser();
+    return null;
+  }
 }
