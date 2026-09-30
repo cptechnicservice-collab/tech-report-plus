@@ -815,3 +815,16 @@ export async function syncOfflineQueue(): Promise<string[]> {
   }
   emitChange();
   return Array.from(syncedQueryKeys);
+}
+
+export const offlineCacheKeys = {
+  clientes: CACHE_CLIENTES,
+  apontamentos: CACHE_APONTAMENTOS,
+  apontamentoPecas: CACHE_APONTAMENTO_PECAS,
+  valores: CACHE_VALORES,
+  agendamentos: CACHE_AGENDAMENTOS,
+  pecas: CACHE_PECAS,
+  relatorios: CACHE_RELATORIOS,
+  empresa: CACHE_EMPRESA,
+  orcamentos: CACHE_ORCAMENTOS,
+};
