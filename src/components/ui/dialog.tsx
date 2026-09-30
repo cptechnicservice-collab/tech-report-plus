@@ -6,18 +6,22 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | null>) {
-  React.useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    let timer: number | null = null;
+function useFocusedFieldVisibility() {
+  const timerRef = React.useRef<number | null>(null);
 
-    const handleFocus = (event: FocusEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
-      if (target instanceof HTMLInputElement && target.type === "file") return;
-      if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return React.useCallback((event: React.FocusEvent<HTMLElement>) => {
+    const target = event.target;
+    const container = event.currentTarget;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+    if (target instanceof HTMLInputElement && target.type === "file") return;
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
         const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         target.scrollIntoView({
           block: "center",
@@ -34,14 +38,7 @@ function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | n
         const delta = targetRect.top + targetRect.height / 2 - (visiblePanelTop + visibleBottom) / 2;
         if (Math.abs(delta) > 1) container.scrollBy({ top: delta, behavior: reducedMotion ? "auto" : "smooth" });
       }, 250);
-    };
-
-    container.addEventListener("focusin", handleFocus);
-    return () => {
-      if (timer !== null) window.clearTimeout(timer);
-      container.removeEventListener("focusin", handleFocus);
-    };
-  }, [containerRef]);
+  }, []);
 }
 
 function setForwardedRef<T>(forwardedRef: React.ForwardedRef<T>, value: T | null) {
@@ -77,9 +74,9 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     keyboardPosition?: "center" | "bottom";
   }
->(({ className, children, keyboardPosition = "center", ...props }, ref) => {
+>(({ className, children, keyboardPosition = "center", onFocusCapture, ...props }, ref) => {
   const contentRef = React.useRef<React.ElementRef<typeof DialogPrimitive.Content>>(null);
-  useFocusedFieldVisibility(contentRef);
+  const handleFieldFocus = useFocusedFieldVisibility();
 
   return (
     <DialogPortal>
@@ -90,6 +87,10 @@ const DialogContent = React.forwardRef<
           setForwardedRef(ref, node);
         }}
         data-keyboard-position={keyboardPosition}
+        onFocusCapture={(event) => {
+          onFocusCapture?.(event);
+          handleFieldFocus(event);
+        }}
         className={cn(
           "keyboard-panel fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain border border-border bg-card p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-2xl",
           className,

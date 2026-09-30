@@ -3,18 +3,22 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
-function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | null>) {
-  React.useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    let timer: number | null = null;
+function useFocusedFieldVisibility() {
+  const timerRef = React.useRef<number | null>(null);
 
-    const handleFocus = (event: FocusEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
-      if (target instanceof HTMLInputElement && target.type === "file") return;
-      if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return React.useCallback((event: React.FocusEvent<HTMLElement>) => {
+    const target = event.target;
+    const container = event.currentTarget;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+    if (target instanceof HTMLInputElement && target.type === "file") return;
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
         const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         target.scrollIntoView({
           block: "center",
@@ -31,14 +35,7 @@ function useFocusedFieldVisibility(containerRef: React.RefObject<HTMLElement | n
         const delta = targetRect.top + targetRect.height / 2 - (visiblePanelTop + visibleBottom) / 2;
         if (Math.abs(delta) > 1) container.scrollBy({ top: delta, behavior: reducedMotion ? "auto" : "smooth" });
       }, 250);
-    };
-
-    container.addEventListener("focusin", handleFocus);
-    return () => {
-      if (timer !== null) window.clearTimeout(timer);
-      container.removeEventListener("focusin", handleFocus);
-    };
-  }, [containerRef]);
+  }, []);
 }
 
 function setForwardedRef<T>(forwardedRef: React.ForwardedRef<T>, value: T | null) {
@@ -75,9 +72,9 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { overlayClassName?: string }
->(({ className, children, overlayClassName, ...props }, ref) => {
+>(({ className, children, overlayClassName, onFocusCapture, ...props }, ref) => {
   const contentRef = React.useRef<React.ElementRef<typeof DrawerPrimitive.Content>>(null);
-  useFocusedFieldVisibility(contentRef);
+  const handleFieldFocus = useFocusedFieldVisibility();
 
   return (
     <DrawerPortal>
@@ -86,6 +83,10 @@ const DrawerContent = React.forwardRef<
         ref={(node) => {
           contentRef.current = node;
           setForwardedRef(ref, node);
+        }}
+        onFocusCapture={(event) => {
+          onFocusCapture?.(event);
+          handleFieldFocus(event);
         }}
         className={cn(
           "keyboard-panel fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[calc(var(--vvh,100dvh)-0.75rem)] flex-col overflow-y-auto overscroll-contain rounded-t-[10px] border bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-[bottom,max-height] duration-150",
