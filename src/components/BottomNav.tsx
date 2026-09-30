@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, CalendarPlus, Clock, LayoutGrid, Menu } from "lucide-react";
+import { CalendarPlus, Clock, FileArchive, LayoutGrid, Menu } from "lucide-react";
 
 const items = [
   { to: "/painel", label: "Painel", icon: LayoutGrid, exact: true },
-  { to: "/agenda", label: "Agenda", icon: CalendarDays, exact: false },
-  { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
+  { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
+  { to: "/relatorios-salvos", label: "Relatórios", icon: FileArchive, exact: false },
   { to: "/mais", label: "Mais", icon: Menu, exact: false },
 ] as const;
 
