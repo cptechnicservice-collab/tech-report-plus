@@ -20,6 +20,7 @@ import { ServiceWorkerRegistration } from "../components/ServiceWorkerRegistrati
 import { queryPersister } from "../lib/offline";
 import { supabase } from "../integrations/supabase/client";
 import { clearConfirmedUser, rememberConfirmedUser } from "../lib/auth-session";
+import { useKeyboardInset } from "../hooks/use-keyboard-inset";
 
 function NotFoundComponent() {
   return (
@@ -133,6 +134,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  useKeyboardInset();
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });

@@ -89,7 +89,7 @@ export function ClienteSelect({
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bottom-0 top-auto max-h-[88dvh] max-w-md translate-y-0 gap-4 rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
+        <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[88dvh] max-w-md translate-y-0 gap-4 rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
           <DialogHeader>
             <DialogTitle>Clientes ativos</DialogTitle>
           </DialogHeader>

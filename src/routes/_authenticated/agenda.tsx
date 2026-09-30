@@ -276,7 +276,7 @@ function Agenda() {
       ))}
 
       <Dialog open={editing !== null} onOpenChange={(open) => { if (!open) setEditing(null); }}>
-        <DialogContent className="bottom-0 top-auto max-h-[92dvh] max-w-md translate-y-0 overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
+        <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[92dvh] max-w-md translate-y-0 overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
           <DialogHeader><DialogTitle>{editing === "new" ? "Novo agendamento" : "Editar agendamento"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <ClienteSelect clientes={clientes} value={draft.clienteId} onChange={(clienteId) => setDraft((current) => ({ ...current, clienteId }))} />
