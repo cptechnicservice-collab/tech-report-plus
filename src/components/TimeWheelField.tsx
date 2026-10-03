@@ -110,7 +110,7 @@ export function TimeWheelField({ label, value, onChange }: TimeWheelFieldProps) 
   const openPicker = () => {
     const [savedHour, savedMinute] = value.split(":");
     const current = new Date();
-    const hour = HOURS.includes(savedHour ?? "") ? savedHour : String(current.getHours()).padStart(2, "0");
+    const hour = savedHour && HOURS.includes(savedHour) ? savedHour : String(current.getHours()).padStart(2, "0");
     const numericMinute = Number(savedMinute ?? current.getMinutes());
     const roundedMinute = String(Math.min(55, Math.round(numericMinute / 5) * 5)).padStart(2, "0");
     setDraftHour(hour);
