@@ -20,3 +20,4 @@
 - A autenticação no aparelho preserva somente o último userId confirmado durante falhas de rede; rejeições explícitas online encerram o acesso, mantendo cache e fila isolados por usuário.
 - A navegação secundária da barra inferior abre `MoreSheet`; `/mais` permanece como fallback direto e a sincronização abre pelo evento compartilhado.
 - Painéis flutuantes usam as variáveis globais `--kb-inset` e `--vvh` derivadas de `visualViewport` para permanecer acima do teclado do iPhone.
+- Horários de apontamentos usam um seletor de rolagem compartilhado em intervalos de cinco minutos, mantendo valores no formato `HH:mm` para preservar cálculos e persistência.

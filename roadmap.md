@@ -91,3 +91,4 @@
 - [x] Automatizar novas tentativas da fila offline com backoff, status de sincronização e painel para falhas persistentes.
 - [x] Permitir abrir, consultar e salvar no modo avião após o token expirar, renovando e sincronizando ao reconectar.
 - [x] Manter formulários flutuantes visíveis e roláveis acima do teclado do iPhone, inclusive em modo avião.
+- [ ] Selecionar horários do apontamento por rolagem, em intervalos de cinco minutos, e validar no iPhone e offline.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { Section } from "@/components/PageShell";
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { PartPicker, type SelectedPart } from "@/components/PartPicker";
+import { TimeWheelField } from "@/components/TimeWheelField";
 import {
   calcularTotais,
   diffMinutes,
@@ -99,127 +100,6 @@ function initialState(a?: Apontamento, draft?: ApontamentoDraft): FormState {
     outras_despesas: a?.outras_despesas != null ? String(a.outras_despesas) : "",
     outras_despesas_descricao: a?.outras_despesas_descricao ?? "",
   };
-}
-
-function TimeField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [draftHour, setDraftHour] = useState("");
-  const [draftMinute, setDraftMinute] = useState("");
-
-  const showPicker = () => {
-    const [hour = "", minute = ""] = value.split(":");
-    setDraftHour(hour);
-    setDraftMinute(minute);
-    setOpen(true);
-  };
-
-  const confirm = () => {
-    if (!draftHour || !draftMinute) return;
-    onChange(`${draftHour}:${draftMinute}`);
-    setOpen(false);
-  };
-
-  return (
-    <div className="min-w-0 space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <div className="relative">
-        <Button
-          type="button"
-          variant="outline"
-          className="h-12 w-full justify-start rounded-xl border-input bg-card px-3 text-base font-normal tabular-nums"
-          aria-label={`${label}: ${value || "vazio"}`}
-          onClick={showPicker}
-        >
-          <span className={value ? "text-foreground" : "text-muted-foreground"}>
-            {value || "--:--"}
-          </span>
-        </Button>
-        {value ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1 h-10 w-10 rounded-lg text-muted-foreground"
-            aria-label={`Limpar ${label.toLowerCase()}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onChange("");
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        ) : null}
-      </div>
-      {open ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/25 p-4 pb-[max(env(safe-area-inset-bottom),1rem)] sm:items-center"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Selecionar ${label.toLowerCase()}`}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
-          }}
-        >
-          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-5 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="font-semibold">{label}</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                aria-label="Cancelar seleção de horário"
-                onClick={() => setOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-              <select
-                aria-label="Hora"
-                value={draftHour}
-                onChange={(event) => setDraftHour(event.target.value)}
-                className="h-14 rounded-xl border border-input bg-background px-3 text-center text-lg tabular-nums"
-              >
-                <option value="">Hora</option>
-                {Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0")).map(
-                  (hour) => <option key={hour} value={hour}>{hour}</option>,
-                )}
-              </select>
-              <span className="text-xl font-semibold">:</span>
-              <select
-                aria-label="Minuto"
-                value={draftMinute}
-                onChange={(event) => setDraftMinute(event.target.value)}
-                className="h-14 rounded-xl border border-input bg-background px-3 text-center text-lg tabular-nums"
-              >
-                <option value="">Min</option>
-                {Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, "0")).map(
-                  (minute) => <option key={minute} value={minute}>{minute}</option>,
-                )}
-              </select>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button type="button" variant="ghost" className="h-12 rounded-xl" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="button" className="h-12 rounded-xl" disabled={!draftHour || !draftMinute} onClick={confirm}>
-                Confirmar
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
 }
 
 function OptionalSection({
@@ -475,12 +355,12 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         onClear={() => setForm((prev) => ({ ...prev, viagem_ida_saida: "", viagem_ida_chegada: "" }))}
       >
         <div className="grid grid-cols-2 gap-3">
-          <TimeField
+          <TimeWheelField
             label="Saída"
             value={form.viagem_ida_saida}
             onChange={(v) => set("viagem_ida_saida", v)}
           />
-          <TimeField
+          <TimeWheelField
             label="Chegada"
             value={form.viagem_ida_chegada}
             onChange={(v) => set("viagem_ida_chegada", v)}
@@ -492,12 +372,12 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
 
       <Section title="Trabalho (opcional)">
         <div className="grid grid-cols-2 gap-3">
-          <TimeField
+          <TimeWheelField
             label="Início"
             value={form.trabalho_inicio}
             onChange={(v) => set("trabalho_inicio", v)}
           />
-          <TimeField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
+          <TimeWheelField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
         </div>
         {validacoes.trabalhoIncompleto ? <Warning>Preencha início e fim</Warning> : null}
         {validacoes.trabalhoDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(totais.trabalho)}</Warning> : null}
@@ -511,8 +391,8 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         onClear={() => setForm((prev) => ({ ...prev, intervalo_inicio: "", intervalo_fim: "" }))}
       >
         <div className="grid grid-cols-2 gap-3">
-          <TimeField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
-          <TimeField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
+          <TimeWheelField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
+          <TimeWheelField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
         </div>
         {validacoes.intervaloIncompleto ? <Warning>Preencha início e fim</Warning> : null}
         {validacoes.intervaloInvalido ? <Warning>Intervalo fora da jornada ou maior que o trabalho. Não será descontado.</Warning> : null}
@@ -525,12 +405,12 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
         onClear={() => setForm((prev) => ({ ...prev, viagem_volta_saida: "", viagem_volta_chegada: "" }))}
       >
         <div className="grid grid-cols-2 gap-3">
-          <TimeField
+          <TimeWheelField
             label="Saída"
             value={form.viagem_volta_saida}
             onChange={(v) => set("viagem_volta_saida", v)}
           />
-          <TimeField
+          <TimeWheelField
             label="Chegada"
             value={form.viagem_volta_chegada}
             onChange={(v) => set("viagem_volta_chegada", v)}
