@@ -42,18 +42,21 @@ function WheelColumn({ label, options, value, onChange }: WheelColumnProps) {
   }, []);
 
   const settleSelection = () => {
+    const viewport = viewportRef.current;
+    if (viewport?.scrollLeft) viewport.scrollLeft = 0;
     if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
     settleTimerRef.current = window.setTimeout(() => {
-      const viewport = viewportRef.current;
-      if (!viewport) return;
-      const index = Math.max(0, Math.min(options.length - 1, Math.round(viewport.scrollTop / ITEM_HEIGHT)));
+      const currentViewport = viewportRef.current;
+      if (!currentViewport) return;
+      currentViewport.scrollLeft = 0;
+      const index = Math.max(0, Math.min(options.length - 1, Math.round(currentViewport.scrollTop / ITEM_HEIGHT)));
       onChange(options[index] ?? options[0] ?? "00");
       scrollToIndex(index);
     }, 90);
   };
 
   return (
-    <div className="min-w-0 flex-1" data-vaul-no-drag>
+    <div className="min-w-0 flex-1 overflow-x-hidden" data-vaul-no-drag>
       <p className="mb-2 text-center text-xs font-semibold text-muted-foreground">{label}</p>
       <div className="relative h-60 overflow-hidden rounded-2xl bg-muted/45">
         <div className="pointer-events-none absolute inset-x-2 top-1/2 z-10 h-12 -translate-y-1/2 rounded-xl border border-primary/25 bg-card shadow-sm" />
@@ -66,7 +69,7 @@ function WheelColumn({ label, options, value, onChange }: WheelColumnProps) {
           aria-activedescendant={`${label}-${value}`}
           tabIndex={0}
           onScroll={settleSelection}
-          className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain py-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="h-full w-full touch-pan-y snap-y snap-mandatory overflow-x-hidden overflow-y-auto overscroll-x-none overscroll-y-contain py-24 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {options.map((option) => {
             const selected = option === value;
@@ -166,7 +169,7 @@ export function TimeWheelField({ label, value, onChange }: TimeWheelFieldProps) 
             </Button>
           </div>
 
-          <div className="relative mx-auto mt-5 flex w-full max-w-xs items-end gap-3 px-5">
+          <div className="relative mx-auto mt-5 grid w-full max-w-xs grid-cols-2 items-end gap-3 overflow-x-hidden px-5">
             <WheelColumn label="Hora" options={HOURS} value={draftHour} onChange={setDraftHour} />
             <span className="absolute left-1/2 top-[8.3rem] z-40 -translate-x-1/2 text-xl font-semibold text-foreground">:</span>
             <WheelColumn label="Minutos" options={MINUTES} value={draftMinute} onChange={setDraftMinute} />
