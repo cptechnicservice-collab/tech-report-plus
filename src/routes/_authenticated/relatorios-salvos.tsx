@@ -58,7 +58,11 @@ export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
     const status = value === "aberto" || value === "recebido" || value === "pendente" || value === "parcial" || value === "pago"
       ? value
       : undefined;
-    return { status, periodo, financeiro: search["financeiro"] === true };
+    return {
+      ...(status ? { status } : {}),
+      ...(periodo ? { periodo } : {}),
+      ...(search["financeiro"] === true ? { financeiro: true } : {}),
+    };
   },
   head: () => ({ meta: [
     { title: "Relatórios salvos — CP TECHNIC Horas" },
@@ -352,7 +356,7 @@ function RelatoriosSalvos() {
       {search.periodo ? (
         <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-4 py-3 text-sm">
           <span className="font-medium">Período: {search.periodo.length === 4 ? search.periodo : new Date(`${search.periodo}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
-          <Button asChild type="button" variant="ghost" size="sm" className="h-8 rounded-lg px-3"><Link to="/relatorios-salvos" search={{ status: search.status }}>Limpar</Link></Button>
+          <Button asChild type="button" variant="ghost" size="sm" className="h-8 rounded-lg px-3"><Link to="/relatorios-salvos" search={search.status ? { status: search.status } : {}}>Limpar</Link></Button>
         </div>
       ) : null}
 
