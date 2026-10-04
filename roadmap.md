@@ -92,3 +92,4 @@
 - [x] Permitir abrir, consultar e salvar no modo avião após o token expirar, renovando e sincronizando ao reconectar.
 - [x] Manter formulários flutuantes visíveis e roláveis acima do teclado do iPhone, inclusive em modo avião.
 - [x] Selecionar horários do apontamento por rolagem, em intervalos de cinco minutos, e validar no iPhone e offline.
+- [ ] Mostrar valores a receber e recebidos no Painel, com filtro financeiro mensal ou anual e acesso à lista filtrada.
