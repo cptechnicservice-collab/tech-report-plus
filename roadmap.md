@@ -93,3 +93,4 @@
 - [x] Manter formulários flutuantes visíveis e roláveis acima do teclado do iPhone, inclusive em modo avião.
 - [x] Selecionar horários do apontamento por rolagem, em intervalos de cinco minutos, e validar no iPhone e offline.
 - [x] Mostrar valores a receber e recebidos no Painel, com filtro financeiro mensal ou anual e acesso à lista filtrada.
+- [x] Adicionar total financeiro geral no Painel e uma tela detalhada de relatórios totais, recebidos e a receber.
