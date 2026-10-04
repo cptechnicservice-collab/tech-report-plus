@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer } from "lucide-react";
+import { CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, ReceiptText, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,9 @@ function Resumo() {
     item.valor_recebido > 0 && Boolean(item.data_recebimento?.startsWith(periodoFinanceiro)),
   );
   const totalRecebido = relatoriosRecebidos.reduce((total, item) => total + item.valor_recebido, 0);
+  const totalRelatorios = relatorios.reduce((total, item) => total + item.total_geral, 0);
+  const totalRecebidoGeral = relatorios.reduce((total, item) => total + item.valor_recebido, 0);
+  const totalAReceberGeral = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
@@ -123,6 +126,18 @@ function Resumo() {
       </section>
 
       <section className="space-y-3">
+        <Link to="/relatorios-totais" className="press ios-group flex min-h-24 items-center gap-4 p-4">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground"><ReceiptText className="h-6 w-6" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium text-muted-foreground">Total financeiro</span>
+            <span className="mt-0.5 block break-words text-xl font-bold tabular-nums">{formatCurrency(totalRelatorios)}</span>
+            <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span>Recebidos {formatCurrency(totalRecebidoGeral)}</span>
+              <span>A receber {formatCurrency(totalAReceberGeral)}</span>
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        </Link>
         <div className="flex items-center justify-between gap-3 px-1">
           <h2 className="text-sm font-semibold">Recebimentos</h2>
           <div className="flex rounded-lg bg-secondary p-1" aria-label="Período financeiro">
