@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer } from "lucide-react";
+import { CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,8 @@ export const Route = createFileRoute("/_authenticated/painel")({
 
 function Resumo() {
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
+  const [periodoFinanceiroTipo, setPeriodoFinanceiroTipo] = useState<"mensal" | "anual">("mensal");
+  const [periodoFinanceiro, setPeriodoFinanceiro] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
     queryFn: fetchApontamentos,
@@ -53,8 +55,12 @@ function Resumo() {
   const totais = somarTotais(doMes);
   const financeiro = calcularValoresPeriodo(doMes, valores);
   const ultimos = doMes.slice(0, 5);
-  const relatoriosAbertos = relatorios.filter((item) => saldoRelatorio(item) > 0);
+  const relatoriosAbertos = relatorios.filter((item) => saldoRelatorio(item) > 0 && item.fim.startsWith(periodoFinanceiro));
   const totalAReceber = relatoriosAbertos.reduce((total, item) => total + saldoRelatorio(item), 0);
+  const relatoriosRecebidos = relatorios.filter((item) =>
+    item.valor_recebido > 0 && Boolean(item.data_recebimento?.startsWith(periodoFinanceiro)),
+  );
+  const totalRecebido = relatoriosRecebidos.reduce((total, item) => total + item.valor_recebido, 0);
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
@@ -63,11 +69,30 @@ function Resumo() {
     setMes(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`);
   };
 
+  const alterarTipoPeriodoFinanceiro = (tipo: "mensal" | "anual") => {
+    setPeriodoFinanceiroTipo(tipo);
+    setPeriodoFinanceiro((atual) => tipo === "anual" ? atual.slice(0, 4) : `${atual.slice(0, 4)}-${todayISO().slice(5, 7)}`);
+  };
+
+  const moverPeriodoFinanceiro = (diferenca: number) => {
+    if (periodoFinanceiroTipo === "anual") {
+      setPeriodoFinanceiro(String(Number(periodoFinanceiro.slice(0, 4)) + diferenca));
+      return;
+    }
+    const [ano, numeroMes] = periodoFinanceiro.split("-").map(Number);
+    if (!ano || !numeroMes) return;
+    const data = new Date(ano, numeroMes - 1 + diferenca, 1);
+    setPeriodoFinanceiro(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`);
+  };
+
   const nomeMes = new Date(`${mes}-01T12:00:00`).toLocaleDateString("pt-BR", {
     month: "long",
     year: "numeric",
   });
   const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+  const periodoFinanceiroLabel = periodoFinanceiroTipo === "anual"
+    ? periodoFinanceiro
+    : new Date(`${periodoFinanceiro}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   return (
     <PageShell title="Painel" subtitle="CP TECHNIC Horas">
@@ -97,11 +122,37 @@ function Resumo() {
         {[{ label: "Horas trab.", value: formatMinutes(totais.trabalho), icon: Timer }, { label: "Horas viagem", value: formatMinutes(totais.viagem), icon: MapPin }, { label: "KM rodados", value: String(totais.km), icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="ios-group p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-4 w-4" /></span><p className="mt-3 text-[0.68rem] text-muted-foreground">{label}</p><p className="mt-0.5 text-lg font-bold tabular-nums">{value}</p></div>)}
       </section>
 
-      <Link to="/relatorios-salvos" search={{ status: "aberto" }} className="press ios-group flex items-center gap-4 p-4">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-highlight text-highlight-foreground"><HandCoins className="h-6 w-6" /></span>
-        <span className="min-w-0 flex-1"><span className="block text-sm font-medium text-muted-foreground">A receber</span><span className="mt-0.5 block text-xl font-bold tabular-nums">{formatCurrency(totalAReceber)}</span><span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} relatório(s) em aberto</span></span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-      </Link>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <h2 className="text-sm font-semibold">Recebimentos</h2>
+          <div className="flex rounded-lg bg-secondary p-1" aria-label="Período financeiro">
+            {(["mensal", "anual"] as const).map((tipo) => (
+              <Button key={tipo} type="button" size="sm" variant={periodoFinanceiroTipo === tipo ? "default" : "ghost"} className="h-8 rounded-md px-3 text-xs capitalize" onClick={() => alterarTipoPeriodoFinanceiro(tipo)}>
+                {tipo}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="flex h-11 items-center justify-between">
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Período financeiro anterior" onClick={() => moverPeriodoFinanceiro(-1)}><ChevronLeft className="h-5 w-5" /></Button>
+          <p className="text-sm font-semibold capitalize">{periodoFinanceiroLabel}</p>
+          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Próximo período financeiro" onClick={() => moverPeriodoFinanceiro(1)}><ChevronRight className="h-5 w-5" /></Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Link to="/relatorios-salvos" search={{ status: "aberto", periodo: periodoFinanceiro, financeiro: true }} className="press ios-group min-w-0 p-4">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-highlight text-highlight-foreground"><HandCoins className="h-5 w-5" /></span>
+            <span className="mt-3 block text-sm font-medium text-muted-foreground">A receber</span>
+            <span className="mt-0.5 block break-words text-lg font-bold tabular-nums">{formatCurrency(totalAReceber)}</span>
+            <span className="mt-1 block text-xs text-muted-foreground">{relatoriosAbertos.length} em aberto</span>
+          </Link>
+          <Link to="/relatorios-salvos" search={{ status: "recebido", periodo: periodoFinanceiro, financeiro: true }} className="press ios-group min-w-0 p-4">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-success/15 text-success"><CheckCircle2 className="h-5 w-5" /></span>
+            <span className="mt-3 block text-sm font-medium text-muted-foreground">Recebidos</span>
+            <span className="mt-0.5 block break-words text-lg font-bold tabular-nums">{formatCurrency(totalRecebido)}</span>
+            <span className="mt-1 block text-xs text-muted-foreground">{relatoriosRecebidos.length} recebimento(s)</span>
+          </Link>
+        </div>
+      </section>
 
       <Section title="Composição do valor">
         <dl className="-my-2 divide-y divide-border">

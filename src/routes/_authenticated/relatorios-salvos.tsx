@@ -50,9 +50,15 @@ const tiposDespesa = [
 type TipoDespesa = typeof tiposDespesa[number]["value"];
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
-  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" } => {
+  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" | "recebido"; periodo?: string; financeiro?: boolean } => {
     const value = search["status"];
-    return value === "aberto" || value === "pendente" || value === "parcial" || value === "pago" ? { status: value } : {};
+    const periodo = typeof search["periodo"] === "string" && /^\d{4}(?:-\d{2})?$/.test(search["periodo"])
+      ? search["periodo"]
+      : undefined;
+    const status = value === "aberto" || value === "recebido" || value === "pendente" || value === "parcial" || value === "pago"
+      ? value
+      : undefined;
+    return { status, periodo, financeiro: search["financeiro"] === true };
   },
   head: () => ({ meta: [
     { title: "Relatórios salvos — CP TECHNIC Horas" },
@@ -68,10 +74,10 @@ export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
 function RelatoriosSalvos() {
   const search = Route.useSearch();
   const [busca, setBusca] = useState("");
-  const [periodo, setPeriodo] = useState<"ultimos" | "30" | "60" | "todos">("ultimos");
+  const [periodo, setPeriodo] = useState<"ultimos" | "30" | "60" | "todos">(search.periodo ? "todos" : "ultimos");
   const [generatingId, setGeneratingId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"todos" | "aberto" | PagamentoStatus>(search.status ?? "todos");
-  const [statusRelatorio, setStatusRelatorio] = useState<"ativos" | StatusRelatorio>("ativos");
+  const [status, setStatus] = useState<"todos" | "aberto" | "recebido" | PagamentoStatus>(search.status ?? "todos");
+  const [statusRelatorio, setStatusRelatorio] = useState<"todos" | "ativos" | StatusRelatorio>(search.financeiro ? "todos" : "ativos");
   const [recebimento, setRecebimento] = useState<RelatorioSalvo | null>(null);
   const [valorRecebido, setValorRecebido] = useState("");
   const [dataRecebimento, setDataRecebimento] = useState("");
@@ -90,12 +96,12 @@ function RelatoriosSalvos() {
       return;
     }
     const savedStatus = window.localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
-    if (savedStatus === "todos" || savedStatus === "aberto" || savedStatus === "pendente" || savedStatus === "parcial" || savedStatus === "pago") {
+    if (savedStatus === "todos" || savedStatus === "aberto" || savedStatus === "recebido" || savedStatus === "pendente" || savedStatus === "parcial" || savedStatus === "pago") {
       setStatus(savedStatus);
     }
   }, [search.status]);
 
-  const selectStatus = (value: "todos" | "aberto" | PagamentoStatus) => {
+  const selectStatus = (value: "todos" | "aberto" | "recebido" | PagamentoStatus) => {
     setStatus(value);
     window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, value);
   };
@@ -115,9 +121,14 @@ function RelatoriosSalvos() {
       .filter((item) => {
         if (term && !normalizeSearchText(item.cliente_nome).includes(term)) return false;
         if (statusRelatorio === "ativos" && item.status_relatorio === "concluido") return false;
-        if (statusRelatorio !== "ativos" && item.status_relatorio !== statusRelatorio) return false;
+        if (statusRelatorio !== "todos" && statusRelatorio !== "ativos" && item.status_relatorio !== statusRelatorio) return false;
         if (status === "aberto" && item.pagamento_status === "pago") return false;
-        if (status !== "todos" && status !== "aberto" && item.pagamento_status !== status) return false;
+        if (status === "recebido" && item.valor_recebido <= 0) return false;
+        if (status !== "todos" && status !== "aberto" && status !== "recebido" && item.pagamento_status !== status) return false;
+        if (search.periodo) {
+          const dataPeriodo = status === "recebido" ? item.data_recebimento : item.fim;
+          if (!dataPeriodo?.startsWith(search.periodo)) return false;
+        }
         if (limiteDias == null) return true;
         const limite = new Date(agora);
         limite.setDate(limite.getDate() - limiteDias);
@@ -125,7 +136,7 @@ function RelatoriosSalvos() {
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, periodo === "ultimos" ? 12 : undefined);
-  }, [busca, periodo, relatorios, status, statusRelatorio]);
+  }, [busca, periodo, relatorios, search.periodo, status, statusRelatorio]);
 
   const filtros = [
     { id: "ultimos", label: "Últimos" },
@@ -338,6 +349,13 @@ function RelatoriosSalvos() {
         {busca ? <Button type="button" variant="ghost" size="icon" aria-label="Limpar busca" onClick={() => setBusca("")} className="absolute right-1.5 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full"><X className="h-4 w-4" /></Button> : null}
       </div>
 
+      {search.periodo ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-4 py-3 text-sm">
+          <span className="font-medium">Período: {search.periodo.length === 4 ? search.periodo : new Date(`${search.periodo}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</span>
+          <Button asChild type="button" variant="ghost" size="sm" className="h-8 rounded-lg px-3"><Link to="/relatorios-salvos" search={{ status: search.status }}>Limpar</Link></Button>
+        </div>
+      ) : null}
+
       <div className="-mx-4 border-b border-border bg-card px-4">
         <div className="grid grid-cols-4" role="tablist" aria-label="Período dos relatórios">
           {filtros.map((filtro) => (
@@ -358,9 +376,9 @@ function RelatoriosSalvos() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Status do pagamento">
-        {(["todos", "aberto", "pendente", "parcial", "pago"] as const).map((value) => (
+        {(["todos", "aberto", "recebido", "pendente", "parcial", "pago"] as const).map((value) => (
           <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={status === value} onClick={() => selectStatus(value)}>
-            {value === "todos" ? "Todos" : value === "aberto" ? "Em aberto" : statusInfo[value].label}
+            {value === "todos" ? "Todos" : value === "aberto" ? "Em aberto" : value === "recebido" ? "Recebidos" : statusInfo[value].label}
           </Button>
         ))}
       </div>
@@ -368,9 +386,9 @@ function RelatoriosSalvos() {
       <div className="space-y-2">
         <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Situação do relatório</p>
         <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Situação do relatório">
-          {(["ativos", "pendente", "aguardando_pagamento", "concluido"] as const).map((value) => (
+          {(["todos", "ativos", "pendente", "aguardando_pagamento", "concluido"] as const).map((value) => (
             <Button key={value} type="button" size="sm" variant={statusRelatorio === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={statusRelatorio === value} onClick={() => setStatusRelatorio(value)}>
-              {value === "ativos" ? "Ativos" : statusRelatorioOptions.find((option) => option.value === value)?.label}
+              {value === "todos" ? "Todos" : value === "ativos" ? "Ativos" : statusRelatorioOptions.find((option) => option.value === value)?.label}
             </Button>
           ))}
         </div>
