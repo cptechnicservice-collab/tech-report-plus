@@ -38,14 +38,15 @@ function RelatoriosTotais() {
         .filter((item) => item.forma_pagamento === forma.value)
         .reduce((soma, item) => soma + item.valor_recebido, 0),
     })).filter((item) => item.quantidade > 0);
-    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; saldo: number }>();
+    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; saldo: number; concluidos: number }>();
     relatorios.forEach((item) => {
       const chave = item.cliente_id ?? item.cliente_nome;
-      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, saldo: 0 };
+      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, saldo: 0, concluidos: 0 };
       atual.relatorios += 1;
       atual.total += item.total_geral;
       atual.recebido += item.valor_recebido;
       atual.saldo += saldoRelatorio(item);
+      if (item.status_relatorio === "concluido") atual.concluidos += 1;
       clientes.set(chave, atual);
     });
     return {
@@ -121,10 +122,18 @@ function RelatoriosTotais() {
             {resumo.clientes.map((cliente) => (
               <li key={cliente.nome} className="py-3">
                 <div className="flex items-start gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Users className="h-4 w-4" /></span>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}><Users className="h-4 w-4" /></span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0"><p className="truncate text-sm font-semibold">{cliente.nome}</p><p className="text-xs text-muted-foreground">{cliente.relatorios} relatório(s)</p></div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{cliente.nome}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}>
+                            {cliente.saldo <= 0 ? "Pago" : cliente.concluidos === cliente.relatorios ? "Finalizado" : "Pendente"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{cliente.relatorios} relatório(s)</span>
+                        </div>
+                      </div>
                       <p className="shrink-0 text-sm font-bold tabular-nums">{formatCurrency(cliente.total)}</p>
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
