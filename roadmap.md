@@ -95,3 +95,4 @@
 - [x] Mostrar valores a receber e recebidos no Painel, com filtro financeiro mensal ou anual e acesso à lista filtrada.
 - [x] Adicionar total financeiro geral no Painel e uma tela detalhada de relatórios totais, recebidos e a receber.
 - [x] Destacar os clientes nos relatórios totais com estados coloridos de Pago, Finalizado ou Pendente.
+- [x] Mostrar o CNPJ cadastrado junto ao nome do cliente no PDF do relatório.

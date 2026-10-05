@@ -244,17 +244,17 @@ export async function generateClientReport(
 
   const infoTop = 49.2;
   doc.setFillColor(...colors.light);
-  doc.rect(0, infoTop, pageWidth, 14, "F");
+  doc.rect(0, infoTop, pageWidth, 17, "F");
   const infoColumns = [
-    { label: "CLIENTE", value: cliente.nome, x: marginX, width: 78 },
+    { label: "CLIENTE", value: cliente.nome, detail: cliente.cnpj ? `CNPJ: ${cliente.cnpj}` : null, x: marginX, width: 78 },
     { label: "CIDADE", value: cliente.cidade || "Não informada", x: 94, width: 45 },
     { label: "PERÍODO", value: `${formatDateBR(inicio)} a ${formatDateBR(fim)}`, x: 143, width: 55 },
   ];
   doc.setDrawColor(...colors.divider);
   doc.setLineWidth(0.2);
-  doc.line(90, infoTop + 2.5, 90, infoTop + 11.5);
-  doc.line(139, infoTop + 2.5, 139, infoTop + 11.5);
-  infoColumns.forEach(({ label, value, x, width }) => {
+  doc.line(90, infoTop + 2.5, 90, infoTop + 14.5);
+  doc.line(139, infoTop + 2.5, 139, infoTop + 14.5);
+  infoColumns.forEach(({ label, value, detail, x, width }) => {
     doc.setTextColor(...colors.gray);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
@@ -264,6 +264,12 @@ export async function generateClientReport(
     doc.setFontSize(9);
     const fitted = doc.splitTextToSize(value, width) as string[];
     doc.text(fitted[0] ?? "", x, infoTop + 10.5);
+    if (detail) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...colors.text2);
+      doc.text(detail, x, infoTop + 14.2);
+    }
   });
 
   const totals = somarTotais(apontamentos);
@@ -275,7 +281,7 @@ export async function generateClientReport(
   const totalComPecas = subtotalComPecas - descontoAplicado;
   const sortedEntries = [...apontamentos].sort((a, b) => a.data.localeCompare(b.data));
   autoTable(doc, {
-    startY: 67,
+    startY: 70,
     margin: { left: marginX, right: marginX, bottom: 24 },
     theme: "plain",
     styles: { font: "helvetica", fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak", valign: "middle", textColor: colors.text, lineColor: colors.hairline, lineWidth: { bottom: 0.08 } },
