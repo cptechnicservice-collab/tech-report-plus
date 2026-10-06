@@ -27,6 +27,11 @@ type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos
 
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 const STATUS_FILTER_STORAGE_KEY = "cp-technic-relatorios-status";
+const STATUS_RELATORIO_ORDER: Record<StatusRelatorio, number> = {
+  pendente: 0,
+  aguardando_pagamento: 1,
+  concluido: 2,
+};
 
 const attachmentContent = (anexo: AnexoDespesa) => typeof anexo === "string" ? anexo : anexo.conteudo;
 const attachmentIsPdf = (anexo: AnexoDespesa) => typeof anexo !== "string" && anexo.tipo === "pdf";
@@ -138,7 +143,11 @@ function RelatoriosSalvos() {
         limite.setDate(limite.getDate() - limiteDias);
         return new Date(item.created_at) >= limite;
       })
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a, b) => {
+        const statusDifference = STATUS_RELATORIO_ORDER[a.status_relatorio] - STATUS_RELATORIO_ORDER[b.status_relatorio];
+        if (statusDifference !== 0) return statusDifference;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      })
       .slice(0, periodo === "ultimos" ? 12 : undefined);
   }, [busca, periodo, relatorios, search.periodo, status, statusRelatorio]);
 

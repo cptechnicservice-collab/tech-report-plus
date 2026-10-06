@@ -96,3 +96,4 @@
 - [x] Adicionar total financeiro geral no Painel e uma tela detalhada de relatórios totais, recebidos e a receber.
 - [x] Destacar os clientes nos relatórios totais com estados coloridos de Pago, Finalizado ou Pendente.
 - [x] Mostrar o CNPJ cadastrado junto ao nome do cliente no PDF do relatório.
+- [x] Ordenar relatórios salvos por situação, priorizando pendentes, e depois pela data de criação.
