@@ -3,9 +3,9 @@
 ## Segurança e robustez dos apontamentos
 
 - [ ] Ignorar/remover rastreamento de .env: bloqueado porque .gitignore e .env são gerenciados pela plataforma.
-- [ ] Documentar variáveis de ambiente sem valores reais.
-- [ ] Validar cálculos noturnos compartilhados e bloquear horários de trabalho iguais e odômetro regressivo.
-- [ ] Adicionar script de verificação de tipos e conferir validações sem alterar registros existentes.
+- [x] Documentar variáveis de ambiente sem valores reais em .env.example.
+- [x] Validar cálculos noturnos compartilhados e bloquear horários de trabalho iguais e odômetro regressivo no formulário, persistência offline e banco, sem modificar registros antigos.
+- [x] Adicionar script typecheck; quatro testes passaram e formulário autenticado validou 23:00–01:00, bloqueio de horários iguais e funcionamento offline sem salvar registros. Compilação automática OK; verificação de tipos isolada não executada, pois é gerenciada pela plataforma.
 
 - [x] Criar Catálogo de Peças simples com busca e cadastro offline.
 - [x] Inspirar a apresentação do catálogo no Agenda Boa enviado, mantendo a identidade do CP TECHNIC.

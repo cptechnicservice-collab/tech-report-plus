@@ -25,3 +25,4 @@
 - Use shared time-duration helpers for form, history, and dashboard totals, including midnight rollover, to keep displayed and persisted calculations consistent.
 - Validate time and mileage through the shared apontamento schema before both form submission and offline persistence, preserving legacy odometer fields to prevent bypasses and data loss.
 - Keep environment examples value-free and use the platform-generated environment clients; generated environment and Git configuration files are platform-managed and must not be rewritten.
+- Enforce odometer ordering and distinct filled work times on new database writes with NOT VALID constraints, so validation cannot be bypassed and existing records remain untouched.
