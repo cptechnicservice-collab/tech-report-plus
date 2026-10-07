@@ -836,6 +836,8 @@ type RelatorioWrite = Omit<
   | "total_despesas"
   | "desconto"
   | "source_orcamento_id"
+  | "parcelas"
+  | "data_pagamento_prevista"
 > &
   Partial<
     Pick<
@@ -853,6 +855,8 @@ type RelatorioWrite = Omit<
       | "total_despesas"
       | "desconto"
       | "source_orcamento_id"
+      | "parcelas"
+      | "data_pagamento_prevista"
     >
   >;
 
@@ -886,6 +890,8 @@ function relatorioPayload(
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
     source_orcamento_id: payload.source_orcamento_id ?? null,
+    parcelas: (payload.parcelas ?? []) as unknown as Json,
+    data_pagamento_prevista: payload.data_pagamento_prevista ?? null,
   };
 }
 
@@ -901,6 +907,8 @@ export async function saveRelatorioOffline(payload: RelatorioWrite) {
     data_recebimento: payload.data_recebimento ?? null,
     forma_pagamento: payload.forma_pagamento ?? null,
     source_orcamento_id: payload.source_orcamento_id ?? null,
+    parcelas: payload.parcelas ?? [],
+    data_pagamento_prevista: payload.data_pagamento_prevista ?? null,
     observacao_relatorio: payload.observacao_relatorio ?? "",
     despesas_snapshot: payload.despesas_snapshot ?? [],
     total_despesas: payload.total_despesas ?? 0,

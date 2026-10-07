@@ -19,6 +19,8 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
+import { ParcelamentoEditor, parcelasDoEstado, type ParcelamentoState } from "@/components/ParcelamentoEditor";
+import { recebimentosDoRelatorio, relatorioComParcelas, somaParcelas, vencimentoInfo } from "@/lib/parcelas";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, statusRelatorioOptions, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo, type StatusRelatorio } from "@/lib/relatorios";
@@ -32,6 +34,16 @@ const STATUS_RELATORIO_ORDER: Record<StatusRelatorio, number> = {
   aguardando_pagamento: 1,
   concluido: 2,
 };
+
+const FILTROS_VENCIMENTO = [
+  { id: "todos", label: "Todos" },
+  { id: "atrasado", label: "Atrasados" },
+  { id: "hoje", label: "Hoje" },
+  { id: "7", label: "7 dias" },
+  { id: "30", label: "30 dias" },
+  { id: "pago", label: "Pagos" },
+] as const;
+type FiltroVencimento = typeof FILTROS_VENCIMENTO[number]["id"];
 
 const attachmentContent = (anexo: AnexoDespesa) => typeof anexo === "string" ? anexo : anexo.conteudo;
 const attachmentIsPdf = (anexo: AnexoDespesa) => typeof anexo !== "string" && anexo.tipo === "pdf";
@@ -55,7 +67,7 @@ const tiposDespesa = [
 type TipoDespesa = typeof tiposDespesa[number]["value"];
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
-  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" | "recebido"; periodo?: string; financeiro?: boolean } => {
+  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" | "recebido"; periodo?: string; financeiro?: boolean; abrir?: string; vencimento?: FiltroVencimento } => {
     const value = search["status"];
     const periodo = typeof search["periodo"] === "string" && /^\d{4}(?:-\d{2})?$/.test(search["periodo"])
       ? search["periodo"]
@@ -67,6 +79,8 @@ export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
       ...(status ? { status } : {}),
       ...(periodo ? { periodo } : {}),
       ...(search["financeiro"] === true ? { financeiro: true } : {}),
+      ...(typeof search["abrir"] === "string" ? { abrir: search["abrir"] } : {}),
+      ...(typeof search["vencimento"] === "string" && FILTROS_VENCIMENTO.some((f) => f.id === search["vencimento"]) ? { vencimento: search["vencimento"] as FiltroVencimento } : {}),
     };
   },
   head: () => ({ meta: [
@@ -96,6 +110,8 @@ function RelatoriosSalvos() {
   const [desconto, setDesconto] = useState("");
   const [despesas, setDespesas] = useState<DespesaEditavel[]>([]);
   const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
+  const [parcelamento, setParcelamento] = useState<ParcelamentoState>({ parcelar: false, quantidade: 2, primeiro: "", parcelas: [], dataPrevista: "" });
+  const [filtroVencimento, setFiltroVencimento] = useState<FiltroVencimento>(search.vencimento ?? "todos");
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
 
@@ -134,6 +150,14 @@ function RelatoriosSalvos() {
         if (status === "aberto" && item.pagamento_status === "pago") return false;
         if (status === "recebido" && item.valor_recebido <= 0) return false;
         if (status !== "todos" && status !== "aberto" && status !== "recebido" && item.pagamento_status !== status) return false;
+        if (filtroVencimento !== "todos") {
+          const recs = recebimentosDoRelatorio(item);
+          const ok = recs.some((r) => filtroVencimento === "pago" ? r.info.tipo === "pago"
+            : filtroVencimento === "atrasado" ? r.info.tipo === "atrasado"
+            : filtroVencimento === "hoje" ? r.info.tipo === "hoje"
+            : r.info.tipo !== "pago" && r.info.tipo !== "atrasado" && r.info.dias <= Number(filtroVencimento));
+          if (!ok) return false;
+        }
         if (search.periodo) {
           const dataPeriodo = status === "recebido" ? item.data_recebimento : item.fim;
           if (!dataPeriodo?.startsWith(search.periodo)) return false;
@@ -149,7 +173,14 @@ function RelatoriosSalvos() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       })
       .slice(0, periodo === "ultimos" ? 12 : undefined);
-  }, [busca, periodo, relatorios, search.periodo, status, statusRelatorio]);
+  }, [busca, periodo, relatorios, search.periodo, status, statusRelatorio, filtroVencimento]);
+
+  useEffect(() => {
+    if (!search.abrir) return;
+    const alvo = relatorios.find((item) => item.id === search.abrir);
+    if (alvo) openRecebimento(alvo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.abrir, relatorios.length]);
 
   const filtros = [
     { id: "ultimos", label: "Últimos" },
@@ -221,6 +252,25 @@ function RelatoriosSalvos() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível registrar o recebimento"),
   });
 
+  const pagarParcela = useMutation({
+    mutationFn: async ({ parcelaId, pago }: { parcelaId: string; pago: boolean }) => {
+      if (!recebimento) throw new Error("Relatório não encontrado.");
+      if (pago && !dataRecebimento) throw new Error("Informe a data do pagamento.");
+      const parcelas = recebimento.parcelas.map((p) => p.id === parcelaId
+        ? { ...p, pago_em: pago ? dataRecebimento : null, forma_pagamento: pago ? formaPagamento : null }
+        : p);
+      const atualizado = relatorioComParcelas(recebimento, parcelas);
+      const result = await saveRelatorioOffline(atualizado);
+      setRecebimento(atualizado);
+      return result;
+    },
+    onSuccess: (result, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
+      toast.success(result.queued ? "Parcela salva no aparelho" : vars.pago ? "Parcela marcada como paga" : "Pagamento desfeito");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar a parcela"),
+  });
+
   const saveStatusRelatorio = useMutation({
     mutationFn: ({ item, value }: { item: RelatorioSalvo; value: StatusRelatorio }) =>
       saveRelatorioOffline({ ...item, status_relatorio: value }),
@@ -234,6 +284,13 @@ function RelatoriosSalvos() {
   const openObservacao = (item: RelatorioSalvo) => {
     setRelatorioObservacao(item);
     setObservacao(item.observacao_relatorio ?? "");
+    setParcelamento({
+      parcelar: item.parcelas.length > 0,
+      quantidade: item.parcelas[0]?.total ?? 2,
+      primeiro: item.parcelas[0]?.vencimento ?? "",
+      parcelas: item.parcelas.map((p) => ({ ...p, valor: p.valor.toFixed(2).replace(".", ",") })),
+      dataPrevista: item.data_pagamento_prevista ?? "",
+    });
     setDesconto(item.desconto > 0 ? String(item.desconto).replace(".", ",") : "");
     setDespesas((item.despesas_snapshot ?? []).map((despesa) => ({
       ...despesa,
@@ -311,14 +368,22 @@ function RelatoriosSalvos() {
       if (!Number.isFinite(descontoNumerico) || descontoNumerico < 0) throw new Error("Informe um desconto válido.");
       if (descontoNumerico > subtotal) throw new Error("O desconto não pode ser maior que o total do relatório.");
       const totalGeral = subtotal - descontoNumerico;
+      const parcelas = parcelamento.parcelar ? parcelasDoEstado(parcelamento) : [];
+      if (parcelamento.parcelar) {
+        if (parcelas.length < 2) throw new Error("Escolha a data do 1º vencimento para gerar as parcelas.");
+        if (parcelas.some((p) => !p.vencimento || p.valor <= 0)) throw new Error("Cada parcela precisa de data e valor maior que zero.");
+        if (Math.abs(somaParcelas(parcelas) - totalGeral) > 0.004) throw new Error(`A soma das parcelas (${formatCurrency(somaParcelas(parcelas))}) não fecha com o total (${formatCurrency(totalGeral)}).`);
+      }
+      const base = { ...relatorioObservacao, total_geral: totalGeral, data_pagamento_prevista: parcelamento.parcelar ? null : (parcelamento.dataPrevista || null) };
+      if (parcelamento.parcelar || relatorioObservacao.parcelas.length > 0) Object.assign(base, relatorioComParcelas(base, parcelas));
       return saveRelatorioOffline({
-        ...relatorioObservacao,
+        ...base,
         observacao_relatorio: observacao.trim(),
         despesas_snapshot: despesasValidas,
         total_despesas: totalDespesas,
         desconto: descontoNumerico,
         total_geral: totalGeral,
-        pagamento_status: statusPagamento(totalGeral, relatorioObservacao.valor_recebido),
+        pagamento_status: statusPagamento(totalGeral, base.valor_recebido),
       });
     },
     onSuccess: (result) => {
@@ -331,15 +396,17 @@ function RelatoriosSalvos() {
 
   const generateReceipt = async (item: RelatorioSalvo) => {
     if (!item.data_recebimento || !item.forma_pagamento || item.valor_recebido <= 0) return;
+    const ultimaPaga = [...item.parcelas].filter((p) => p.pago_em).sort((a, b) => (b.pago_em ?? "").localeCompare(a.pago_em ?? "") || b.numero - a.numero)[0];
     setGeneratingId(`recibo-${item.id}`);
     try {
       await generatePaymentReceipt({
         cliente: item.cliente_snapshot,
         inicio: item.inicio,
         fim: item.fim,
-        valorRecebido: item.valor_recebido,
-        formaPagamento: formasPagamento.find((option) => option.value === item.forma_pagamento)?.label ?? "Outro",
-        dataRecebimento: item.data_recebimento,
+        valorRecebido: ultimaPaga ? ultimaPaga.valor : item.valor_recebido,
+        formaPagamento: formasPagamento.find((option) => option.value === (ultimaPaga?.forma_pagamento ?? item.forma_pagamento))?.label ?? "Outro",
+        dataRecebimento: ultimaPaga?.pago_em ?? item.data_recebimento,
+        ...(ultimaPaga ? { parcela: `Parcela ${ultimaPaga.numero}/${ultimaPaga.total} · vencimento ${formatDateBR(ultimaPaga.vencimento)}` } : item.data_pagamento_prevista ? { parcela: `Vencimento ${formatDateBR(item.data_pagamento_prevista)}` } : {}),
       });
     } catch (error) {
       toast.error(error instanceof Error ? `Não foi possível gerar o recibo: ${error.message}` : "Não foi possível gerar o recibo");
@@ -397,6 +464,15 @@ function RelatoriosSalvos() {
       </div>
 
       <div className="space-y-2">
+        <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Vencimento</p>
+        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Vencimento">
+          {FILTROS_VENCIMENTO.map((f) => (
+            <Button key={f.id} type="button" size="sm" variant={filtroVencimento === f.id ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={filtroVencimento === f.id} onClick={() => setFiltroVencimento(f.id)}>{f.label}</Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
         <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Situação do relatório</p>
         <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Situação do relatório">
           {(["todos", "ativos", "pendente", "aguardando_pagamento", "concluido"] as const).map((value) => (
@@ -424,6 +500,7 @@ function RelatoriosSalvos() {
                     <p className="mt-1 text-sm text-muted-foreground">{formatDateBR(item.inicio)} a {formatDateBR(item.fim)}</p>
                     <p className="mt-1 text-xs text-muted-foreground">Serviços {formatCurrency(item.total_servicos)} · Peças {formatCurrency(item.total_pecas)}{item.total_despesas > 0 ? ` · Despesas ${formatCurrency(item.total_despesas)}` : ""}{item.desconto > 0 ? ` · Desconto ${formatCurrency(item.desconto)}` : ""}</p>
                     {item.pagamento_status !== "pago" ? <p className="mt-1 text-xs font-medium text-warning-foreground">Saldo {formatCurrency(saldoRelatorio(item))}</p> : null}
+                    {(() => { const prox = recebimentosDoRelatorio(item).find((r) => r.info.tipo !== "pago"); return prox ? <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs"><span className={`inline-flex rounded-full px-2 py-0.5 font-semibold ${prox.info.className}`}>{prox.info.label}</span><span className="text-muted-foreground">{prox.label} · vence {formatDateBR(prox.vencimento)} · {formatCurrency(prox.valor)}</span></p> : null; })()}
                     {item.observacao_relatorio ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">Obs.: {item.observacao_relatorio}</p> : null}
                   </div>
                 </div>
@@ -452,13 +529,26 @@ function RelatoriosSalvos() {
             <DrawerTitle>Registrar recebimento</DrawerTitle>
             <DrawerDescription>{recebimento?.cliente_nome} · Total {recebimento ? formatCurrency(recebimento.total_geral) : ""}</DrawerDescription>
           </DrawerHeader>
-          <div className="space-y-4 px-4">
-            <div className="space-y-1.5"><Label htmlFor="payment-value">Valor recebido</Label><Input id="payment-value" inputMode="decimal" value={valorRecebido} onChange={(event) => setValorRecebido(event.target.value)} className="h-12 rounded-xl" /></div>
-            <div className="space-y-1.5"><Label htmlFor="payment-date">Data</Label><Input id="payment-date" type="date" value={dataRecebimento} onChange={(event) => setDataRecebimento(event.target.value)} className="h-12 rounded-xl" /></div>
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto px-4">
+            {recebimento && recebimento.parcelas.length > 0 ? (
+              <ul className="space-y-2">
+                {recebimento.parcelas.map((parcela) => { const info = vencimentoInfo(parcela.vencimento, parcela.pago_em); return (
+                  <li key={parcela.id} className={`rounded-xl border p-3 ${info.tipo === "atrasado" ? "border-destructive/40" : "border-border"}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div><p className="text-sm font-semibold">Parcela {parcela.numero}/{parcela.total} · {formatCurrency(parcela.valor)}</p><p className="text-xs text-muted-foreground">Vencimento {formatDateBR(parcela.vencimento)}{parcela.pago_em ? ` · pago em ${formatDateBR(parcela.pago_em)}` : ""}</p></div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${info.className}`}>{info.label}</span>
+                    </div>
+                    <Button type="button" size="sm" variant={parcela.pago_em ? "ghost" : "default"} className="mt-2 h-10 w-full rounded-xl" disabled={pagarParcela.isPending} onClick={() => pagarParcela.mutate({ parcelaId: parcela.id, pago: !parcela.pago_em })}>{parcela.pago_em ? "Desfazer pagamento" : "Marcar como pago"}</Button>
+                  </li>
+                ); })}
+              </ul>
+            ) : null}
+            {recebimento && recebimento.parcelas.length > 0 ? null : <div className="space-y-1.5"><Label htmlFor="payment-value">Valor recebido</Label><Input id="payment-value" inputMode="decimal" value={valorRecebido} onChange={(event) => setValorRecebido(event.target.value)} className="h-12 rounded-xl" /></div>}
+            <div className="space-y-1.5"><Label htmlFor="payment-date">{recebimento && recebimento.parcelas.length > 0 ? "Data do pagamento" : "Data"}</Label><Input id="payment-date" type="date" value={dataRecebimento} onChange={(event) => setDataRecebimento(event.target.value)} className="h-12 rounded-xl" /></div>
             <div className="space-y-1.5"><Label htmlFor="payment-method">Forma de pagamento</Label><select id="payment-method" value={formaPagamento} onChange={(event) => setFormaPagamento(event.target.value as FormaPagamento)} className="ios-field h-12 w-full border px-3">{formasPagamento.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
           </div>
           <DrawerFooter>
-            <Button className="h-12 rounded-xl" disabled={saveRecebimento.isPending} onClick={() => saveRecebimento.mutate()}>{saveRecebimento.isPending ? "Salvando..." : "Confirmar recebimento"}</Button>
+            {recebimento && recebimento.parcelas.length > 0 ? null : <Button className="h-12 rounded-xl" disabled={saveRecebimento.isPending} onClick={() => saveRecebimento.mutate()}>{saveRecebimento.isPending ? "Salvando..." : "Confirmar recebimento"}</Button>}
             <DrawerClose asChild><Button variant="ghost" className="h-11 rounded-xl">Cancelar</Button></DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -479,6 +569,7 @@ function RelatoriosSalvos() {
               <Label htmlFor="saved-report-note">Observação</Label>
               <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Detalhes gerais do relatório" rows={4} />
             </div>
+            {relatorioObservacao ? <ParcelamentoEditor total={Math.max(0, relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + despesas.reduce((t, d) => t + (Number(d.valor.replace(",", ".")) || 0), 0) - (Number(desconto.replace(",", ".")) || 0))} value={parcelamento} onChange={setParcelamento} /> : null}
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div><p className="text-sm font-semibold">Despesas adicionais</p><p className="text-xs text-muted-foreground">Hotel, pedágio ou outras despesas</p></div>

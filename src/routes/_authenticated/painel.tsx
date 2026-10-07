@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Gauge, HandCoins, MapPin, ReceiptText, Timer } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
+import { PagamentosCard } from "@/components/PagamentosAlertas";
 import { Button } from "@/components/ui/button";
 import {
   fetchApontamentos,
@@ -168,6 +169,8 @@ function Resumo() {
           </Link>
         </div>
       </section>
+
+      <PagamentosCard relatorios={relatorios} />
 
       <Section title="Composição do valor">
         <dl className="-my-2 divide-y divide-border">
