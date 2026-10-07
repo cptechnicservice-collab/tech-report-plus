@@ -1,5 +1,13 @@
 # Roadmap
 
+## Qualidade de código
+
+- [ ] Configurar Vitest e cobrir horas, KM, pagamentos, numeração e cálculos financeiros/parcelas.
+- [ ] Criar CI para lint, typecheck e testes nos pushes para main.
+- [ ] Separar cache, fila e sincronização offline e módulos PDF mantendo API e comportamento.
+- [ ] Injetar versão do cache no build e revalidar assets estáticos em segundo plano.
+- [ ] Atualizar documentação de desenvolvimento, ambiente e migrations.
+
 ## Segurança e robustez dos apontamentos
 
 - [ ] Ignorar/remover rastreamento de .env: bloqueado porque .gitignore e .env são gerenciados pela plataforma.
