@@ -155,6 +155,13 @@
       "when": 1790735992890,
       "tag": "0021_add_missing_query_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791339374082,
+      "tag": "0022_add_report_installments",
+      "breakpoints": true
     }
   ]
 }

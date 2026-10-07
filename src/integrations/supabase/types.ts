@@ -513,6 +513,7 @@ export type Database = {
           cliente_nome: string
           cliente_snapshot: Json
           created_at: string
+          data_pagamento_prevista: string | null
           data_recebimento: string | null
           desconto: number
           despesas_snapshot: Json
@@ -524,6 +525,7 @@ export type Database = {
           numero_relatorio: string | null
           observacao_relatorio: string
           pagamento_status: string
+          parcelas: Json
           pecas_snapshot: Json
           source_orcamento_id: string | null
           status_relatorio: string
@@ -542,6 +544,7 @@ export type Database = {
           cliente_nome: string
           cliente_snapshot: Json
           created_at?: string
+          data_pagamento_prevista?: string | null
           data_recebimento?: string | null
           desconto?: number
           despesas_snapshot?: Json
@@ -553,6 +556,7 @@ export type Database = {
           numero_relatorio?: string | null
           observacao_relatorio?: string
           pagamento_status?: string
+          parcelas?: Json
           pecas_snapshot?: Json
           source_orcamento_id?: string | null
           status_relatorio?: string
@@ -571,6 +575,7 @@ export type Database = {
           cliente_nome?: string
           cliente_snapshot?: Json
           created_at?: string
+          data_pagamento_prevista?: string | null
           data_recebimento?: string | null
           desconto?: number
           despesas_snapshot?: Json
@@ -582,6 +587,7 @@ export type Database = {
           numero_relatorio?: string | null
           observacao_relatorio?: string
           pagamento_status?: string
+          parcelas?: Json
           pecas_snapshot?: Json
           source_orcamento_id?: string | null
           status_relatorio?: string
