@@ -20,7 +20,7 @@ import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
 import { ParcelamentoEditor, parcelasDoEstado, type ParcelamentoState } from "@/components/ParcelamentoEditor";
-import { localTodayISO, recebimentosDoRelatorio, relatorioComParcelas, somaParcelas, vencimentoInfo } from "@/lib/parcelas";
+import { recebimentosDoRelatorio, relatorioComParcelas, somaParcelas, vencimentoInfo } from "@/lib/parcelas";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, statusRelatorioOptions, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo, type StatusRelatorio } from "@/lib/relatorios";
