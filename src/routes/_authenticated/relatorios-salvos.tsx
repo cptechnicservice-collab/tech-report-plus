@@ -391,7 +391,11 @@ function RelatoriosSalvos() {
       setRelatorioObservacao(null);
       toast.success(result.queued ? "Informações salvas no aparelho" : "Valores e informações salvos");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar as informações"),
+    onError: (error) => {
+      const detalhe = error && typeof error === "object" && "message" in error ? String((error as { message: unknown }).message) : "";
+      console.error("Falha ao salvar informações do relatório", error);
+      toast.error(detalhe ? `Não foi possível salvar: ${detalhe}` : "Não foi possível salvar as informações");
+    },
   });
 
   const generateReceipt = async (item: RelatorioSalvo) => {
