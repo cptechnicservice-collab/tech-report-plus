@@ -22,3 +22,6 @@
 - Painéis flutuantes usam as variáveis globais `--kb-inset` e `--vvh` derivadas de `visualViewport` para permanecer acima do teclado do iPhone.
 - Horários de apontamentos usam um seletor de rolagem compartilhado em intervalos de cinco minutos, mantendo valores no formato `HH:mm` para preservar cálculos e persistência.
 - A visão de relatórios totais deriva seus indicadores do cache de relatórios salvos, preservando os cálculos financeiros e o funcionamento offline.
+- Use shared time-duration helpers for form, history, and dashboard totals, including midnight rollover, to keep displayed and persisted calculations consistent.
+- Validate time and mileage through the shared apontamento schema before both form submission and offline persistence, preserving legacy odometer fields to prevent bypasses and data loss.
+- Keep environment examples value-free and use the platform-generated environment clients; generated environment and Git configuration files are platform-managed and must not be rewritten.

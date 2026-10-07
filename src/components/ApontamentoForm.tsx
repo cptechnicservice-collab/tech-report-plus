@@ -43,6 +43,7 @@ import { fetchAgendamento } from "@/lib/agenda";
 import { fetchOrcamento } from "@/lib/orcamentos";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { apontamentoValidationSchema, assertApontamentoValid } from "@/lib/apontamento-validation";
 
 type FormState = {
   data: string;
@@ -217,8 +218,8 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       intervalo_fim: t(form.intervalo_fim),
       viagem_volta_saida: t(form.viagem_volta_saida),
       viagem_volta_chegada: t(form.viagem_volta_chegada),
-      km_inicial: null,
-      km_final: null,
+      km_inicial: apontamento?.km_inicial ?? null,
+      km_final: apontamento?.km_final ?? null,
       km_total: null,
       km_ida: n(form.km_ida),
       km_volta: n(form.km_volta),
@@ -228,15 +229,17 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       outras_despesas: n(form.outras_despesas),
       outras_despesas_descricao: form.outras_despesas_descricao.trim() || null,
     };
-  }, [form]);
+  }, [form, apontamento?.km_inicial, apontamento?.km_final]);
 
   const totais = useMemo(() => calcularTotais(payload), [payload]);
   const validacoes = useMemo(() => validarApontamento(payload), [payload]);
+  const validation = useMemo(() => apontamentoValidationSchema.safeParse(payload), [payload]);
   const valorAtual = useMemo(() => valorVigente(form.data, valores), [form.data, valores]);
   const retornoKm = totais.km * (valorAtual?.valor_km ?? 0);
 
   const salvar = useMutation({
     mutationFn: async () => {
+      assertApontamentoValid(payload);
       const id = apontamento?.id ?? crypto.randomUUID();
       const saved = await saveApontamentoOffline({
         ...payload,
@@ -297,6 +300,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
     form.cliente_id &&
       form.data &&
       !validacoes.trabalhoIncompleto &&
+      validation.success &&
       pecasSelecionadas.every((part) => typeof part.quantidade === "number" && part.quantidade > 0),
   );
 
@@ -380,6 +384,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
           <TimeWheelField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
         </div>
         {validacoes.trabalhoIncompleto ? <Warning>Preencha início e fim</Warning> : null}
+        {validacoes.trabalhoHorariosIguais ? <Warning>O fim do trabalho deve ser diferente do início.</Warning> : null}
         {validacoes.trabalhoDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(totais.trabalho)}</Warning> : null}
         {validacoes.jornadaLonga ? <Warning>Jornada acima de 16h. Confira os horários.</Warning> : null}
       </Section>
@@ -479,6 +484,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
       </Section>
 
       <div className="space-y-2">
+        {!validation.success ? <Warning>{validation.error.issues[0]?.message}</Warning> : null}
         <Button
           className="h-14 w-full rounded-2xl text-base font-semibold"
           disabled={!podeSalvar || salvar.isPending}

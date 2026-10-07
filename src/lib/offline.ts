@@ -12,6 +12,7 @@ import type { DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento, OrcamentoItem } from "@/lib/orcamentos";
 import type { ApontamentoPeca } from "@/lib/apontamento-pecas";
 import { activeAppUserId } from "@/lib/auth-session";
+import { assertApontamentoValid } from "@/lib/apontamento-validation";
 
 export type OfflineEntity =
   | "clientes"
@@ -331,6 +332,7 @@ type ApontamentoWrite = Omit<
   Partial<Pick<ApontamentoComCliente, "created_at" | "updated_at" | "user_id">>;
 
 export async function saveApontamentoOffline(payload: ApontamentoWrite) {
+  assertApontamentoValid(payload);
   const userId = await requireUserId();
   payload = { ...payload, user_id: userId };
   const now = new Date().toISOString();
