@@ -3,6 +3,7 @@ import type { ApontamentoComCliente, Cliente } from "@/lib/apontamentos";
 import type { TotaisFinanceiros, ValorVigencia } from "@/lib/financeiro";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ReportPartItem } from "@/lib/pdf-report";
+import type { Parcela } from "@/lib/parcelas";
 
 export type AnexoDespesa = string | {
   tipo: "imagem" | "pdf";
@@ -45,6 +46,8 @@ export type RelatorioSalvo = {
   data_recebimento: string | null;
   forma_pagamento: FormaPagamento | null;
   source_orcamento_id: string | null;
+  parcelas: Parcela[];
+  data_pagamento_prevista: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -103,6 +106,8 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
     data_recebimento: item.data_recebimento ?? null,
     forma_pagamento: item.forma_pagamento ?? null,
     source_orcamento_id: item.source_orcamento_id ?? null,
+    parcelas: Array.isArray(item.parcelas) ? item.parcelas : [],
+    data_pagamento_prevista: item.data_pagamento_prevista ?? null,
     observacao_relatorio: item.observacao_relatorio ?? "",
     despesas_snapshot: despesas,
     total_despesas: Number(item.total_despesas ?? 0),

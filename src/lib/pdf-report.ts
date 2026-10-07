@@ -674,6 +674,7 @@ export async function generatePaymentReceipt(input: {
   valorRecebido: number;
   formaPagamento: string;
   dataRecebimento: string;
+  parcela?: string;
 }) {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -693,6 +694,7 @@ export async function generatePaymentReceipt(input: {
   doc.setFontSize(11);
   doc.text(`Forma de pagamento: ${input.formaPagamento}`, 18, startY + 50);
   doc.text(`Data do recebimento: ${formatDateBR(input.dataRecebimento)}`, 18, startY + 59);
+  if (input.parcela) doc.text(input.parcela, 18, startY + 68);
 
   drawDocumentFooter(doc, empresa);
 
