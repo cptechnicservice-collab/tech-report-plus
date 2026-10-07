@@ -97,3 +97,4 @@
 - [x] Destacar os clientes nos relatórios totais com estados coloridos de Pago, Finalizado ou Pendente.
 - [x] Mostrar o CNPJ cadastrado junto ao nome do cliente no PDF do relatório.
 - [x] Ordenar relatórios salvos por situação, priorizando pendentes, e depois pela data de criação.
+- [x] Explicar o ícone sem logo no iPhone e mostrar o motivo real quando salvar parcelas falhar.
