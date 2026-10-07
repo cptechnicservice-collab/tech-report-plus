@@ -1,5 +1,12 @@
 # Roadmap
 
+## Segurança e robustez dos apontamentos
+
+- [ ] Ignorar/remover rastreamento de .env: bloqueado porque .gitignore e .env são gerenciados pela plataforma.
+- [ ] Documentar variáveis de ambiente sem valores reais.
+- [ ] Validar cálculos noturnos compartilhados e bloquear horários de trabalho iguais e odômetro regressivo.
+- [ ] Adicionar script de verificação de tipos e conferir validações sem alterar registros existentes.
+
 - [x] Criar Catálogo de Peças simples com busca e cadastro offline.
 - [x] Inspirar a apresentação do catálogo no Agenda Boa enviado, mantendo a identidade do CP TECHNIC.
 - [x] Validar no iPhone e confirmar compilação sem erros.
