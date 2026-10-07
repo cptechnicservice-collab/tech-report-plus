@@ -51,7 +51,7 @@ export type ApontamentoComCliente = Apontamento & { clientes: Cliente | null };
 
 /** minutos desde 00:00 para "HH:MM" ou "HH:MM:SS" */
 export function toMinutes(value?: string | null): number | null {
-  if (!value) return null;
+  if (!value || !/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(value)) return null;
   const [h, m] = value.split(":");
   const hh = Number(h);
   const mm = Number(m);
@@ -64,7 +64,8 @@ export function diffMinutes(start?: string | null, end?: string | null): number 
   const a = toMinutes(start);
   const b = toMinutes(end);
   if (a === null || b === null) return 0;
-  return b >= a ? b - a : b + 24 * 60 - a;
+  const endMinutes = b < a ? b + 24 * 60 : b;
+  return endMinutes - a;
 }
 
 export function formatMinutes(total: number): string {
@@ -91,6 +92,7 @@ export type Totais = { trabalho: number; viagem: number; km: number };
 
 export type ValidacoesApontamento = {
   trabalhoIncompleto: boolean;
+  trabalhoHorariosIguais: boolean;
   viagemIdaIncompleta: boolean;
   intervaloIncompleto: boolean;
   viagemVoltaIncompleta: boolean;
@@ -130,6 +132,7 @@ export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamen
 
   return {
     trabalhoIncompleto: pairIncomplete(a.trabalho_inicio, a.trabalho_fim),
+    trabalhoHorariosIguais: trabalhoInicio !== null && trabalhoFimBase !== null && trabalhoInicio === trabalhoFimBase,
     viagemIdaIncompleta: pairIncomplete(a.viagem_ida_saida, a.viagem_ida_chegada),
     intervaloIncompleto: pairIncomplete(a.intervalo_inicio, a.intervalo_fim),
     viagemVoltaIncompleta: pairIncomplete(a.viagem_volta_saida, a.viagem_volta_chegada),
@@ -140,7 +143,7 @@ export function validarApontamento(a: Partial<Apontamento>): ValidacoesApontamen
       (toMinutes(a.viagem_volta_saida) ?? -1) >
       (toMinutes(a.viagem_volta_chegada) ?? Number.MAX_SAFE_INTEGER),
     intervaloInvalido,
-    kmInvalido: false,
+    kmInvalido: a.km_inicial != null && a.km_final != null && a.km_final < a.km_inicial,
     jornadaLonga: trabalhoBruto > 16 * 60,
   };
 }

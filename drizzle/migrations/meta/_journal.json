@@ -162,6 +162,13 @@
       "when": 1791339374082,
       "tag": "0022_add_report_installments",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791368102586,
+      "tag": "0023_validate_apontamento_odometer_and_work_times",
+      "breakpoints": true
     }
   ]
 }
