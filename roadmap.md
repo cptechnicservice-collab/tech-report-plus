@@ -1,5 +1,12 @@
 # Roadmap
 
+## Robustez e desempenho das consultas
+
+- [ ] Compartilhar máscara/parse decimal, validar despesas e proteger totais contra valores não finitos; cobrir com testes.
+- [ ] Paginar consultas completas de apontamentos, clientes, relatórios e peças; testar 2.500 registros e falha intermediária.
+- [ ] Avaliar consultas leves de relatórios sem comprometer snapshots, anexos ou disponibilidade offline; implementar somente se seguro.
+- [ ] Validar lint, tipos e testes, sem publicação ou alterações em arquivos gerenciados.
+
 ## Qualidade de código
 
 - [x] Limitar esperas de autenticação para impedir navegação presa em conexão lenta; validar saída de Relatórios para Painel com conexão normal e requisição travada, sem alterar registros. A causa específica no iPhone não foi reproduzida.
