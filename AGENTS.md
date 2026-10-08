@@ -30,3 +30,4 @@
 - Test domain calculations with Vitest and a mocked generated data client; tests must never authenticate or write production records.
 - Generate the app-shell worker with vite-plugin-pwa and register it only through the guarded wrapper; build-derived cache names and NetworkFirst navigation prevent stale installed shells.
 - Run lint, typecheck and unit tests on main pushes and pull requests; generated clients are excluded and legacy formatting remains nonblocking to avoid rewriting platform-managed files.
+- Bound authentication reads with a transient timeout and retain only the last confirmed identity on network failures, so stalled connections cannot lock navigation; explicit online rejections still clear access.

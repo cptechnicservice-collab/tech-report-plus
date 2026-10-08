@@ -14,6 +14,8 @@ export default defineConfig({
   plugins: [VitePWA({
     strategies: "generateSW",
     filename: "sw.js",
+    // TanStack's deployable public files live in the client environment output.
+    outDir: "dist/client",
     manifest: false,
     injectRegister: null,
     registerType: "autoUpdate",

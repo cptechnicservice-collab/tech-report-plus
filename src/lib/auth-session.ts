@@ -3,6 +3,26 @@ import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 const CONFIRMED_USER_ID_KEY = "cp-technic-confirmed-user-id";
+const AUTH_NETWORK_TIMEOUT_MS = 5000;
+
+/** A stalled connection must not hold route navigation indefinitely. */
+async function boundedAuth<T>(operation: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error("Authentication request timed out");
+          error.name = "TimeoutError";
+          reject(error);
+        }, AUTH_NETWORK_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
 
 export type AppIdentity = {
   user: User | { id: string };
@@ -63,7 +83,7 @@ export async function recoverAppIdentity(): Promise<SessionRecovery> {
   }
 
   try {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const { data: sessionData, error: sessionError } = await boundedAuth(supabase.auth.getSession());
     const session = sessionData.session;
 
     if (!session) {
@@ -82,7 +102,7 @@ export async function recoverAppIdentity(): Promise<SessionRecovery> {
       };
     }
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await boundedAuth(supabase.auth.getUser());
     if (userData.user) {
       rememberConfirmedUser(userData.user.id);
       return {
@@ -114,7 +134,7 @@ export async function renewAppSession(): Promise<SessionRecovery> {
   }
 
   try {
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } = await boundedAuth(supabase.auth.refreshSession());
     if (data.session?.user) {
       rememberConfirmedUser(data.session.user.id);
       return {
@@ -136,7 +156,7 @@ export async function activeAppUserId() {
   const fallbackUserId = getConfirmedUserId();
   if (typeof navigator !== "undefined" && !navigator.onLine) return fallbackUserId;
   try {
-    const { data, error } = await supabase.auth.getSession();
+    const { data, error } = await boundedAuth(supabase.auth.getSession());
     if (data.session?.user.id) {
       rememberConfirmedUser(data.session.user.id);
       return data.session.user.id;
