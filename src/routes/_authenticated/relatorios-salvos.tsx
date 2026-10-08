@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { formatDateBR, normalizeSearchText } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
+import { isDecimalBRInput, parseDecimalBR } from "@/lib/decimal-br";
 import { resizeImage } from "@/lib/image-resize";
 import { ParcelamentoEditor, parcelasDoEstado, type ParcelamentoState } from "@/components/ParcelamentoEditor";
 import { recebimentosDoRelatorio, relatorioComParcelas, somaParcelas, vencimentoInfo } from "@/lib/parcelas";
@@ -356,7 +357,7 @@ function RelatoriosSalvos() {
         tipo: despesa.tipo ?? "diversos" as const,
         descricao: despesa.descricao.trim(),
         data: despesa.data || relatorioObservacao.fim,
-        valor: Number(despesa.valor.replace(",", ".")),
+        valor: parseDecimalBR(despesa.valor) ?? 0,
         anexos: despesa.anexos,
       }));
       if (despesasValidas.some((despesa) => !despesa.descricao || !Number.isFinite(despesa.valor) || despesa.valor <= 0)) {
@@ -364,7 +365,7 @@ function RelatoriosSalvos() {
       }
       const totalDespesas = despesasValidas.reduce((total, despesa) => total + despesa.valor, 0);
       const subtotal = relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + totalDespesas;
-      const descontoNumerico = desconto.trim() ? Number(desconto.replace(",", ".")) : 0;
+      const descontoNumerico = parseDecimalBR(desconto) ?? 0;
       if (!Number.isFinite(descontoNumerico) || descontoNumerico < 0) throw new Error("Informe um desconto válido.");
       if (descontoNumerico > subtotal) throw new Error("O desconto não pode ser maior que o total do relatório.");
       const totalGeral = subtotal - descontoNumerico;
@@ -566,14 +567,14 @@ function RelatoriosSalvos() {
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5">
             <div>
               <Label htmlFor="saved-report-discount">Desconto</Label>
-              <Input id="saved-report-discount" type="text" inputMode="decimal" className="mt-1.5 h-12 rounded-xl text-right tabular-nums" value={desconto} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDesconto(value); }} placeholder="0,00" />
+              <Input id="saved-report-discount" type="text" inputMode="decimal" className="mt-1.5 h-12 rounded-xl text-right tabular-nums" value={desconto} onChange={(event) => { const value = event.target.value; if (isDecimalBRInput(value)) setDesconto(value); }} placeholder="0,00" />
               <p className="mt-1 text-xs text-muted-foreground">Valor em reais descontado do total final.</p>
             </div>
             <div>
               <Label htmlFor="saved-report-note">Observação</Label>
               <Textarea id="saved-report-note" className="mt-1.5" value={observacao} onChange={(event) => setObservacao(event.target.value)} placeholder="Detalhes gerais do relatório" rows={4} />
             </div>
-            {relatorioObservacao ? <ParcelamentoEditor total={Math.max(0, relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + despesas.reduce((t, d) => t + (Number(d.valor.replace(",", ".")) || 0), 0) - (Number(desconto.replace(",", ".")) || 0))} value={parcelamento} onChange={setParcelamento} /> : null}
+            {relatorioObservacao ? <ParcelamentoEditor total={Math.max(0, relatorioObservacao.total_servicos + relatorioObservacao.total_pecas + despesas.reduce((t, d) => t + (parseDecimalBR(d.valor) || 0), 0) - (parseDecimalBR(desconto) || 0))} value={parcelamento} onChange={setParcelamento} /> : null}
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div><p className="text-sm font-semibold">Despesas adicionais</p><p className="text-xs text-muted-foreground">Hotel, pedágio ou outras despesas</p></div>
@@ -590,13 +591,13 @@ function RelatoriosSalvos() {
                       </div>
                       <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
                         <div className="space-y-1"><Label htmlFor={`expense-description-${despesa.id}`}>Descrição</Label><Input id={`expense-description-${despesa.id}`} value={despesa.descricao} onChange={(event) => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, descricao: event.target.value } : item))} placeholder="Hotel" className="h-11 rounded-xl" /></div>
-                        <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (/^\d*[,.]?\d{0,2}$/.test(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
+                        <div className="space-y-1"><Label htmlFor={`expense-value-${despesa.id}`}>Valor</Label><Input id={`expense-value-${despesa.id}`} type="text" inputMode="decimal" value={despesa.valor} onChange={(event) => { const value = event.target.value; if (isDecimalBRInput(value)) setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, valor: value } : item)); }} placeholder="0,00" className="h-11 rounded-xl text-right tabular-nums" /></div>
                       </div>
                       {despesa.anexos.length > 0 ? <div className="grid grid-cols-3 gap-2">{despesa.anexos.map((anexo, anexoIndex) => <div key={`${despesa.id}-${anexoIndex}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted"><Button type="button" variant="ghost" className="h-full w-full rounded-none p-0" aria-label={`Visualizar comprovante ${anexoIndex + 1}`} onClick={() => setAnexoAberto(attachmentContent(anexo))}>{attachmentIsPdf(anexo) ? <span className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center"><FileText className="h-7 w-7 text-primary" /><span className="line-clamp-2 text-[0.65rem] font-medium">{typeof anexo === "string" ? "PDF" : anexo.nome}</span></span> : <img src={attachmentContent(anexo)} alt={`Comprovante ${anexoIndex + 1}`} className="h-full w-full object-cover" />}</Button><div className="absolute bottom-1 right-1 flex gap-1"><Button asChild type="button" variant="secondary" size="icon" className="h-7 w-7 rounded-full shadow"><label aria-label={`Substituir comprovante ${anexoIndex + 1}`}>{attachmentIsPdf(anexo) ? <FileText className="h-3.5 w-3.5" /> : <ImagePlus className="h-3.5 w-3.5" />}<input type="file" accept={attachmentIsPdf(anexo) ? "application/pdf,.pdf" : "image/*"} className="sr-only" onChange={(event) => attachmentIsPdf(anexo) ? void addExpensePdfs(despesa.id, event.target.files, anexoIndex) : void addExpensePhotos(despesa.id, event.target.files, anexoIndex)} /></label></Button><Button type="button" variant="destructive" size="icon" className="h-7 w-7 rounded-full shadow" aria-label={`Excluir comprovante ${anexoIndex + 1}`} onClick={() => setDespesas((current) => current.map((item) => item.id === despesa.id ? { ...item, anexos: item.anexos.filter((_, photoIndex) => photoIndex !== anexoIndex) } : item))}><Trash2 className="h-3.5 w-3.5" /></Button></div></div>)}</div> : null}
                       <div className="grid grid-cols-3 gap-2"><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><Camera className="mr-1.5 h-4 w-4" />Câmera<input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><ImagePlus className="mr-1.5 h-4 w-4" />Fotos<input type="file" accept="image/*" multiple className="sr-only" onChange={(event) => void addExpensePhotos(despesa.id, event.target.files)} /></label></Button><Button asChild type="button" variant="outline" className="h-10 rounded-xl px-2"><label><FileText className="mr-1.5 h-4 w-4" />PDF<input type="file" accept="application/pdf,.pdf" multiple className="sr-only" onChange={(event) => void addExpensePdfs(despesa.id, event.target.files)} /></label></Button></div>
                     </div>
                   ))}
-                  <div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total das despesas</span><span className="tabular-nums text-primary">{formatCurrency(despesas.reduce((total, despesa) => total + (Number(despesa.valor.replace(",", ".")) || 0), 0))}</span></div>
+                  <div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total das despesas</span><span className="tabular-nums text-primary">{formatCurrency(despesas.reduce((total, despesa) => total + (parseDecimalBR(despesa.valor) || 0), 0))}</span></div>
                 </div>
               )}
             </div>
