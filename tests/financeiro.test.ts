@@ -27,6 +27,17 @@ describe("Tarifas e totais financeiros", () => {
     expect(calcularValoresPeriodo([], []).totalGeral).toBe(0);
     expect(calcularValoresPeriodo([{ data: "2026-01-01", pedagio: 10, outras_despesas: 5 }], []).totalGeral).toBe(15);
   });
+  test("despesas antigas não finitas não contaminam os totais", () => {
+    const result = calcularValoresPeriodo([
+      { pedagio: NaN, outras_despesas: Infinity },
+      { pedagio: -Infinity, outras_despesas: NaN },
+      { pedagio: 10, outras_despesas: 5 },
+    ], []);
+    expect(result.pedagios).toBe(10);
+    expect(result.outrasDespesas).toBe(5);
+    expect(result.totalGeral).toBe(15);
+    expect(calcularValoresPeriodo([{ pedagio: -2 }], []).totalGeral).toBe(-2);
+  });
 });
 
 describe("Descontos do orçamento", () => {

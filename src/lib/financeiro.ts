@@ -67,8 +67,8 @@ export function calcularValoresPeriodo(
     acc.valorDiariasInteiras += diariaTipo === "inteira" ? valorDiaria : 0;
     acc.valorMeiasDiarias += diariaTipo === "meia" ? valorDiaria : 0;
     acc.valorDiarias += valorDiaria;
-    acc.pedagios += apontamento.pedagio ?? 0;
-    acc.outrasDespesas += apontamento.outras_despesas ?? 0;
+    acc.pedagios += Number.isFinite(apontamento.pedagio) ? (apontamento.pedagio ?? 0) : 0;
+    acc.outrasDespesas += Number.isFinite(apontamento.outras_despesas) ? (apontamento.outras_despesas ?? 0) : 0;
     return acc;
   }, {
     horasTrabalhadas: 0,

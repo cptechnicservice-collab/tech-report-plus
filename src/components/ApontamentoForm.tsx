@@ -44,6 +44,7 @@ import { fetchOrcamento } from "@/lib/orcamentos";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { apontamentoValidationSchema, assertApontamentoValid } from "@/lib/apontamento-validation";
+import { isDecimalBRInput, parseDecimalBR } from "@/lib/decimal-br";
 
 type FormState = {
   data: string;
@@ -205,7 +206,7 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
 
   const payload = useMemo(() => {
     const t = (v: string) => (v ? v : null);
-    const n = (v: string) => (v.trim() ? Number(v.replace(",", ".")) : null);
+    const n = parseDecimalBR;
     return {
       data: form.data,
       cliente_id: form.cliente_id as string,
@@ -437,14 +438,14 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
               label="KM total ida"
               inputMode="decimal"
               value={form.km_ida}
-              onChange={(event) => set("km_ida", event.target.value)}
+              onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("km_ida", event.target.value); }}
             />
           <FloatingInput
               id="km-volta"
               label="KM total volta"
               inputMode="decimal"
               value={form.km_volta}
-              onChange={(event) => set("km_volta", event.target.value)}
+              onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("km_volta", event.target.value); }}
             />
         </div>
       </OptionalSection>
@@ -464,8 +465,8 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
           </select>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <FloatingInput id="pedagio" label="Pedágio (R$)" inputMode="decimal" value={form.pedagio} onChange={(event) => set("pedagio", event.target.value)} />
-          <FloatingInput id="outras-despesas" label="Outras despesas (R$)" inputMode="decimal" value={form.outras_despesas} onChange={(event) => set("outras_despesas", event.target.value)} />
+          <FloatingInput id="pedagio" label="Pedágio (R$)" inputMode="decimal" value={form.pedagio} onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("pedagio", event.target.value); }} />
+          <FloatingInput id="outras-despesas" label="Outras despesas (R$)" inputMode="decimal" value={form.outras_despesas} onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("outras_despesas", event.target.value); }} />
         </div>
         <FloatingInput id="outras-despesas-descricao" label="Descrição (opcional)" value={form.outras_despesas_descricao} onChange={(event) => set("outras_despesas_descricao", event.target.value)} />
       </Section>

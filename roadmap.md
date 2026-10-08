@@ -1,5 +1,13 @@
 # Roadmap
 
+## Robustez e desempenho das consultas
+
+- [x] Compartilhar máscara/parse decimal, validar despesas e proteger totais contra valores não finitos; entradas verificadas no formulário autenticado online/offline sem salvar registros.
+- [x] Paginar consultas completas de apontamentos, clientes, relatórios e peças; testar 2.500 registros por consulta, falha intermediária, ordenação determinística e timeout existente de peças.
+- [x] Avaliar consultas leves de relatórios: não implementadas conforme alternativa autorizada; carregar detalhes só sob demanda impediria editar/gerar PDF offline de registros nunca abertos individualmente. Consultas e salvamentos continuam completos; testes confirmam preservação de snapshots e anexos online/offline.
+- [x] Executar testes: 58 passaram; lint sem erros; compilação automática OK. Nenhuma publicação, arquivo gerenciado ou registro real alterado.
+- [ ] Executar typecheck isolado: bloqueado pelas regras da plataforma, que reservam essa verificação ao processo automático.
+
 ## Qualidade de código
 
 - [x] Limitar esperas de autenticação para impedir navegação presa em conexão lenta; validar saída de Relatórios para Painel com conexão normal e requisição travada, sem alterar registros. A causa específica no iPhone não foi reproduzida.
