@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { calcularTotais, diffMinutes, somarTotais, toMinutes, validarApontamento } from "../src/lib/apontamentos";
 import { assertApontamentoValid } from "../src/lib/apontamento-validation";
 
@@ -31,5 +31,16 @@ describe("Validações de salvamento", () => {
     expect(() => assertApontamentoValid({ km_inicial: 200, km_final: 200 })).not.toThrow();
     expect(() => assertApontamentoValid({ km_inicial: null, km_final: 10 })).not.toThrow();
     expect(() => assertApontamentoValid({ km_ida: NaN })).toThrow();
+  });
+});
+
+describe("Quilometragem", () => {
+  test("prioriza ida/volta, depois total legado, depois odômetro", () => {
+    expect(calcularTotais({ km_ida: 12, km_volta: 8, km_total: 90, km_inicial: 0, km_final: 100 }).km).toBe(20);
+    expect(calcularTotais({ km_ida: 0, km_total: 90 }).km).toBe(0);
+    expect(calcularTotais({ km_total: 90, km_inicial: 0, km_final: 100 }).km).toBe(90);
+    expect(calcularTotais({ km_inicial: 100, km_final: 123.5 }).km).toBe(23.5);
+    expect(calcularTotais({ km_inicial: 100, km_final: 99 }).km).toBe(0);
+    expect(calcularTotais({}).km).toBe(0);
   });
 });

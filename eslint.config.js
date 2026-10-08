@@ -6,7 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  { ignores: ["dist", ".output", ".vinxi", "src/routeTree.gen.ts", "src/integrations/supabase/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -37,4 +37,7 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  // Existing formatting debt is reported without blocking behavioral checks.
+  // Platform-generated clients are excluded above and must never be reformatted.
+  { rules: { "prettier/prettier": "warn" } },
 );

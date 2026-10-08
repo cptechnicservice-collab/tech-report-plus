@@ -26,3 +26,7 @@
 - Validate time and mileage through the shared apontamento schema before both form submission and offline persistence, preserving legacy odometer fields to prevent bypasses and data loss.
 - Keep environment examples value-free and use the platform-generated environment clients; generated environment and Git configuration files are platform-managed and must not be rewritten.
 - Enforce odometer ordering and distinct filled work times on new database writes with NOT VALID constraints, so validation cannot be bypassed and existing records remain untouched.
+- Keep offline.ts and pdf-report.ts as compatibility facades over single-purpose modules; generic offline modules must not import their facade, preventing runtime cycles.
+- Test domain calculations with Vitest and a mocked generated data client; tests must never authenticate or write production records.
+- Generate the app-shell worker with vite-plugin-pwa and register it only through the guarded wrapper; build-derived cache names and NetworkFirst navigation prevent stale installed shells.
+- Run lint, typecheck and unit tests on main pushes and pull requests; generated clients are excluded and legacy formatting remains nonblocking to avoid rewriting platform-managed files.
