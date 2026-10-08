@@ -8,7 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
 // Evaluated at build time, never in the Worker. Each build retires its old runtime buckets.
-const cacheVersion = process.env.GITHUB_SHA || Date.now().toString(36);
+const cacheVersion = process.env["GITHUB_SHA"] || Date.now().toString(36);
 
 export default defineConfig({
   plugins: [VitePWA({

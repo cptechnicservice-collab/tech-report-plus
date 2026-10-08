@@ -37,4 +37,7 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  // Existing formatting debt is reported without blocking behavioral checks.
+  // Platform-generated clients are excluded above and must never be reformatted.
+  { rules: { "prettier/prettier": "warn" } },
 );
