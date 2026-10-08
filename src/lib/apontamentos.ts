@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ValorVigencia } from "@/lib/financeiro";
+import { fetchAllPages } from "@/lib/fetch-all-pages";
 
 export type Cliente = {
   id: string;
@@ -200,34 +201,36 @@ export function todayISO(): string {
 /* ---------- queries ---------- */
 
 export async function fetchClientes(): Promise<Cliente[]> {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select("*")
-    .order("nome", { ascending: true });
-  if (error) {
+  try {
+    const result = await fetchAllPages(() => supabase
+      .from("clientes")
+      .select("*")
+      .order("nome", { ascending: true })
+      .order("id", { ascending: true }));
+    await writeCached(offlineCacheKeys.clientes, result);
+    return result;
+  } catch (error) {
     const cached = await readCached<Cliente[]>(offlineCacheKeys.clientes);
     if (cached) return cached.sort((a, b) => a.nome.localeCompare(b.nome));
     throw error;
   }
-  const result = (data ?? []) as Cliente[];
-  await writeCached(offlineCacheKeys.clientes, result);
-  return result;
 }
 
 export async function fetchApontamentos(): Promise<ApontamentoComCliente[]> {
-  const { data, error } = await supabase
-    .from("apontamentos")
-    .select("*, clientes(*)")
-    .order("data", { ascending: false })
-    .order("created_at", { ascending: false });
-  if (error) {
+  try {
+    const result = await fetchAllPages(() => supabase
+      .from("apontamentos")
+      .select("*, clientes(*)")
+      .order("data", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }));
+    await writeCached(offlineCacheKeys.apontamentos, result);
+    return result;
+  } catch (error) {
     const cached = await readCached<ApontamentoComCliente[]>(offlineCacheKeys.apontamentos);
     if (cached) return cached;
     throw error;
   }
-  const result = (data ?? []) as unknown as ApontamentoComCliente[];
-  await writeCached(offlineCacheKeys.apontamentos, result);
-  return result;
 }
 
 export async function fetchApontamento(id: string): Promise<ApontamentoComCliente> {

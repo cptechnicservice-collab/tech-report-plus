@@ -16,6 +16,8 @@ export const apontamentoValidationSchema = z.object({
   km_final: km,
   km_ida: km,
   km_volta: km,
+  pedagio: z.number().finite("Pedágio inválido").nonnegative("Pedágio não pode ser negativo").nullable().optional(),
+  outras_despesas: z.number().finite("Outras despesas inválidas").nonnegative("Outras despesas não podem ser negativas").nullable().optional(),
 }).superRefine((value, context) => {
   if (value.km_inicial != null && value.km_final != null && value.km_final < value.km_inicial) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["km_final"], message: "KM final deve ser maior ou igual ao KM inicial." });

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
+import { fetchAllPages } from "@/lib/fetch-all-pages";
 
 export type Peca = {
   id: string;
@@ -16,13 +17,12 @@ export type Peca = {
 
 export async function fetchPecas(): Promise<Peca[]> {
   try {
-    const { data, error } = await supabase
+    const pecas = await fetchAllPages(() => supabase
       .from("pecas")
       .select("*")
       .order("descricao", { ascending: true })
-      .abortSignal(AbortSignal.timeout(10_000));
-    if (error) throw error;
-    const pecas = (data ?? []) as Peca[];
+      .order("id", { ascending: true })
+      .abortSignal(AbortSignal.timeout(10_000)));
     await writeCached(offlineCacheKeys.pecas, pecas);
     return pecas;
   } catch (error) {

@@ -4,6 +4,7 @@ import type { TotaisFinanceiros, ValorVigencia } from "@/lib/financeiro";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import type { Parcela } from "@/lib/parcelas";
+import { fetchAllPages } from "@/lib/fetch-all-pages";
 
 export type AnexoDespesa = string | {
   tipo: "imagem" | "pdf";
@@ -117,16 +118,18 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
 }
 
 export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
-  const { data, error } = await supabase
-    .from("relatorios_salvos")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) {
+  try {
+    const data = await fetchAllPages(() => supabase
+      .from("relatorios_salvos")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }));
+    const result = (data as unknown as RelatorioSalvo[]).map(normalizeRelatorio);
+    await writeCached(offlineCacheKeys.relatorios, result);
+    return result;
+  } catch (error) {
     const cached = await readCached<RelatorioSalvo[]>(offlineCacheKeys.relatorios);
     if (cached) return cached.map(normalizeRelatorio);
     throw error;
   }
-  const result = ((data ?? []) as unknown as RelatorioSalvo[]).map(normalizeRelatorio);
-  await writeCached(offlineCacheKeys.relatorios, result);
-  return result;
 }
