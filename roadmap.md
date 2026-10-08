@@ -2,13 +2,14 @@
 
 ## Qualidade de código
 
-- [ ] Investigar e corrigir travamento ao sair da página Relatórios, preservando os dados.
+- [x] Limitar esperas de autenticação para impedir navegação presa em conexão lenta; validar saída de Relatórios para Painel com conexão normal e requisição travada, sem alterar registros. A causa específica no iPhone não foi reproduzida.
 
-- [ ] Configurar Vitest e cobrir horas, KM, pagamentos, numeração e cálculos financeiros/parcelas.
-- [ ] Criar CI para lint, typecheck e testes nos pushes para main.
-- [ ] Separar cache, fila e sincronização offline e módulos PDF mantendo API e comportamento.
-- [ ] Injetar versão do cache no build e revalidar assets estáticos em segundo plano.
-- [ ] Atualizar documentação de desenvolvimento, ambiente e migrations.
+- [x] Configurar Vitest e cobrir horas, KM, pagamentos, numeração e cálculos financeiros/parcelas; 32 testes passaram, incluindo seis regressões de autenticação.
+- [x] Criar CI para lint, typecheck e testes nos pushes para main e pull requests; lint sem erros, avisos de formatação legados não bloqueantes.
+- [x] Separar cache, fila e sincronização offline e módulos PDF mantendo API e comportamento; gerar PDF e verificar navegação autenticada sem salvar registros.
+- [x] Injetar versão do cache no build e revalidar assets estáticos em segundo plano; gerar worker no diretório público de saída do cliente. Compilação automática OK.
+- [x] Atualizar documentação de desenvolvimento, ambiente e migrations.
+- [ ] Confirmar abertura instalada em modo avião após atualização: depende da publicação e de teste no iPhone; o worker fica desativado na prévia por segurança.
 
 ## Segurança e robustez dos apontamentos
 
