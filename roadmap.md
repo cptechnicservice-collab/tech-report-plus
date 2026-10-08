@@ -2,6 +2,8 @@
 
 ## Qualidade de código
 
+- [ ] Investigar e corrigir travamento ao sair da página Relatórios, preservando os dados.
+
 - [ ] Configurar Vitest e cobrir horas, KM, pagamentos, numeração e cálculos financeiros/parcelas.
 - [ ] Criar CI para lint, typecheck e testes nos pushes para main.
 - [ ] Separar cache, fila e sincronização offline e módulos PDF mantendo API e comportamento.
