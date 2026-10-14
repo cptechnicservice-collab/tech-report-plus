@@ -204,11 +204,13 @@ export function OfflineStatus() {
   if (!authenticated) return null;
   const attentionItems = queueItems.filter((item) => (item.attempts ?? 0) >= 3);
   const time = syncTime(lastSuccessfulSync);
+  const showStatusBanner = !online || pending > 0 || failed > 0 || Boolean(time);
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center pt-[env(safe-area-inset-top)]">
-        <div className="pointer-events-auto flex min-h-8 max-w-[calc(100%-1rem)] items-center gap-1 rounded-b-xl border border-t-0 border-border bg-card/95 px-2 py-1 text-xs font-medium shadow-sm backdrop-blur-xl">
+      {showStatusBanner ? (
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center pt-[env(safe-area-inset-top)]">
+          <div className="pointer-events-auto flex min-h-8 max-w-[calc(100%-1rem)] items-center gap-1 rounded-b-xl border border-t-0 border-border bg-card/95 px-2 py-1 text-xs font-medium shadow-sm backdrop-blur-xl">
           {!online ? (
             <span className="flex items-center gap-1 text-muted-foreground">
               <WifiOff className="h-3 w-3" />
@@ -257,8 +259,9 @@ export function OfflineStatus() {
               Sincronizar agora
             </Button>
           ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerContent className="max-h-[88dvh]">
