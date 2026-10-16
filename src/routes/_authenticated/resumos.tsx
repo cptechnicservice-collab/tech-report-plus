@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, HandCoins, ReceiptText } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, HandCoins, ReceiptText } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -123,6 +123,15 @@ function Resumos() {
             <span>Recebidos {formatCurrency(totalRecebidoGeral)}</span>
             <span>A receber {formatCurrency(totalAReceberGeral)}</span>
           </span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </Link>
+
+      <Link to="/previsao-recebimentos" className="press ios-group flex min-h-16 items-center gap-4 p-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-info/15 text-info"><CalendarClock className="h-5 w-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Previsão de recebimentos</span>
+          <span className="block text-xs text-muted-foreground">Quanto entra em cada mês, por parcela</span>
         </span>
         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
       </Link>
