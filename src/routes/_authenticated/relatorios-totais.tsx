@@ -62,7 +62,7 @@ function RelatoriosTotais() {
   }, [relatorios]);
 
   return (
-    <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/painel">
+    <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/resumos">
       <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav">
         <p className="flex items-center gap-2 text-xs text-brand-header-foreground/65"><CircleDollarSign className="h-4 w-4" />Total faturado</p>
         <p className="mt-2 break-words text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(resumo.totalFaturado)}</p>
