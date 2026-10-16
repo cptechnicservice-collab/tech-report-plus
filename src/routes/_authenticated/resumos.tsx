@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/resumos")({
   component: Resumos,
 });
 
-const CORES = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--highlight-foreground))", "hsl(var(--muted-foreground))", "hsl(var(--accent-foreground))"];
+const CORES = ["var(--primary)", "var(--success)", "var(--highlight-foreground)", "var(--muted-foreground)", "var(--accent-foreground)"];
 
 function Resumos() {
   const [tipo, setTipo] = useState<"mensal" | "anual">("mensal");
@@ -177,12 +177,12 @@ function Resumos() {
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={graficoMensal} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="mes" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
                 <YAxis hide />
-                <Tooltip formatter={(valor) => formatCurrency(Number(valor))} cursor={{ fill: "hsl(var(--secondary))" }} />
-                <Bar dataKey="faturado" name="Faturado" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
-                <Bar dataKey="recebido" name="Recebido" radius={[4, 4, 0, 0]} fill="hsl(var(--success))" />
+                <Tooltip formatter={(valor) => formatCurrency(Number(valor))} cursor={{ fill: "var(--secondary)" }} />
+                <Bar dataKey="faturado" name="Faturado" radius={[4, 4, 0, 0]} fill="var(--primary)" />
+                <Bar dataKey="recebido" name="Recebido" radius={[4, 4, 0, 0]} fill="var(--success)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -226,9 +226,9 @@ function Resumos() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={graficoFormas} layout="vertical" margin={{ top: 0, right: 8, left: 8, bottom: 0 }}>
                 <XAxis type="number" hide />
-                <YAxis type="category" dataKey="nome" tickLine={false} axisLine={false} fontSize={12} width={96} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip formatter={(valor) => formatCurrency(Number(valor))} cursor={{ fill: "hsl(var(--secondary))" }} />
-                <Bar dataKey="valor" name="Recebido" radius={[0, 4, 4, 0]} fill="hsl(var(--primary))" />
+                <YAxis type="category" dataKey="nome" tickLine={false} axisLine={false} fontSize={12} width={96} stroke="var(--muted-foreground)" />
+                <Tooltip formatter={(valor) => formatCurrency(Number(valor))} cursor={{ fill: "var(--secondary)" }} />
+                <Bar dataKey="valor" name="Recebido" radius={[0, 4, 4, 0]} fill="var(--primary)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
