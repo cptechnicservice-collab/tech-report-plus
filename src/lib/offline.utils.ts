@@ -25,7 +25,9 @@ export function isNetworkError(error: unknown) {
     Number(error.status) === 0
   )
     return true;
-  return /failed to fetch|load failed|networkerror/i.test(errorMessage(error));
+  return /failed to fetch|load failed|networkerror|aborterror|fetch is aborted|timed? ?out/i.test(
+    errorMessage(error),
+  );
 }
 
 export function timeoutSignal() {
