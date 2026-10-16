@@ -124,3 +124,4 @@
 - [x] Mostrar o CNPJ cadastrado junto ao nome do cliente no PDF do relatório.
 - [x] Ordenar relatórios salvos por situação, priorizando pendentes, e depois pela data de criação.
 - [x] Explicar o ícone sem logo no iPhone e mostrar o motivo real quando salvar parcelas falhar.
+- [x] Aba Resumos com total financeiro, resumos mensal/anual e gráficos (fora do Painel)

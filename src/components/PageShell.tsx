@@ -18,7 +18,7 @@ export function PageShell({
   title: string;
   subtitle?: string | undefined;
   action?: ReactNode;
-  backTo?: "/mais" | "/historico" | "/relatorios-salvos" | "/orcamentos" | "/painel";
+  backTo?: "/mais" | "/historico" | "/relatorios-salvos" | "/orcamentos" | "/painel" | "/resumos";
   children: ReactNode;
 }) {
   const navigate = useNavigate();
