@@ -27,6 +27,7 @@ import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedRelatoriosSalvosRouteImport } from './routes/_authenticated/relatorios-salvos'
 import { Route as AuthenticatedRelatoriosTotaisRouteImport } from './routes/_authenticated/relatorios-totais'
+import { Route as AuthenticatedResumosRouteImport } from './routes/_authenticated/resumos'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
@@ -123,6 +124,11 @@ const AuthenticatedRelatoriosTotaisRoute =
     path: '/relatorios-totais',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedResumosRoute = AuthenticatedResumosRouteImport.update({
+  id: '/resumos',
+  path: '/resumos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
+  '/resumos': typeof AuthenticatedResumosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
+  '/resumos': typeof AuthenticatedResumosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/_authenticated/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
+  '/_authenticated/resumos': typeof AuthenticatedResumosRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/relatorio'
     | '/relatorios-salvos'
     | '/relatorios-totais'
+    | '/resumos'
     | '/valores'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/relatorio'
     | '/relatorios-salvos'
     | '/relatorios-totais'
+    | '/resumos'
     | '/valores'
     | '/apontamento/$id'
   id:
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorio'
     | '/_authenticated/relatorios-salvos'
     | '/_authenticated/relatorios-totais'
+    | '/_authenticated/resumos'
     | '/_authenticated/valores'
     | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
@@ -402,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosTotaisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/resumos': {
+      id: '/_authenticated/resumos'
+      path: '/resumos'
+      fullPath: '/resumos'
+      preLoaderRoute: typeof AuthenticatedResumosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/valores': {
       id: '/_authenticated/valores'
       path: '/valores'
@@ -434,6 +453,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
   AuthenticatedRelatoriosSalvosRoute: typeof AuthenticatedRelatoriosSalvosRoute
   AuthenticatedRelatoriosTotaisRoute: typeof AuthenticatedRelatoriosTotaisRoute
+  AuthenticatedResumosRoute: typeof AuthenticatedResumosRoute
   AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
   AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
 }
@@ -453,6 +473,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedRelatoriosSalvosRoute: AuthenticatedRelatoriosSalvosRoute,
   AuthenticatedRelatoriosTotaisRoute: AuthenticatedRelatoriosTotaisRoute,
+  AuthenticatedResumosRoute: AuthenticatedResumosRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, Clock, FileArchive, LayoutGrid, Menu } from "lucide-react";
+import { CalendarPlus, ChartPie, Clock, FileArchive, LayoutGrid, Menu } from "lucide-react";
 
 import { MoreSheet } from "@/components/MoreSheet";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ const items = [
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
   { to: "/novo", label: "Apontar", icon: CalendarPlus, exact: false },
   { to: "/relatorios-salvos", label: "Relatórios", icon: FileArchive, exact: false },
+  { to: "/resumos", label: "Resumos", icon: ChartPie, exact: true },
   { to: "/mais", label: "Mais", icon: Menu, exact: false },
 ] as const;
 
@@ -25,7 +26,7 @@ export function BottomNav() {
   return (
     <>
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 bg-transparent px-4 pb-2">
-        <ul className="mx-auto grid max-w-md grid-cols-5 rounded-2xl border border-border bg-card/95 px-1 py-1.5 shadow-nav backdrop-blur-xl [backdrop-filter:saturate(180%)_blur(20px)]">
+        <ul className="mx-auto grid max-w-md grid-cols-6 rounded-2xl border border-border bg-card/95 px-1 py-1.5 shadow-nav backdrop-blur-xl [backdrop-filter:saturate(180%)_blur(20px)]">
           {items.map(({ to, label, icon: Icon, exact }) => (
             <li key={to}>
               {to === "/mais" ? (
