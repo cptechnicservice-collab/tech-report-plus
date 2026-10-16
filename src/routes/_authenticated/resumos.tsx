@@ -127,6 +127,15 @@ function Resumos() {
         <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
       </Link>
 
+      <Link to="/previsao-recebimentos" className="press ios-group flex min-h-16 items-center gap-4 p-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-info/15 text-info"><CalendarClock className="h-5 w-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Previsão de recebimentos</span>
+          <span className="block text-xs text-muted-foreground">Quanto entra em cada mês, por parcela</span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </Link>
+
       <div className="flex items-center justify-between gap-3 px-1">
         <h2 className="text-sm font-semibold">Período</h2>
         <div className="flex rounded-lg bg-secondary p-1" aria-label="Tipo de período">
