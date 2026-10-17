@@ -34,3 +34,4 @@
 - Bound authentication reads with a transient timeout and retain only the last confirmed identity on network failures, so stalled connections cannot lock navigation; explicit online rejections still clear access.
 - Share decimal input masking/parsing across apontamento and report value editors; reject thousands separators and invalid nonempty strings to prevent silent misinterpretation.
 - Fetch complete record lists through the shared 1,000-row pagination helper with deterministic ordering; write caches only after every page succeeds to prevent truncated offline totals.
+- Keep independent receipts in their own record module using the existing scoped cache and queue; receipt summaries aggregate them separately from report revenue and balances to avoid cross-record mutations.
