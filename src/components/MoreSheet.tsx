@@ -29,6 +29,7 @@ const options = [
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/pecas", label: "Peças", icon: Package },
   { to: "/valores", label: "Valores", icon: CircleDollarSign },
+  { to: "/recebimentos-avulsos", label: "Recebimento avulso", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", icon: ClipboardList },
 ] as const;
 
@@ -85,7 +86,7 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
           <div className="divide-y divide-border">
             {options.map(({ to, label, icon: Icon }) => (
               <DrawerClose asChild key={to}>
-                <Link to={to} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4">
+                <Link to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4">
                   <Icon className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.7} />
                   <span className="min-w-0 truncate font-semibold">{label}</span>
                   <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />

@@ -1,3 +1,5 @@
+import { recebimentosAvulsosQuery, totalRecebimentosAvulsos } from "@/lib/recebimentos-avulsos";
+import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/relatorios-totais")({
 });
 
 function RelatoriosTotais() {
+  const { data: avulsos = [] } = useQuery(recebimentosAvulsosQuery());
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ["relatorios-salvos"],
     queryFn: fetchRelatoriosSalvos,
@@ -29,14 +32,14 @@ function RelatoriosTotais() {
 
   const resumo = useMemo(() => {
     const totalFaturado = relatorios.reduce((total, item) => total + item.total_geral, 0);
-    const totalRecebido = relatorios.reduce((total, item) => total + item.valor_recebido, 0);
+    const totalRecebido = relatorios.reduce((total, item) => total + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos);
     const totalAReceber = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
     const porForma = formasPagamento.map((forma) => ({
       ...forma,
-      quantidade: relatorios.filter((item) => item.forma_pagamento === forma.value && item.valor_recebido > 0).length,
+      quantidade: relatorios.filter((item) => item.forma_pagamento === forma.value && item.valor_recebido > 0).length + avulsos.filter((item) => item.forma_pagamento === forma.value).length,
       total: relatorios
         .filter((item) => item.forma_pagamento === forma.value)
-        .reduce((soma, item) => soma + item.valor_recebido, 0),
+        .reduce((soma, item) => soma + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos.filter((item) => item.forma_pagamento === forma.value)),
     })).filter((item) => item.quantidade > 0);
     const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; saldo: number; concluidos: number }>();
     relatorios.forEach((item) => {
@@ -59,7 +62,7 @@ function RelatoriosTotais() {
       porForma,
       clientes: [...clientes.values()].sort((a, b) => b.total - a.total),
     };
-  }, [relatorios]);
+  }, [relatorios, avulsos]);
 
   return (
     <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/resumos">
@@ -113,6 +116,8 @@ function RelatoriosTotais() {
           </dl>
         )}
       </Section>
+
+      <RecebimentosAvulsosSection />
 
       <Section title="Totais por cliente" hint={`${resumo.clientes.length} cliente(s)`}>
         {isLoading ? <p className="text-sm text-muted-foreground">Carregando...</p> : resumo.clientes.length === 0 ? (

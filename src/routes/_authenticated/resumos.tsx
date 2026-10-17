@@ -1,3 +1,5 @@
+import { recebimentosAvulsosQuery, totalRecebimentosAvulsos } from "@/lib/recebimentos-avulsos";
+import { NovoRecebimentoAvulsoButton, RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/resumos")({
 const CORES = ["var(--primary)", "var(--success)", "var(--highlight-foreground)", "var(--muted-foreground)", "var(--accent-foreground)"];
 
 function Resumos() {
+  const { data: avulsos = [] } = useQuery(recebimentosAvulsosQuery());
   const [tipo, setTipo] = useState<"mensal" | "anual">("mensal");
   const [periodo, setPeriodo] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
@@ -39,10 +42,10 @@ function Resumos() {
   const abertos = relatorios.filter((item) => saldoRelatorio(item) > 0 && item.fim.startsWith(periodo));
   const totalAReceber = abertos.reduce((total, item) => total + saldoRelatorio(item), 0);
   const recebidos = relatorios.filter((item) => item.valor_recebido > 0 && Boolean(item.data_recebimento?.startsWith(periodo)));
-  const totalRecebido = recebidos.reduce((total, item) => total + item.valor_recebido, 0);
+  const totalRecebido = recebidos.reduce((total, item) => total + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos, { periodo });
   const faturadoPeriodo = relatorios.filter((item) => item.fim.startsWith(periodo)).reduce((total, item) => total + item.total_geral, 0);
   const totalRelatorios = relatorios.reduce((total, item) => total + item.total_geral, 0);
-  const totalRecebidoGeral = relatorios.reduce((total, item) => total + item.valor_recebido, 0);
+  const totalRecebidoGeral = relatorios.reduce((total, item) => total + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos);
   const totalAReceberGeral = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
 
   const graficoMensal = useMemo(() => {
@@ -59,6 +62,12 @@ function Resumos() {
         meses.set(chaveRec, rec);
       }
     });
+    avulsos.forEach((item) => {
+      const chave = item.data_recebimento.slice(0, 7);
+      const atual = meses.get(chave) ?? { mes: chave, faturado: 0, recebido: 0 };
+      atual.recebido += item.valor;
+      meses.set(chave, atual);
+    });
     return [...meses.values()]
       .sort((a, b) => a.mes.localeCompare(b.mes))
       .slice(-6)
@@ -66,17 +75,17 @@ function Resumos() {
         ...item,
         mes: new Date(`${item.mes}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
       }));
-  }, [relatorios]);
+  }, [relatorios, avulsos]);
 
   const graficoFormas = useMemo(
     () =>
       formasPagamento
         .map((forma) => ({
           nome: forma.label,
-          valor: relatorios.filter((item) => item.forma_pagamento === forma.value).reduce((soma, item) => soma + item.valor_recebido, 0),
+          valor: relatorios.filter((item) => item.forma_pagamento === forma.value).reduce((soma, item) => soma + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos.filter((item) => item.forma_pagamento === forma.value)),
         }))
         .filter((item) => item.valor > 0),
-    [relatorios],
+    [relatorios, avulsos],
   );
 
   const graficoComposicao = useMemo(
@@ -173,9 +182,12 @@ function Resumos() {
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-success/15 text-success"><CheckCircle2 className="h-5 w-5" /></span>
           <span className="mt-3 block text-sm font-medium text-muted-foreground">Recebidos</span>
           <span className="mt-0.5 block break-words text-lg font-bold tabular-nums">{formatCurrency(totalRecebido)}</span>
-          <span className="mt-1 block text-xs text-muted-foreground">{recebidos.length} recebimento(s)</span>
+          <span className="mt-1 block text-xs text-muted-foreground">{recebidos.length + avulsos.filter((item) => item.data_recebimento.startsWith(periodo)).length} recebimento(s)</span>
         </Link>
       </section>
+
+      <NovoRecebimentoAvulsoButton />
+      <RecebimentosAvulsosSection periodo={periodo} />
 
       <p className="px-1 text-xs text-muted-foreground">Faturado em relatórios no período: <strong className="text-foreground tabular-nums">{formatCurrency(faturadoPeriodo)}</strong></p>
 
