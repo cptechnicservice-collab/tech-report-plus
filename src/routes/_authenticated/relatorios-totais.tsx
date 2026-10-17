@@ -8,6 +8,7 @@ import { CheckCircle2, ChevronRight, CircleDollarSign, Clock3, HandCoins, Receip
 import { PageShell, Section } from "@/components/PageShell";
 import { formatCurrency } from "@/lib/financeiro";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
+import { fetchClientes } from "@/lib/apontamentos";
 
 export const Route = createFileRoute("/_authenticated/relatorios-totais")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/relatorios-totais")({
 
 function RelatoriosTotais() {
   const { data: avulsos = [] } = useQuery(recebimentosAvulsosQuery());
+  const { data: cadastroClientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ["relatorios-salvos"],
     queryFn: fetchRelatoriosSalvos,
@@ -53,8 +55,10 @@ function RelatoriosTotais() {
       clientes.set(chave, atual);
     });
     avulsos.forEach((item) => {
-      const atual = clientes.get(item.cliente_id);
-      if (atual) { atual.recebido += item.valor; atual.avulso += item.valor; }
+      const atual = clientes.get(item.cliente_id) ?? { nome: cadastroClientes.find((cliente) => cliente.id === item.cliente_id)?.nome ?? "Cliente", relatorios: 0, total: 0, recebido: 0, avulso: 0, saldo: 0, concluidos: 0 };
+      atual.recebido += item.valor;
+      atual.avulso += item.valor;
+      clientes.set(item.cliente_id, atual);
     });
     return {
       totalFaturado,
@@ -66,7 +70,7 @@ function RelatoriosTotais() {
       porForma,
       clientes: [...clientes.values()].sort((a, b) => b.total - a.total),
     };
-  }, [relatorios, avulsos]);
+  }, [relatorios, avulsos, cadastroClientes]);
 
   return (
     <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/resumos">
@@ -137,9 +141,9 @@ function RelatoriosTotais() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{cliente.nome}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}>
+                          {cliente.relatorios > 0 ? <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}>
                             {cliente.saldo <= 0 ? "Pago" : cliente.concluidos === cliente.relatorios ? "Finalizado" : "Pendente"}
-                          </span>
+                          </span> : null}
                           <span className="text-xs text-muted-foreground">{cliente.relatorios} relatório(s)</span>
                         </div>
                       </div>
