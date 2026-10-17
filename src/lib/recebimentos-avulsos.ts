@@ -22,7 +22,7 @@ export const recebimentoAvulsoSchema = z.object({
 });
 type ReceiptWrite = z.infer<typeof recebimentoAvulsoSchema> & { created_at?: string };
 
-export function filtrarRecebimentosAvulsos(items: RecebimentoAvulso[], filtro: { clienteId?: string; periodo?: string; inicio?: string; fim?: string } = {}) {
+export function filtrarRecebimentosAvulsos(items: RecebimentoAvulso[], filtro: { clienteId?: string | undefined; periodo?: string | undefined; inicio?: string | undefined; fim?: string | undefined } = {}) {
   return items.filter((item) => (!filtro.clienteId || item.cliente_id === filtro.clienteId)
     && (!filtro.periodo || item.data_recebimento.startsWith(filtro.periodo))
     && (!filtro.inicio || item.data_recebimento >= filtro.inicio)

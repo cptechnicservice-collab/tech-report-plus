@@ -56,7 +56,7 @@ export function NovoRecebimentoAvulsoButton() {
   return <><Button variant="outline" className="h-12 w-full rounded-xl" onClick={() => setOpen(true)}><Plus className="mr-2 h-5 w-5" />Novo recebimento avulso</Button>{open ? <RecebimentoAvulsoEditor open onOpenChange={setOpen} /> : null}</>;
 }
 
-export function RecebimentosAvulsosSection({ clienteId, periodo, inicio, fim, busca = "", editable = true }: { clienteId?: string; periodo?: string; inicio?: string; fim?: string; busca?: string; editable?: boolean }) {
+export function RecebimentosAvulsosSection({ clienteId, periodo, inicio, fim, busca = "", editable = true }: { clienteId?: string | undefined; periodo?: string | undefined; inicio?: string | undefined; fim?: string | undefined; busca?: string; editable?: boolean }) {
   const { data: items = [], isLoading, error } = useQuery(recebimentosAvulsosQuery());
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const [editing, setEditing] = useState<RecebimentoAvulso | null>(null);

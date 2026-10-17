@@ -41,16 +41,20 @@ function RelatoriosTotais() {
         .filter((item) => item.forma_pagamento === forma.value)
         .reduce((soma, item) => soma + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos.filter((item) => item.forma_pagamento === forma.value)),
     })).filter((item) => item.quantidade > 0);
-    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; saldo: number; concluidos: number }>();
+    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; avulso: number; saldo: number; concluidos: number }>();
     relatorios.forEach((item) => {
       const chave = item.cliente_id ?? item.cliente_nome;
-      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, saldo: 0, concluidos: 0 };
+      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, avulso: 0, saldo: 0, concluidos: 0 };
       atual.relatorios += 1;
       atual.total += item.total_geral;
       atual.recebido += item.valor_recebido;
       atual.saldo += saldoRelatorio(item);
       if (item.status_relatorio === "concluido") atual.concluidos += 1;
       clientes.set(chave, atual);
+    });
+    avulsos.forEach((item) => {
+      const atual = clientes.get(item.cliente_id);
+      if (atual) { atual.recebido += item.valor; atual.avulso += item.valor; }
     });
     return {
       totalFaturado,
@@ -141,6 +145,7 @@ function RelatoriosTotais() {
                       </div>
                       <p className="shrink-0 text-sm font-bold tabular-nums">{formatCurrency(cliente.total)}</p>
                     </div>
+                    {cliente.avulso > 0 ? <p className="mt-2 text-xs text-success">Recebimento avulso · {formatCurrency(cliente.avulso)}</p> : null}
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <span className="text-muted-foreground">Recebido <strong className="block text-foreground tabular-nums">{formatCurrency(cliente.recebido)}</strong></span>
                       <span className="text-muted-foreground">A receber <strong className="block text-foreground tabular-nums">{formatCurrency(cliente.saldo)}</strong></span>
