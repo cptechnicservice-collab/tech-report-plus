@@ -73,6 +73,7 @@ function Resumo() {
 
   return (
     <PageShell title="Painel" subtitle="CP TECHNIC Horas">
+      <NovoRecebimentoAvulsoButton />
       <section>
         <div className="flex h-12 items-center justify-between px-1">
           <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Mês anterior" onClick={() => moverMes(-1)}>
@@ -103,7 +104,6 @@ function Resumo() {
         <span className="block text-sm text-muted-foreground">Recebidos no mês</span>
         <span className="mt-1 block break-words text-xl font-bold tabular-nums text-success">{formatCurrency(relatorios.filter((item) => item.data_recebimento?.startsWith(mes)).reduce((sum, item) => sum + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos, { periodo: mes }))}</span>
       </Link>
-      <NovoRecebimentoAvulsoButton />
       <PagamentosCard relatorios={relatorios} />
 
       <Button asChild className="h-14 w-full rounded-2xl text-base">
