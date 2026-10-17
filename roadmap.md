@@ -1,5 +1,11 @@
 # Roadmap
 
+## Recebimentos avulsos
+- [x] Criar tabela protegida por usuário e cadastro, edição e exclusão offline.
+- [x] Adicionar folha de cadastro no Painel/Mais e lista com filtros.
+- [x] Somar entradas independentes aos recebidos e gráficos, com detalhes separados por cliente, sem alterar saldos ou PDFs.
+- [x] Validar 73 testes, lint sem erros, compilação automática e cadastro/edição/exclusão no tamanho do iPhone sem conexão; operações de teste ficaram apenas no navegador e foram descartadas, sem modificar registros reais.
+
 ## Robustez e desempenho das consultas
 
 - [x] Compartilhar máscara/parse decimal, validar despesas e proteger totais contra valores não finitos; entradas verificadas no formulário autenticado online/offline sem salvar registros.

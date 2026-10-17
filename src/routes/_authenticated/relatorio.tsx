@@ -1,3 +1,4 @@
+import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -307,6 +308,7 @@ function Relatorio() {
 
   return (
     <PageShell title={relatorioEmEdicao ? "Editar relatório" : "Relatório"} subtitle={relatorioEmEdicao ? "Documento salvo" : "Cliente e período"} backTo={relatorioEmEdicao ? "/relatorios-salvos" : "/historico"}>
+      {clienteId ? <RecebimentosAvulsosSection clienteId={clienteId === "all" ? undefined : clienteId} inicio={inicio} fim={fim} editable={false} /> : null}
       <Section title="Dados do relatório">
         <FloatingSelect label="Cliente" id="report-client" value={clienteId} disabled={Boolean(relatorioEmEdicao)} onChange={(event) => selectCliente(event.target.value)}>
             <option value="">Selecione o cliente</option>

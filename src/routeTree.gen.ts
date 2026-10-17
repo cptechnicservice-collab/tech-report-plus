@@ -25,6 +25,7 @@ import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedPrevisaoRecebimentosRouteImport } from './routes/_authenticated/previsao-recebimentos'
+import { Route as AuthenticatedRecebimentosAvulsosRouteImport } from './routes/_authenticated/recebimentos-avulsos'
 import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authenticated/relatorio'
 import { Route as AuthenticatedRelatoriosSalvosRouteImport } from './routes/_authenticated/relatorios-salvos'
 import { Route as AuthenticatedRelatoriosTotaisRouteImport } from './routes/_authenticated/relatorios-totais'
@@ -114,6 +115,12 @@ const AuthenticatedPrevisaoRecebimentosRoute =
     path: '/previsao-recebimentos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRecebimentosAvulsosRoute =
+  AuthenticatedRecebimentosAvulsosRouteImport.update({
+    id: '/recebimentos-avulsos',
+    path: '/recebimentos-avulsos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRelatorioRoute = AuthenticatedRelatorioRouteImport.update({
   id: '/relatorio',
   path: '/relatorio',
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
+  '/recebimentos-avulsos': typeof AuthenticatedRecebimentosAvulsosRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
@@ -187,6 +195,7 @@ export interface FileRoutesByTo {
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
+  '/recebimentos-avulsos': typeof AuthenticatedRecebimentosAvulsosRoute
   '/relatorio': typeof AuthenticatedRelatorioRoute
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
@@ -212,6 +221,7 @@ export interface FileRoutesById {
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
+  '/_authenticated/recebimentos-avulsos': typeof AuthenticatedRecebimentosAvulsosRoute
   '/_authenticated/relatorio': typeof AuthenticatedRelatorioRoute
   '/_authenticated/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/_authenticated/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/pecas'
     | '/previsao-recebimentos'
+    | '/recebimentos-avulsos'
     | '/relatorio'
     | '/relatorios-salvos'
     | '/relatorios-totais'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/pecas'
     | '/previsao-recebimentos'
+    | '/recebimentos-avulsos'
     | '/relatorio'
     | '/relatorios-salvos'
     | '/relatorios-totais'
@@ -284,6 +296,7 @@ export interface FileRouteTypes {
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
     | '/_authenticated/previsao-recebimentos'
+    | '/_authenticated/recebimentos-avulsos'
     | '/_authenticated/relatorio'
     | '/_authenticated/relatorios-salvos'
     | '/_authenticated/relatorios-totais'
@@ -413,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrevisaoRecebimentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/recebimentos-avulsos': {
+      id: '/_authenticated/recebimentos-avulsos'
+      path: '/recebimentos-avulsos'
+      fullPath: '/recebimentos-avulsos'
+      preLoaderRoute: typeof AuthenticatedRecebimentosAvulsosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/relatorio': {
       id: '/_authenticated/relatorio'
       path: '/relatorio'
@@ -471,6 +491,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedPrevisaoRecebimentosRoute: typeof AuthenticatedPrevisaoRecebimentosRoute
+  AuthenticatedRecebimentosAvulsosRoute: typeof AuthenticatedRecebimentosAvulsosRoute
   AuthenticatedRelatorioRoute: typeof AuthenticatedRelatorioRoute
   AuthenticatedRelatoriosSalvosRoute: typeof AuthenticatedRelatoriosSalvosRoute
   AuthenticatedRelatoriosTotaisRoute: typeof AuthenticatedRelatoriosTotaisRoute
@@ -493,6 +514,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedPrevisaoRecebimentosRoute:
     AuthenticatedPrevisaoRecebimentosRoute,
+  AuthenticatedRecebimentosAvulsosRoute: AuthenticatedRecebimentosAvulsosRoute,
   AuthenticatedRelatorioRoute: AuthenticatedRelatorioRoute,
   AuthenticatedRelatoriosSalvosRoute: AuthenticatedRelatoriosSalvosRoute,
   AuthenticatedRelatoriosTotaisRoute: AuthenticatedRelatoriosTotaisRoute,

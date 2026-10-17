@@ -1,3 +1,5 @@
+import { recebimentosAvulsosQuery, totalRecebimentosAvulsos } from "@/lib/recebimentos-avulsos";
+import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +8,7 @@ import { CheckCircle2, ChevronRight, CircleDollarSign, Clock3, HandCoins, Receip
 import { PageShell, Section } from "@/components/PageShell";
 import { formatCurrency } from "@/lib/financeiro";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
+import { fetchClientes } from "@/lib/apontamentos";
 
 export const Route = createFileRoute("/_authenticated/relatorios-totais")({
   head: () => ({
@@ -22,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/relatorios-totais")({
 });
 
 function RelatoriosTotais() {
+  const { data: avulsos = [] } = useQuery(recebimentosAvulsosQuery());
+  const { data: cadastroClientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ["relatorios-salvos"],
     queryFn: fetchRelatoriosSalvos,
@@ -29,25 +34,31 @@ function RelatoriosTotais() {
 
   const resumo = useMemo(() => {
     const totalFaturado = relatorios.reduce((total, item) => total + item.total_geral, 0);
-    const totalRecebido = relatorios.reduce((total, item) => total + item.valor_recebido, 0);
+    const totalRecebido = relatorios.reduce((total, item) => total + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos);
     const totalAReceber = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
     const porForma = formasPagamento.map((forma) => ({
       ...forma,
-      quantidade: relatorios.filter((item) => item.forma_pagamento === forma.value && item.valor_recebido > 0).length,
+      quantidade: relatorios.filter((item) => item.forma_pagamento === forma.value && item.valor_recebido > 0).length + avulsos.filter((item) => item.forma_pagamento === forma.value).length,
       total: relatorios
         .filter((item) => item.forma_pagamento === forma.value)
-        .reduce((soma, item) => soma + item.valor_recebido, 0),
+        .reduce((soma, item) => soma + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos.filter((item) => item.forma_pagamento === forma.value)),
     })).filter((item) => item.quantidade > 0);
-    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; saldo: number; concluidos: number }>();
+    const clientes = new Map<string, { nome: string; relatorios: number; total: number; recebido: number; avulso: number; saldo: number; concluidos: number }>();
     relatorios.forEach((item) => {
       const chave = item.cliente_id ?? item.cliente_nome;
-      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, saldo: 0, concluidos: 0 };
+      const atual = clientes.get(chave) ?? { nome: item.cliente_nome, relatorios: 0, total: 0, recebido: 0, avulso: 0, saldo: 0, concluidos: 0 };
       atual.relatorios += 1;
       atual.total += item.total_geral;
       atual.recebido += item.valor_recebido;
       atual.saldo += saldoRelatorio(item);
       if (item.status_relatorio === "concluido") atual.concluidos += 1;
       clientes.set(chave, atual);
+    });
+    avulsos.forEach((item) => {
+      const atual = clientes.get(item.cliente_id) ?? { nome: cadastroClientes.find((cliente) => cliente.id === item.cliente_id)?.nome ?? "Cliente", relatorios: 0, total: 0, recebido: 0, avulso: 0, saldo: 0, concluidos: 0 };
+      atual.recebido += item.valor;
+      atual.avulso += item.valor;
+      clientes.set(item.cliente_id, atual);
     });
     return {
       totalFaturado,
@@ -59,7 +70,7 @@ function RelatoriosTotais() {
       porForma,
       clientes: [...clientes.values()].sort((a, b) => b.total - a.total),
     };
-  }, [relatorios]);
+  }, [relatorios, avulsos, cadastroClientes]);
 
   return (
     <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/resumos">
@@ -114,6 +125,8 @@ function RelatoriosTotais() {
         )}
       </Section>
 
+      <RecebimentosAvulsosSection />
+
       <Section title="Totais por cliente" hint={`${resumo.clientes.length} cliente(s)`}>
         {isLoading ? <p className="text-sm text-muted-foreground">Carregando...</p> : resumo.clientes.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum relatório salvo.</p>
@@ -128,14 +141,15 @@ function RelatoriosTotais() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{cliente.nome}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}>
+                          {cliente.relatorios > 0 ? <span className={`inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${cliente.saldo <= 0 ? "bg-success/15 text-success" : cliente.concluidos === cliente.relatorios ? "bg-primary/15 text-primary" : "bg-highlight text-highlight-foreground"}`}>
                             {cliente.saldo <= 0 ? "Pago" : cliente.concluidos === cliente.relatorios ? "Finalizado" : "Pendente"}
-                          </span>
+                          </span> : null}
                           <span className="text-xs text-muted-foreground">{cliente.relatorios} relatório(s)</span>
                         </div>
                       </div>
                       <p className="shrink-0 text-sm font-bold tabular-nums">{formatCurrency(cliente.total)}</p>
                     </div>
+                    {cliente.avulso > 0 ? <p className="mt-2 text-xs text-success">Recebimento avulso · {formatCurrency(cliente.avulso)}</p> : null}
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                       <span className="text-muted-foreground">Recebido <strong className="block text-foreground tabular-nums">{formatCurrency(cliente.recebido)}</strong></span>
                       <span className="text-muted-foreground">A receber <strong className="block text-foreground tabular-nums">{formatCurrency(cliente.saldo)}</strong></span>

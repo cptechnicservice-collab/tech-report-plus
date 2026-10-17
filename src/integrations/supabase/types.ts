@@ -506,6 +506,50 @@ export type Database = {
         }
         Relationships: []
       }
+      recebimentos_avulsos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_recebimento: string
+          forma_pagamento: string | null
+          id: string
+          observacao: string | null
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_recebimento?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_recebimento?: string
+          forma_pagamento?: string | null
+          id?: string
+          observacao?: string | null
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recebimentos_avulsos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relatorios_salvos: {
         Row: {
           apontamentos_snapshot: Json

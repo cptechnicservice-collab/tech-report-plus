@@ -1,3 +1,5 @@
+import { recebimentosAvulsosQuery, totalRecebimentosAvulsos } from "@/lib/recebimentos-avulsos";
+import { NovoRecebimentoAvulsoButton } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -39,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
 });
 
 function Resumo() {
+  const { data: avulsos = [] } = useQuery(recebimentosAvulsosQuery());
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
@@ -96,6 +99,11 @@ function Resumo() {
         {[{ label: "Horas trab.", value: formatMinutes(totais.trabalho), icon: Timer }, { label: "Horas viagem", value: formatMinutes(totais.viagem), icon: MapPin }, { label: "KM rodados", value: String(totais.km), icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="ios-group p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-4 w-4" /></span><p className="mt-3 text-[0.68rem] text-muted-foreground">{label}</p><p className="mt-0.5 text-lg font-bold tabular-nums">{value}</p></div>)}
       </section>
 
+      <Link to="/relatorios-salvos" search={{ status: "recebido", periodo: mes, financeiro: true }} className="press ios-group block p-4">
+        <span className="block text-sm text-muted-foreground">Recebidos no mês</span>
+        <span className="mt-1 block break-words text-xl font-bold tabular-nums text-success">{formatCurrency(relatorios.filter((item) => item.data_recebimento?.startsWith(mes)).reduce((sum, item) => sum + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos, { periodo: mes }))}</span>
+      </Link>
+      <NovoRecebimentoAvulsoButton />
       <PagamentosCard relatorios={relatorios} />
 
       <Button asChild className="h-14 w-full rounded-2xl text-base">

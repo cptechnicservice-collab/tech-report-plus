@@ -53,6 +53,7 @@ const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
   agendamentos: "Agendamento",
   pecas: "Peça",
   relatorios_salvos: "Relatório",
+  recebimentos_avulsos: "Recebimento avulso",
   dados_empresa: "Dados da empresa",
   orcamentos: "Orçamento",
   orcamento_itens: "Item do orçamento",
@@ -193,6 +194,7 @@ export function OfflineStatus() {
     else if (item.entity === "orcamentos" || item.entity === "orcamento_itens")
       await navigate({ to: "/orcamentos" });
     else if (item.entity === "relatorios_salvos") await navigate({ to: "/relatorios-salvos" });
+    else if (item.entity === "recebimentos_avulsos") await navigate({ to: "/recebimentos-avulsos", search: { novo: false } });
     else if (item.entity === "pecas" || item.entity === "apontamento_pecas")
       await navigate({ to: "/pecas" });
     else if (item.entity === "clientes") await navigate({ to: "/clientes" });

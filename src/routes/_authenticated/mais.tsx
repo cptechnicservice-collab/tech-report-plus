@@ -20,6 +20,7 @@ const options = [
   { to: "/clientes", label: "Clientes", detail: "Cadastro e contatos", icon: Users },
   { to: "/pecas", label: "Peças", detail: "Catálogo e preços", icon: Package },
   { to: "/valores", label: "Valores", detail: "Horas, viagem, KM e diárias", icon: CircleDollarSign },
+  { to: "/recebimentos-avulsos", label: "Recebimento avulso", detail: "Entradas por cliente", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", detail: "Propostas, valores e aprovação", icon: ClipboardList },
 ] as const;
 
@@ -29,7 +30,7 @@ function Mais() {
       <Section title="Opções">
         <div className="-my-3 divide-y divide-border">
           {options.map(({ to, label, detail, icon: Icon }) => (
-            <Link key={to} to={to} className="flex min-h-16 items-center gap-3 py-3 press">
+            <Link key={to} to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="flex min-h-16 items-center gap-3 py-3 press">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Icon className="h-5 w-5" /></span>
               <span className="min-w-0 flex-1"><span className="block font-semibold">{label}</span><span className="block truncate text-sm text-muted-foreground">{detail}</span></span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />

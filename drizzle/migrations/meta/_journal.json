@@ -169,6 +169,13 @@
       "when": 1791368102586,
       "tag": "0023_validate_apontamento_odometer_and_work_times",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792241209424,
+      "tag": "0024_recebimentos_avulsos",
+      "breakpoints": true
     }
   ]
 }
