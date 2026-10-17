@@ -23,6 +23,7 @@ export function RecebimentoAvulsoEditor({ record, open, onOpenChange }: { record
   const queryClient = useQueryClient();
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const salvar = useMutation({
+    networkMode: "always",
     mutationFn: () => saveRecebimentoAvulsoOffline({ id, cliente_id: clienteId, valor: parseDecimalBR(valor) ?? 0, data_recebimento: data, forma_pagamento: forma || null, observacao: observacao.trim() || null, ...(record ? { created_at: record.created_at } : {}) }),
     onSuccess: async ({ queued }) => {
       await queryClient.invalidateQueries({ queryKey: ["recebimentos-avulsos"] });
@@ -32,7 +33,7 @@ export function RecebimentoAvulsoEditor({ record, open, onOpenChange }: { record
     onError: (error) => toast.error(error.message),
   });
   return <Dialog open={open} onOpenChange={(next) => { if (!salvar.isPending) onOpenChange(next); }}>
-    <DialogContent className="bottom-0 top-auto max-h-[90dvh] rounded-t-3xl rounded-b-none p-5 sm:max-w-lg">
+    <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[90dvh] rounded-t-3xl rounded-b-none p-5 sm:max-w-lg">
       <DialogHeader><DialogTitle>{record ? "Editar recebimento avulso" : "Novo recebimento avulso"}</DialogTitle><DialogDescription className="sr-only">Recebimento independente por cliente</DialogDescription></DialogHeader>
       <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); salvar.mutate(); }}>
         <FloatingSelect label="Cliente" value={clienteId} onChange={(event) => setClienteId(event.target.value)} required>
@@ -64,6 +65,7 @@ export function RecebimentosAvulsosSection({ clienteId, periodo, inicio, fim, bu
   const [visible, setVisible] = useState(20);
   const queryClient = useQueryClient();
   const excluir = useMutation({
+    networkMode: "always",
     mutationFn: deleteRecebimentoAvulsoOffline,
     onSuccess: async ({ queued }) => { await queryClient.invalidateQueries({ queryKey: ["recebimentos-avulsos"] }); setDeleting(null); toast.success(queued ? "Exclusão salva no aparelho." : "Recebimento excluído."); },
     onError: (error) => toast.error(error.message),

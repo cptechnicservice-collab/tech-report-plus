@@ -53,7 +53,7 @@ export async function fetchRecebimentosAvulsos(): Promise<RecebimentoAvulso[]> {
     throw error;
   }
 }
-export const recebimentosAvulsosQuery = () => queryOptions({ queryKey: [CACHE_KEY], queryFn: fetchRecebimentosAvulsos, staleTime: 180_000 });
+export const recebimentosAvulsosQuery = () => queryOptions({ queryKey: [CACHE_KEY], queryFn: fetchRecebimentosAvulsos, networkMode: "always", staleTime: 180_000 });
 
 export async function saveRecebimentoAvulsoOffline(input: ReceiptWrite) {
   const payload = recebimentoAvulsoSchema.parse(input);
