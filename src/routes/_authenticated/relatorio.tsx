@@ -155,6 +155,7 @@ function Relatorio() {
     setActivePeriod("custom");
     setPecasSelecionadas(structuredClone(relatorioEmEdicao.pecas_snapshot));
   }, [relatorioEmEdicao]);
+  const invalidPeriod = Boolean(inicio && fim && inicio > fim);
   const atendimentos = useMemo(
     () => groupAtendimentos(
       apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId),
@@ -198,7 +199,6 @@ function Relatorio() {
   const totalDespesasSalvas = relatorioEmEdicao?.total_despesas ?? 0;
   const descontoSalvo = relatorioEmEdicao?.desconto ?? 0;
   const totalRelatorio = Math.max(0, financeiros.totalGeral + totalPecas + totalDespesasSalvas - descontoSalvo);
-  const invalidPeriod = Boolean(inicio && fim && inicio > fim);
 
   const shortcut = (kind: "week" | "lastWeek" | "month") => {
     const [start, end] = getShortcut(kind);
