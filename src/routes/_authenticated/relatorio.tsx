@@ -156,8 +156,11 @@ function Relatorio() {
     setPecasSelecionadas(structuredClone(relatorioEmEdicao.pecas_snapshot));
   }, [relatorioEmEdicao]);
   const atendimentos = useMemo(
-    () => groupAtendimentos(apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId)),
-    [apontamentosDisponiveis, clienteId],
+    () => groupAtendimentos(
+      apontamentosDisponiveis.filter((item) => item.cliente_id === clienteId),
+      inicio && fim && !invalidPeriod ? { start: inicio, end: fim } : undefined,
+    ),
+    [apontamentosDisponiveis, clienteId, inicio, fim, invalidPeriod],
   );
   const filtrados = useMemo(
     () => apontamentosDisponiveis.filter((item) => (clienteId === "all" || item.cliente_id === clienteId) && item.data >= inicio && item.data <= fim),
