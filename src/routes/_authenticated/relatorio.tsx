@@ -70,7 +70,10 @@ function isContinuous(previous: string, current: string) {
   return gap === 1 || (gap === 3 && previousDay === 5 && currentDay === 1);
 }
 
-function groupAtendimentos(items: ApontamentoComCliente[]): Atendimento[] {
+function groupAtendimentos(
+  items: ApontamentoComCliente[],
+  range?: { start: string; end: string },
+): Atendimento[] {
   const byDate = new Map<string, ApontamentoComCliente[]>();
   items.forEach((item) => byDate.set(item.data, [...(byDate.get(item.data) ?? []), item]));
 
@@ -83,7 +86,15 @@ function groupAtendimentos(items: ApontamentoComCliente[]): Atendimento[] {
     else groups.push([date]);
   });
 
-  return groups
+  const inRange = range
+    ? groups.filter((datesInGroup) => {
+        const first = datesInGroup[0];
+        const last = datesInGroup.at(-1);
+        return Boolean(first && last && first <= range.end && last >= range.start);
+      })
+    : groups;
+
+  return inRange
     .map((datesInGroup) => {
       const inicio = datesInGroup[0];
       const fim = datesInGroup.at(-1);
@@ -97,8 +108,7 @@ function groupAtendimentos(items: ApontamentoComCliente[]): Atendimento[] {
       };
     })
     .filter((atendimento): atendimento is Atendimento => atendimento !== null)
-    .reverse()
-    .slice(0, 6);
+    .reverse();
 }
 
 function shortDate(value: string) {
