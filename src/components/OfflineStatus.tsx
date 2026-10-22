@@ -54,6 +54,7 @@ const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
   pecas: "Peça",
   relatorios_salvos: "Relatório",
   recebimentos_avulsos: "Recebimento avulso",
+  lembretes: "Lembrete",
   dados_empresa: "Dados da empresa",
   orcamentos: "Orçamento",
   orcamento_itens: "Item do orçamento",
@@ -62,6 +63,7 @@ const ENTITY_LABELS: Record<QueueItem["entity"], string> = {
 function itemName(item: QueueItem) {
   const payload = item.payload;
   const value =
+    payload?.["titulo"] ??
     payload?.["nome"] ??
     payload?.["descricao"] ??
     payload?.["cliente_nome"] ??
@@ -195,6 +197,7 @@ export function OfflineStatus() {
       await navigate({ to: "/orcamentos" });
     else if (item.entity === "relatorios_salvos") await navigate({ to: "/relatorios-salvos" });
     else if (item.entity === "recebimentos_avulsos") await navigate({ to: "/recebimentos-avulsos", search: { novo: false } });
+    else if (item.entity === "lembretes") await navigate({ to: "/painel" });
     else if (item.entity === "pecas" || item.entity === "apontamento_pecas")
       await navigate({ to: "/pecas" });
     else if (item.entity === "clientes") await navigate({ to: "/clientes" });

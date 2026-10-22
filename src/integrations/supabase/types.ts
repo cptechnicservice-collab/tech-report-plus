@@ -306,6 +306,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lembretes: {
+        Row: {
+          concluido: boolean
+          created_at: string
+          data_prevista: string | null
+          id: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluido?: boolean
+          created_at?: string
+          data_prevista?: string | null
+          id?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluido?: boolean
+          created_at?: string
+          data_prevista?: string | null
+          id?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orcamento_itens: {
         Row: {
           codigo: string | null

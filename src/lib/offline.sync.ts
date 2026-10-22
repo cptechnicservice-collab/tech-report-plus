@@ -14,6 +14,7 @@ const ENTITY_TO_QUERY_KEY: Record<Entity, string> = {
   pecas: "pecas",
   relatorios_salvos: "relatorios-salvos",
   recebimentos_avulsos: "recebimentos-avulsos",
+  lembretes: "lembretes",
   dados_empresa: "dados-empresa",
   orcamentos: "orcamentos",
   orcamento_itens: "orcamentos",
@@ -91,6 +92,11 @@ async function runOfflineQueue(force: boolean): Promise<string[]> {
         result = await supabase
           .from("recebimentos_avulsos")
           .upsert((item.payload ?? {}) as TablesInsert<"recebimentos_avulsos">, { onConflict: "id" })
+          .abortSignal(timeoutSignal());
+      } else if (item.entity === "lembretes") {
+        result = await supabase
+          .from("lembretes")
+          .upsert((item.payload ?? {}) as TablesInsert<"lembretes">, { onConflict: "id" })
           .abortSignal(timeoutSignal());
       } else if (item.entity === "dados_empresa") {
         result = await supabase

@@ -176,6 +176,13 @@
       "when": 1792241209424,
       "tag": "0024_recebimentos_avulsos",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792666478058,
+      "tag": "0025_lembretes_painel",
+      "breakpoints": true
     }
   ]
 }

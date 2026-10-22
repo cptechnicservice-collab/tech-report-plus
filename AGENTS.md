@@ -35,3 +35,4 @@
 - Share decimal input masking/parsing across apontamento and report value editors; reject thousands separators and invalid nonempty strings to prevent silent misinterpretation.
 - Fetch complete record lists through the shared 1,000-row pagination helper with deterministic ordering; write caches only after every page succeeds to prevent truncated offline totals.
 - Keep independent receipts in their own record module using the existing scoped cache and queue; receipt summaries aggregate them separately from report revenue and balances to avoid cross-record mutations.
+- Keep dashboard reminders in a dedicated user-owned record module with the existing scoped cache and queue; pending operations must override online reads so offline edits and completions are preserved.
