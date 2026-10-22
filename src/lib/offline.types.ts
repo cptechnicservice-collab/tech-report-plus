@@ -8,6 +8,7 @@ export type OfflineEntity =
   | "pecas"
   | "relatorios_salvos"
   | "recebimentos_avulsos"
+  | "lembretes"
   | "dados_empresa"
   | "orcamentos"
   | "orcamento_itens";
