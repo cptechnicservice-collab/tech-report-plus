@@ -24,7 +24,7 @@ export function TechnicalQuoteButton() {
         ]);
         const pdf = await createTechnicalQuotePdf({
           valores: queryClient.getQueryData<ValorVigencia[]>(["valores"]) ?? cachedRates ?? [],
-          logo: empresa?.logo_data_url,
+          logo: empresa?.logo_data_url ?? null,
         });
         if (active) setDoc(pdf);
       } catch { if (active) setError(true); }
