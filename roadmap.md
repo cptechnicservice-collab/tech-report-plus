@@ -1,5 +1,10 @@
 # Roadmap
 
+## Lembretes no Painel
+- [ ] Retirar Total do mês e Recebidos no mês, mantendo indicadores de horas/KM e pagamentos.
+- [ ] Criar lembretes com descrição, data opcional, edição, conclusão e exclusão, com cache e sincronização por usuário.
+- [ ] Validar testes e cadastro/edição/conclusão offline no Painel sem alterar dados reais.
+
 ## Recebimentos avulsos
 - [x] Criar tabela protegida por usuário e cadastro, edição e exclusão offline.
 - [x] Adicionar folha de cadastro no Painel/Mais e lista com filtros.
