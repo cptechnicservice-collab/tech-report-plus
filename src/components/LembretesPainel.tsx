@@ -77,7 +77,7 @@ export function LembretesPainel() {
       )}
       {completed.length > 0 ? <Button variant="ghost" size="sm" onClick={() => setShowCompleted(!showCompleted)}>{showCompleted ? "Ocultar concluídos" : `Concluídos (${completed.length})`}</Button> : null}
       <Dialog open={open} onOpenChange={(value) => { if (!busy) setOpen(value); }}>
-        <DialogContent keyboardPosition="bottom" className="bottom-0 top-auto rounded-t-2xl" onOpenAutoFocus={(event) => event.preventDefault()}>
+        <DialogContent className="w-[calc(100%-2rem)] rounded-2xl" onOpenAutoFocus={(event) => event.preventDefault()}>
           <DialogHeader><DialogTitle>{editing ? "Editar lembrete" : "Novo lembrete"}</DialogTitle><DialogDescription>Tarefa e data prevista</DialogDescription></DialogHeader>
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
             <FloatingTextarea label="Lembrete" value={titulo} onChange={(event) => setTitulo(event.target.value)} maxLength={300} required />
