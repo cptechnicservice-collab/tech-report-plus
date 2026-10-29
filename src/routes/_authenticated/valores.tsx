@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/valores")({
 });
 
 type Draft = Pick<ValorVigencia, "vigencia"> & Record<
-  "valor_hora_trabalhada" | "valor_hora_viagem" | "valor_km" | "valor_diaria_inteira" | "valor_meia_diaria",
+  "valor_hora_trabalhada" | "valor_hora_viagem" | "valor_km" | "almoco" | "janta",
   string
 >;
 
@@ -33,8 +33,8 @@ const blank = (): Draft => ({
   valor_hora_trabalhada: "",
   valor_hora_viagem: "",
   valor_km: "",
-  valor_diaria_inteira: "",
-  valor_meia_diaria: "",
+  almoco: "",
+  janta: "",
 });
 
 const numberValue = (value: string) => Number(value.replace(",", ".")) || 0;
@@ -55,8 +55,9 @@ function Valores() {
       valor_hora_trabalhada: numberValue(draft.valor_hora_trabalhada),
       valor_hora_viagem: numberValue(draft.valor_hora_viagem),
       valor_km: numberValue(draft.valor_km),
-      valor_diaria_inteira: numberValue(draft.valor_diaria_inteira),
-      valor_meia_diaria: numberValue(draft.valor_meia_diaria),
+      // A diária inteira cobre almoço + janta; a meia diária cobre só o almoço.
+      valor_meia_diaria: numberValue(draft.almoco),
+      valor_diaria_inteira: numberValue(draft.almoco) + numberValue(draft.janta),
     }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["valores"] });
@@ -76,8 +77,8 @@ function Valores() {
       valor_hora_trabalhada: String(valor.valor_hora_trabalhada),
       valor_hora_viagem: String(valor.valor_hora_viagem),
       valor_km: String(valor.valor_km),
-      valor_diaria_inteira: String(valor.valor_diaria_inteira),
-      valor_meia_diaria: String(valor.valor_meia_diaria),
+      almoco: String(valor.valor_meia_diaria),
+      janta: String(valor.valor_diaria_inteira - valor.valor_meia_diaria),
     });
   };
 
@@ -85,8 +86,8 @@ function Valores() {
     ["valor_hora_trabalhada", "Hora trabalhada", "R$/h"],
     ["valor_hora_viagem", "Hora de viagem", "R$/h"],
     ["valor_km", "Quilômetro", "R$/km"],
-    ["valor_diaria_inteira", "Diária inteira", "R$"],
-    ["valor_meia_diaria", "Meia diária", "R$"],
+    ["almoco", "Almoço (alimentação)", "R$"],
+    ["janta", "Janta (alimentação)", "R$"],
   ] as const;
 
   return (
@@ -97,7 +98,7 @@ function Valores() {
           <p>Os cálculos financeiros nos apontamentos dependem dos valores definidos aqui. Cadastre a vigência atual abaixo.</p>
         </div>
       )}
-      {maisRecente ? <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav"><p className="text-xs text-brand-header-foreground/65">Vigente desde {formatDateBR(maisRecente.vigencia)}</p><div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">{[["Hora trabalho", `${formatCurrency(maisRecente.valor_hora_trabalhada)}/h`], ["Hora viagem", `${formatCurrency(maisRecente.valor_hora_viagem)}/h`], ["Por KM", formatCurrency(maisRecente.valor_km)], ["Diária inteira", formatCurrency(maisRecente.valor_diaria_inteira)]].map(([label, value]) => <div key={label}><p className="text-xs text-brand-header-foreground/55">{label}</p><p className="mt-1 font-semibold tabular-nums">{value}</p></div>)}</div></section> : null}
+      {maisRecente ? <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav"><p className="text-xs text-brand-header-foreground/65">Vigente desde {formatDateBR(maisRecente.vigencia)}</p><div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">{[["Hora trabalho", `${formatCurrency(maisRecente.valor_hora_trabalhada)}/h`], ["Hora viagem", `${formatCurrency(maisRecente.valor_hora_viagem)}/h`], ["Por KM", formatCurrency(maisRecente.valor_km)], ["Almoço", formatCurrency(maisRecente.valor_meia_diaria)], ["Janta", formatCurrency(maisRecente.valor_diaria_inteira - maisRecente.valor_meia_diaria)], ["Diária (almoço + janta)", formatCurrency(maisRecente.valor_diaria_inteira)]].map(([label, value]) => <div key={label}><p className="text-xs text-brand-header-foreground/55">{label}</p><p className="mt-1 font-semibold tabular-nums">{value}</p></div>)}</div></section> : null}
       {showForm ? <Section title={editingId ? "Editar valores" : "Novos valores"}>
         <FloatingInput id="vigencia" label="Vigente desde" type="date" value={draft.vigencia} onChange={(event) => setDraft({ ...draft, vigencia: event.target.value })} />
         {fields.map(([key, label, suffix]) => (
@@ -125,7 +126,7 @@ function Valores() {
                     <span className="block text-sm font-semibold">Vigência {formatDateBR(valor.vigencia)}</span>
                     <span className="mt-1 block whitespace-normal text-xs leading-5 text-muted-foreground">
                       Trabalho {formatCurrency(valor.valor_hora_trabalhada)}/h · Viagem {formatCurrency(valor.valor_hora_viagem)}/h · KM {formatCurrency(valor.valor_km)}<br />
-                      Diária {formatCurrency(valor.valor_diaria_inteira)} · Meia {formatCurrency(valor.valor_meia_diaria)}
+                      Almoço {formatCurrency(valor.valor_meia_diaria)} · Janta {formatCurrency(valor.valor_diaria_inteira - valor.valor_meia_diaria)}
                     </span>
                   </span>
                 </Button>

@@ -15,8 +15,8 @@ export function technicalQuoteRates(valores: ValorVigencia[], date: string) {
     ["Hora trabalhada", "hora", rate(vigente?.valor_hora_trabalhada, 170)],
     ["Hora viajada (deslocamento)", "hora", rate(vigente?.valor_hora_viagem, 120)],
     ["Quilometragem rodada", "km", rate(vigente?.valor_km, 2)],
-    ["Almoço (alimentação)", "refeição", 55],
-    ["Janta (alimentação)", "refeição", 65],
+    ["Almoço (alimentação)", "refeição", 60],
+    ["Janta (alimentação)", "refeição", 60],
     ["Hospedagem / hotel (opcional)", "diária", 300],
   ] as const;
 }

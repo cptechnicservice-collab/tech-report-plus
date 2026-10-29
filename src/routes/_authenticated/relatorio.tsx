@@ -414,7 +414,7 @@ function Relatorio() {
           <ValueRow label={`Horas trabalhadas · ${formatDecimalHours(financeiros.horasTrabalhadas)} h × valores vigentes`} value={financeiros.valorTrabalho} />
           <ValueRow label={`Horas de viagem · ${formatDecimalHours(financeiros.horasViagem)} h × valores vigentes`} value={financeiros.valorViagem} />
           <ValueRow label={`KM · ${financeiros.km} × valores vigentes`} value={financeiros.valorKm} />
-          <ValueRow label={`Diárias · ${financeiros.diariasInteiras} inteira(s), ${financeiros.meiasDiarias} meia(s)`} value={financeiros.valorDiarias} />
+          <ValueRow label={`Diárias · ${financeiros.diariasInteiras + financeiros.meiasDiarias} almoço(s), ${financeiros.diariasInteiras} janta(s)`} value={financeiros.valorDiarias} />
           <ValueRow label="Pedágios" value={financeiros.pedagios} />
           <ValueRow label="Outras despesas" value={financeiros.outrasDespesas} />
           {totalPecas > 0 ? <ValueRow label={`Peças utilizadas · ${pecasCombinadas.length} item(ns)`} value={totalPecas} /> : null}

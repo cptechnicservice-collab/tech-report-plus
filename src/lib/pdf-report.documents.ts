@@ -146,8 +146,8 @@ export async function generateHourQuotePdf(input: {
       ["Hora trabalhada", "hora", formatCurrency(input.valor.valor_hora_trabalhada)],
       ["Hora viajada (deslocamento)", "hora", formatCurrency(input.valor.valor_hora_viagem)],
       ["Quilometragem rodada", "km", formatCurrency(input.valor.valor_km)],
-      ["Diária inteira (alimentação)", "dia", formatCurrency(input.valor.valor_diaria_inteira)],
-      ["Meia diária (alimentação)", "dia", formatCurrency(input.valor.valor_meia_diaria)],
+      ["Almoço (alimentação)", "refeição", formatCurrency(input.valor.valor_meia_diaria)],
+      ["Janta (alimentação)", "refeição", formatCurrency(input.valor.valor_diaria_inteira - input.valor.valor_meia_diaria)],
     ],
     columnStyles: { 0: { cellWidth: 105 }, 1: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 47, halign: "right", fontStyle: "bold" } },
   });

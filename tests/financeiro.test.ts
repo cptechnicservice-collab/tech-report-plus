@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { calcularValoresPeriodo, valorVigente, type ValorVigencia } from "@/lib/financeiro";
+import { calcularValoresPeriodo, linhasRefeicoes, valorVigente, type ValorVigencia } from "@/lib/financeiro";
 import { calcularTotaisOrcamento } from "@/lib/orcamentos";
 
 const tarifa = (vigencia: string, hora: number, created_at = "2026-01-01"): ValorVigencia => ({
@@ -50,5 +50,39 @@ describe("Descontos do orçamento", () => {
     expect(calcularTotaisOrcamento(itens, "percentual", 150).total).toBe(0);
     expect(calcularTotaisOrcamento(itens, "valor", 999).desconto).toBe(350);
     expect(calcularTotaisOrcamento([], "valor", 10).total).toBe(0);
+  });
+});
+
+describe("Almoço e janta das diárias", () => {
+  const fin = (inteiras: number, meias: number, valorInteiras: number, valorMeias: number) => ({ diariasInteiras: inteiras, meiasDiarias: meias, valorDiariasInteiras: valorInteiras, valorMeiasDiarias: valorMeias });
+  const tarifaRef = { valor_diaria_inteira: 120, valor_meia_diaria: 60 };
+
+  test("inteira cobre almoço e janta; meia cobre só almoço, preservando o total", () => {
+    const linhas = linhasRefeicoes(fin(2, 1, 240, 60), tarifaRef);
+    expect(linhas).toEqual([
+      { descricao: "Almoço (alimentação)", quantidade: 3, unitario: 60, total: 180 },
+      { descricao: "Janta (alimentação)", quantidade: 2, unitario: 60, total: 120 },
+    ]);
+    expect(linhas.reduce((soma, linha) => soma + linha.total, 0)).toBe(300);
+  });
+
+  test("sem meias, o almoço vem da vigência e a janta completa a inteira", () => {
+    const linhas = linhasRefeicoes(fin(1, 0, 150, 0), tarifaRef);
+    expect(linhas.map((linha) => [linha.descricao, linha.unitario, linha.total])).toEqual([
+      ["Almoço (alimentação)", 60, 60],
+      ["Janta (alimentação)", 90, 90],
+    ]);
+  });
+
+  test("sem vigência e sem meias, divide a diária em duas refeições iguais", () => {
+    expect(linhasRefeicoes(fin(1, 0, 150, 0), null).map((linha) => linha.unitario)).toEqual([75, 75]);
+  });
+
+  test("só meias mostra só almoço; dados inconsistentes caem no fallback de diárias", () => {
+    expect(linhasRefeicoes(fin(0, 1, 0, 60), tarifaRef)).toEqual([
+      { descricao: "Almoço (alimentação)", quantidade: 1, unitario: 60, total: 60 },
+    ]);
+    expect(linhasRefeicoes(fin(1, 1, 100, 150), tarifaRef)).toEqual([]);
+    expect(linhasRefeicoes(fin(0, 0, 0, 0), tarifaRef)).toEqual([]);
   });
 });
