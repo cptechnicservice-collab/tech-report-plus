@@ -1,5 +1,11 @@
 # Roadmap
 
+## Diárias em almoço e janta
+- [x] Tela Valores com campos separados de Almoço e Janta; salvar grava meia = almoço e inteira = almoço + janta, sem mudar cálculos.
+- [x] Relatório PDF e resumo da tela de relatório exibem Almoço (inteiras + meias) e Janta (inteiras), preservando o total; fallback para diárias se inconsistente.
+- [x] Orçamento técnico com almoço 60 e janta 60; meia diária da vigência atual ajustada de 70 para 60 (inteira mantida em 120).
+- [x] Testes de linhas de refeições e do orçamento técnico (17 testes nos arquivos de valores passaram).
+
 ## Lembretes no Painel
 - [x] Retirar Total do mês e Recebidos no mês, mantendo indicadores de horas/KM e pagamentos.
 - [x] Criar lembretes com descrição, data opcional, edição, conclusão e exclusão, com cache e sincronização por usuário.
