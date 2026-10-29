@@ -7,7 +7,7 @@ import {
   type ApontamentoComCliente,
   type Cliente,
 } from "@/lib/apontamentos";
-import { calcularValoresPeriodo, formatCurrency, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
+import { calcularValoresPeriodo, formatCurrency, linhasRefeicoes, valorVigente, type TotaisFinanceiros, type ValorVigencia } from "@/lib/financeiro";
 import { ensureEmpresa, type DadosEmpresa } from "@/lib/empresa";
 import type { Orcamento } from "@/lib/orcamentos";
 import type { DespesaRelatorio } from "@/lib/relatorios";
@@ -199,6 +199,13 @@ export async function generateClientReport(
   }
   const unitValue = (total: number, quantity: number, suffix = "") =>
     quantity > 0 ? `${currencyNumber(total / quantity)}${suffix}` : "—";
+  const refeicoes = linhasRefeicoes(financial, valorVigente(inicio, valores));
+  const diariaRows: string[][] = refeicoes.length > 0
+    ? refeicoes.map((linha) => [linha.descricao, String(linha.quantidade), currencyNumber(linha.unitario), currencyNumber(linha.total)])
+    : [
+      ...(financial.diariasInteiras > 0 ? [["Diária inteira", String(financial.diariasInteiras), unitValue(financial.valorDiariasInteiras, financial.diariasInteiras), currencyNumber(financial.valorDiariasInteiras)]] : []),
+      ...(financial.meiasDiarias > 0 ? [["Meia diária", String(financial.meiasDiarias), unitValue(financial.valorMeiasDiarias, financial.meiasDiarias), currencyNumber(financial.valorMeiasDiarias)]] : []),
+    ];
   const financialRows = [
     [
       "Horas trabalhadas",
@@ -218,18 +225,7 @@ export async function generateClientReport(
       unitValue(financial.valorKm, financial.km, "/km"),
       currencyNumber(financial.valorKm),
     ],
-    ...(financial.diariasInteiras > 0 ? [[
-      "Diária inteira",
-      String(financial.diariasInteiras),
-      unitValue(financial.valorDiariasInteiras, financial.diariasInteiras),
-      currencyNumber(financial.valorDiariasInteiras),
-    ]] : []),
-    ...(financial.meiasDiarias > 0 ? [[
-      "Meia diária",
-      String(financial.meiasDiarias),
-      unitValue(financial.valorMeiasDiarias, financial.meiasDiarias),
-      currencyNumber(financial.valorMeiasDiarias),
-    ]] : []),
+    ...diariaRows,
     ...(financial.pedagios > 0 ? [["Pedágios", "—", "—", currencyNumber(financial.pedagios)]] : []),
     ...(financial.outrasDespesas > 0 ? [["Outras despesas", "—", "—", currencyNumber(financial.outrasDespesas)]] : []),
   ];

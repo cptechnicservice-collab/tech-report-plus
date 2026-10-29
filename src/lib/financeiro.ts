@@ -42,6 +42,42 @@ export function valorVigente(data: string, valores: ValorVigencia[]) {
     .sort((a, b) => `${b.vigencia}${b.created_at}`.localeCompare(`${a.vigencia}${a.created_at}`))[0] ?? null;
 }
 
+export type LinhaRefeicao = {
+  descricao: string;
+  quantidade: number;
+  unitario: number;
+  total: number;
+};
+
+// A diária inteira cobre almoço + janta; a meia diária cobre só o almoço.
+// As linhas derivam os valores unitários dos totais já calculados, preservando o total das diárias.
+export function linhasRefeicoes(
+  financeiro: Pick<TotaisFinanceiros, "diariasInteiras" | "meiasDiarias" | "valorDiariasInteiras" | "valorMeiasDiarias">,
+  tarifa?: Pick<ValorVigencia, "valor_diaria_inteira" | "valor_meia_diaria"> | null,
+): LinhaRefeicao[] {
+  const inteiras = financeiro.diariasInteiras;
+  const meias = financeiro.meiasDiarias;
+  if (inteiras <= 0 && meias <= 0) return [];
+  const unitInteira = inteiras > 0 ? financeiro.valorDiariasInteiras / inteiras : null;
+  const almoco = (meias > 0 ? financeiro.valorMeiasDiarias / meias : null)
+    ?? (tarifa ? tarifa.valor_meia_diaria : null)
+    ?? (unitInteira !== null ? unitInteira / 2 : null);
+  if (almoco === null || !Number.isFinite(almoco) || almoco < 0) return [];
+  const linhas: LinhaRefeicao[] = [{
+    descricao: "Almoço (alimentação)",
+    quantidade: inteiras + meias,
+    unitario: almoco,
+    total: almoco * (inteiras + meias),
+  }];
+  if (inteiras > 0) {
+    const janta = (unitInteira !== null ? unitInteira - almoco : null)
+      ?? (tarifa ? tarifa.valor_diaria_inteira - tarifa.valor_meia_diaria : null);
+    if (janta === null || !Number.isFinite(janta) || janta < 0) return [];
+    linhas.push({ descricao: "Janta (alimentação)", quantidade: inteiras, unitario: janta, total: janta * inteiras });
+  }
+  return linhas;
+}
+
 export function calcularValoresPeriodo(
   apontamentos: Partial<Apontamento>[],
   valores: ValorVigencia[],
