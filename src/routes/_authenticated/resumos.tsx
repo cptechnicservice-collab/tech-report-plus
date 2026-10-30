@@ -1,5 +1,6 @@
 import { recebimentosAvulsosQuery, totalRecebimentosAvulsos } from "@/lib/recebimentos-avulsos";
 import { NovoRecebimentoAvulsoButton, RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
+import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +39,7 @@ function Resumos() {
 
   const doPeriodo = useMemo(() => apontamentos.filter((a) => a.data.startsWith(periodo)), [apontamentos, periodo]);
   const financeiro = useMemo(() => calcularValoresPeriodo(doPeriodo, valores), [doPeriodo, valores]);
+  const { data: apontamentoPecas = [] } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
 
   const abertos = relatorios.filter((item) => saldoRelatorio(item) > 0 && item.fim.startsWith(periodo));
   const totalAReceber = abertos.reduce((total, item) => total + saldoRelatorio(item), 0);
@@ -88,6 +90,13 @@ function Resumos() {
     [relatorios, avulsos],
   );
 
+  const valorPecasPeriodo = useMemo(() => {
+    const ids = new Set(doPeriodo.map((item) => item.id));
+    return apontamentoPecas
+      .filter((item) => ids.has(item.apontamento_id))
+      .reduce((total, item) => total + item.valor_unitario * item.quantidade, 0);
+  }, [doPeriodo, apontamentoPecas]);
+
   const graficoComposicao = useMemo(
     () =>
       [
@@ -95,9 +104,10 @@ function Resumos() {
         { nome: "Horas de viagem", valor: financeiro.valorViagem },
         { nome: "Quilometragem", valor: financeiro.valorKm },
         { nome: "Diárias", valor: financeiro.valorDiarias },
+        { nome: "Peças", valor: valorPecasPeriodo },
         { nome: "Despesas", valor: financeiro.pedagios + financeiro.outrasDespesas },
       ].filter((item) => item.valor > 0),
-    [financeiro],
+    [financeiro, valorPecasPeriodo],
   );
 
   const alterarTipo = (novo: "mensal" | "anual") => {
