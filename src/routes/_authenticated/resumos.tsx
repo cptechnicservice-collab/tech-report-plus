@@ -90,6 +90,13 @@ function Resumos() {
     [relatorios, avulsos],
   );
 
+  const valorPecasPeriodo = useMemo(() => {
+    const ids = new Set(doPeriodo.map((item) => item.id));
+    return apontamentoPecas
+      .filter((item) => ids.has(item.apontamento_id))
+      .reduce((total, item) => total + item.valor_unitario * item.quantidade, 0);
+  }, [doPeriodo, apontamentoPecas]);
+
   const graficoComposicao = useMemo(
     () =>
       [
@@ -97,9 +104,10 @@ function Resumos() {
         { nome: "Horas de viagem", valor: financeiro.valorViagem },
         { nome: "Quilometragem", valor: financeiro.valorKm },
         { nome: "Diárias", valor: financeiro.valorDiarias },
+        { nome: "Peças", valor: valorPecasPeriodo },
         { nome: "Despesas", valor: financeiro.pedagios + financeiro.outrasDespesas },
       ].filter((item) => item.valor > 0),
-    [financeiro],
+    [financeiro, valorPecasPeriodo],
   );
 
   const alterarTipo = (novo: "mensal" | "anual") => {
