@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingInput, FloatingTextarea } from "@/components/FloatingField";
 import { PartPicker, type SelectedPart } from "@/components/PartPicker";
 import { TimeWheelField } from "@/components/TimeWheelField";
@@ -45,6 +46,7 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { apontamentoValidationSchema, assertApontamentoValid } from "@/lib/apontamento-validation";
 import { isDecimalBRInput, parseDecimalBR } from "@/lib/decimal-br";
+import { selecionarRefeicao, type DiariaTipo } from "@/lib/refeicoes";
 
 type FormState = {
   data: string;
@@ -61,7 +63,7 @@ type FormState = {
   km_ida: string;
   km_volta: string;
   observacoes: string;
-  diaria_tipo: "nenhuma" | "meia" | "inteira";
+  diaria_tipo: DiariaTipo;
   pedagio: string;
   outras_despesas: string;
   outras_despesas_descricao: string;
@@ -452,17 +454,20 @@ export function ApontamentoForm({ apontamento, draft }: { apontamento?: Apontame
 
       <Section title="Despesas">
         <div className="space-y-1.5">
-          <Label htmlFor="diaria">Diária</Label>
-          <select
-            id="diaria"
-            value={form.diaria_tipo}
-            onChange={(event) => set("diaria_tipo", event.target.value as FormState["diaria_tipo"])}
-            className="ios-field h-12 w-full border px-3"
-          >
-            <option value="nenhuma">Nenhuma</option>
-            <option value="meia">Meia diária</option>
-            <option value="inteira">Diária inteira</option>
-          </select>
+          <p className="text-sm font-medium">Alimentação</p>
+          <div className="grid grid-cols-2 gap-3">
+            {(["almoco", "janta"] as const).map((refeicao) => (
+              <Label key={refeicao} htmlFor={`refeicao-${refeicao}`} className="ios-field flex min-h-12 cursor-pointer items-center gap-3 border px-3">
+                <Checkbox
+                  id={`refeicao-${refeicao}`}
+                  checked={form.diaria_tipo === "inteira" || form.diaria_tipo === (refeicao === "almoco" ? "meia" : "janta")}
+                  onCheckedChange={(checked) => set("diaria_tipo", selecionarRefeicao(form.diaria_tipo, refeicao, checked === true))}
+                  className="h-5 w-5"
+                />
+                {refeicao === "almoco" ? "Almoço" : "Janta"}
+              </Label>
+            ))}
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <FloatingInput id="pedagio" label="Pedágio (R$)" inputMode="decimal" value={form.pedagio} onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("pedagio", event.target.value); }} />

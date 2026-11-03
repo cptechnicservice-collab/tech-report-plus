@@ -1,5 +1,10 @@
 # Roadmap
 
+## Seleção de refeições em Apontar
+- [x] Substituir diária por seleção independente de Almoço e Janta, incluindo ambos e nenhum.
+- [x] Permitir janta avulsa no banco e nos cálculos, mantendo diárias antigas, snapshots e fluxo offline.
+- [x] 95 testes passaram, compilação OK e lint sem erros; as quatro seleções verificadas no formulário autenticado em tamanho de iPhone, online/offline, sem salvar registros reais.
+
 ## Diárias em almoço e janta
 - [x] Tela Valores com campos separados de Almoço e Janta; salvar grava meia = almoço e inteira = almoço + janta, sem mudar cálculos.
 - [x] Relatório PDF e resumo da tela de relatório exibem Almoço (inteiras + meias) e Janta (inteiras), preservando o total; fallback para diárias se inconsistente.

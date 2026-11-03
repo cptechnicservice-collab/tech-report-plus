@@ -1,0 +1,3 @@
+ALTER TABLE public.apontamentos DROP CONSTRAINT apontamentos_diaria_tipo_check;
+ALTER TABLE public.apontamentos ADD CONSTRAINT apontamentos_diaria_tipo_check CHECK (diaria_tipo IN ('nenhuma', 'meia', 'inteira', 'janta'));
+COMMENT ON COLUMN public.apontamentos.diaria_tipo IS 'Meal selection: nenhuma = neither, meia = lunch, inteira = lunch and dinner, janta = dinner only. Legacy values remain supported.';

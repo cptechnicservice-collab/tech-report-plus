@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { calcularValoresPeriodo, linhasRefeicoes, valorVigente, type ValorVigencia } from "@/lib/financeiro";
 import { calcularTotaisOrcamento } from "@/lib/orcamentos";
+import { selecionarRefeicao } from "@/lib/refeicoes";
 
 const tarifa = (vigencia: string, hora: number, created_at = "2026-01-01"): ValorVigencia => ({
   id: vigencia, vigencia, valor_hora_trabalhada: hora, valor_hora_viagem: 50,
@@ -54,6 +55,35 @@ describe("Descontos do orçamento", () => {
 });
 
 describe("Almoço e janta das diárias", () => {
+  test("selecionar almoço e janta independentemente preserva as quatro combinações", () => {
+    expect(selecionarRefeicao("nenhuma", "almoco", true)).toBe("meia");
+    expect(selecionarRefeicao("nenhuma", "janta", true)).toBe("janta");
+    expect(selecionarRefeicao("meia", "janta", true)).toBe("inteira");
+    expect(selecionarRefeicao("janta", "almoco", true)).toBe("inteira");
+    expect(selecionarRefeicao("inteira", "almoco", false)).toBe("janta");
+    expect(selecionarRefeicao("inteira", "janta", false)).toBe("meia");
+    expect(selecionarRefeicao("janta", "janta", false)).toBe("nenhuma");
+    expect(selecionarRefeicao("meia", "almoco", false)).toBe("nenhuma");
+  });
+
+  test("janta sozinha usa a tarifa de janta e aparece sem almoço no relatório", () => {
+    const valores = [{ ...tarifa("2026-01-01", 100), valor_diaria_inteira: 150, valor_meia_diaria: 60 }];
+    const total = calcularValoresPeriodo([{ data: "2026-01-01", diaria_tipo: "janta" }], valores);
+    expect(total.totalGeral).toBe(90);
+    expect(total).toMatchObject({ diariasInteiras: 0, meiasDiarias: 0, jantasAvulsas: 1, valorJantasAvulsas: 90, valorDiarias: 90 });
+    expect(linhasRefeicoes(total, valores[0])).toEqual([{ descricao: "Janta (alimentação)", quantidade: 1, unitario: 90, total: 90 }]);
+  });
+
+  test("ambas cobram a soma das refeições e jantas avulsas somam sem duplicação", () => {
+    const valores = [{ ...tarifa("2026-01-01", 100), valor_diaria_inteira: 120, valor_meia_diaria: 60 }];
+    const ambas = calcularValoresPeriodo([{ data: "2026-01-01", diaria_tipo: "inteira" }], valores);
+    expect(ambas.totalGeral).toBe(120);
+    const total = calcularValoresPeriodo(["inteira", "meia", "janta"].map((diaria_tipo) => ({ data: "2026-01-01", diaria_tipo })), valores);
+    expect(total.totalGeral).toBe(240);
+    expect(linhasRefeicoes(total, valores[0]).map((linha) => [linha.quantidade, linha.total])).toEqual([[2, 120], [2, 120]]);
+    expect(linhasRefeicoes(JSON.parse(JSON.stringify(total)), valores[0]).reduce((soma, linha) => soma + linha.total, 0)).toBe(240);
+  });
+
   const fin = (inteiras: number, meias: number, valorInteiras: number, valorMeias: number) => ({ diariasInteiras: inteiras, meiasDiarias: meias, valorDiariasInteiras: valorInteiras, valorMeiasDiarias: valorMeias });
   const tarifaRef = { valor_diaria_inteira: 120, valor_meia_diaria: 60 };
 

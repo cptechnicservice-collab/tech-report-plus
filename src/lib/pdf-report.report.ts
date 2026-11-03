@@ -205,6 +205,7 @@ export async function generateClientReport(
     : [
       ...(financial.diariasInteiras > 0 ? [["Diária inteira", String(financial.diariasInteiras), unitValue(financial.valorDiariasInteiras, financial.diariasInteiras), currencyNumber(financial.valorDiariasInteiras)]] : []),
       ...(financial.meiasDiarias > 0 ? [["Meia diária", String(financial.meiasDiarias), unitValue(financial.valorMeiasDiarias, financial.meiasDiarias), currencyNumber(financial.valorMeiasDiarias)]] : []),
+      ...((financial.jantasAvulsas ?? 0) > 0 ? [["Janta (alimentação)", String(financial.jantasAvulsas), unitValue(financial.valorJantasAvulsas ?? 0, financial.jantasAvulsas ?? 0), currencyNumber(financial.valorJantasAvulsas ?? 0)]] : []),
     ];
   const financialRows = [
     [
