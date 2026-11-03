@@ -19,6 +19,8 @@ export type TotaisFinanceiros = {
   km: number;
   diariasInteiras: number;
   meiasDiarias: number;
+  jantasAvulsas?: number;
+  valorJantasAvulsas?: number;
   valorTrabalho: number;
   valorViagem: number;
   valorKm: number;
@@ -52,12 +54,17 @@ export type LinhaRefeicao = {
 // A diária inteira cobre almoço + janta; a meia diária cobre só o almoço.
 // As linhas derivam os valores unitários dos totais já calculados, preservando o total das diárias.
 export function linhasRefeicoes(
-  financeiro: Pick<TotaisFinanceiros, "diariasInteiras" | "meiasDiarias" | "valorDiariasInteiras" | "valorMeiasDiarias">,
+  financeiro: Pick<TotaisFinanceiros, "diariasInteiras" | "meiasDiarias" | "valorDiariasInteiras" | "valorMeiasDiarias" | "jantasAvulsas" | "valorJantasAvulsas">,
   tarifa?: Pick<ValorVigencia, "valor_diaria_inteira" | "valor_meia_diaria"> | null,
 ): LinhaRefeicao[] {
   const inteiras = financeiro.diariasInteiras;
   const meias = financeiro.meiasDiarias;
-  if (inteiras <= 0 && meias <= 0) return [];
+  const jantasAvulsas = financeiro.jantasAvulsas ?? 0;
+  const valorJantasAvulsas = financeiro.valorJantasAvulsas ?? 0;
+  if (inteiras <= 0 && meias <= 0) return jantasAvulsas > 0 ? [{
+    descricao: "Janta (alimentação)", quantidade: jantasAvulsas,
+    unitario: valorJantasAvulsas / jantasAvulsas, total: valorJantasAvulsas,
+  }] : [];
   const unitInteira = inteiras > 0 ? financeiro.valorDiariasInteiras / inteiras : null;
   const almoco = (meias > 0 ? financeiro.valorMeiasDiarias / meias : null)
     ?? (tarifa ? tarifa.valor_meia_diaria : null)
@@ -69,11 +76,14 @@ export function linhasRefeicoes(
     unitario: almoco,
     total: almoco * (inteiras + meias),
   }];
-  if (inteiras > 0) {
+  if (inteiras > 0 || jantasAvulsas > 0) {
     const janta = (unitInteira !== null ? unitInteira - almoco : null)
+      ?? (jantasAvulsas > 0 ? valorJantasAvulsas / jantasAvulsas : null)
       ?? (tarifa ? tarifa.valor_diaria_inteira - tarifa.valor_meia_diaria : null);
     if (janta === null || !Number.isFinite(janta) || janta < 0) return [];
-    linhas.push({ descricao: "Janta (alimentação)", quantidade: inteiras, unitario: janta, total: janta * inteiras });
+    const quantidade = inteiras + jantasAvulsas;
+    const total = janta * inteiras + valorJantasAvulsas;
+    linhas.push({ descricao: "Janta (alimentação)", quantidade, unitario: total / quantidade, total });
   }
   return linhas;
 }
@@ -90,13 +100,17 @@ export function calcularValoresPeriodo(
       ? (tarifa?.valor_diaria_inteira ?? 0)
       : diariaTipo === "meia"
         ? (tarifa?.valor_meia_diaria ?? 0)
-        : 0;
+        : diariaTipo === "janta"
+          ? Math.max(0, (tarifa?.valor_diaria_inteira ?? 0) - (tarifa?.valor_meia_diaria ?? 0))
+          : 0;
 
     acc.horasTrabalhadas += quantidades.trabalho;
     acc.horasViagem += quantidades.viagem;
     acc.km += quantidades.km;
     acc.diariasInteiras += diariaTipo === "inteira" ? 1 : 0;
     acc.meiasDiarias += diariaTipo === "meia" ? 1 : 0;
+    acc.jantasAvulsas = (acc.jantasAvulsas ?? 0) + (diariaTipo === "janta" ? 1 : 0);
+    acc.valorJantasAvulsas = (acc.valorJantasAvulsas ?? 0) + (diariaTipo === "janta" ? valorDiaria : 0);
     acc.valorTrabalho += (quantidades.trabalho / 60) * (tarifa?.valor_hora_trabalhada ?? 0);
     acc.valorViagem += (quantidades.viagem / 60) * (tarifa?.valor_hora_viagem ?? 0);
     acc.valorKm += quantidades.km * (tarifa?.valor_km ?? 0);
@@ -112,6 +126,8 @@ export function calcularValoresPeriodo(
     km: 0,
     diariasInteiras: 0,
     meiasDiarias: 0,
+    jantasAvulsas: 0,
+    valorJantasAvulsas: 0,
     valorTrabalho: 0,
     valorViagem: 0,
     valorKm: 0,
