@@ -38,3 +38,4 @@
 - Keep dashboard reminders in a dedicated user-owned record module with the existing scoped cache and queue; pending operations must override online reads so offline edits and completions are preserved.
 - Prepare the standalone technical quote PDF from scoped local rates and the existing logo before its share button is clicked; this avoids backend dependencies and preserves iPhone user activation without changing existing PDF generators.
 - Keep meal selection in the shared meal helper and preserve legacy diaria_tipo values; dinner-only uses an additive value and optional financial snapshot fields so old records remain compatible.
+- Enforce manual app approval with restrictive RLS alongside existing ownership policies; administrator RPCs validate protected roles in PostgreSQL, while scoped approval markers provide only offline continuity until reconnection.

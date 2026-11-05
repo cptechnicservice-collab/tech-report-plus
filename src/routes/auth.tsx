@@ -98,7 +98,7 @@ function AuthPage() {
       <form className="ios-group space-y-4 p-5" onSubmit={submit}>
         <div>
           <h2 className="text-xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{mode === "login" ? "Continue de onde parou." : "Comece com seus dados separados e seguros."}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "login" ? "Continue de onde parou." : "O acesso é pago e depende da liberação de Clarel Pavan."}</p>
         </div>
         {mode === "signup" ? <div className="space-y-1.5"><Label htmlFor="name">Nome</Label><Input id="name" autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} required /></div> : null}
         <div className="space-y-1.5"><Label htmlFor="email">E-mail</Label><div className="relative"><Mail className="pointer-events-none absolute left-3 top-3.5 h-5 w-5 text-muted-foreground"/><Input id="email" className="pl-10" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></div></div>

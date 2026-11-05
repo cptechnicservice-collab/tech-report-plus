@@ -1,6 +1,7 @@
 import { isAuthRetryableFetchError, type User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { clearSavedAccess } from "@/lib/app-access";
 
 const CONFIRMED_USER_ID_KEY = "cp-technic-confirmed-user-id";
 const AUTH_NETWORK_TIMEOUT_MS = 5000;
@@ -45,6 +46,8 @@ export function rememberConfirmedUser(userId: string) {
 }
 
 export function clearConfirmedUser() {
+  const userId = getConfirmedUserId();
+  if (userId) clearSavedAccess(userId);
   if (typeof localStorage !== "undefined") localStorage.removeItem(CONFIRMED_USER_ID_KEY);
 }
 
