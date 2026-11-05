@@ -29,14 +29,14 @@ export async function resolveAppAccess(userId: string, offline: boolean): Promis
     }
     const data = result.data;
     if (!data || typeof data !== "object" || Array.isArray(data) ||
-      !("status" in data) || !["pending", "approved", "blocked"].includes(String(data.status))) {
+      !("status" in data) || !["pending", "approved", "blocked"].includes(String(data["status"]))) {
       clearSavedAccess(userId);
       return fallback;
     }
-    const status = data.status as AppAccess["status"];
+    const status = data["status"] as AppAccess["status"];
     if (status === "approved" && typeof localStorage !== "undefined") localStorage.setItem(key(userId), "approved");
     else clearSavedAccess(userId);
-    return { status, admin: data.admin === true };
+    return { status, admin: data["admin"] === true };
   } catch {
     return { status: saved ? "approved" : "pending", admin: false };
   } finally {

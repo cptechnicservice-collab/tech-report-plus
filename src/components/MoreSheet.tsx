@@ -39,7 +39,7 @@ type MoreSheetProps = {
 };
 
 export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
-  const context = useRouteContext({ from: "/_authenticated", strict: false });
+  const context = useRouteContext({ strict: false });
   const [pending, setPending] = useState(0);
 
   const refreshStatus = useCallback(async () => {
