@@ -1,5 +1,10 @@
 # Roadmap
 
+## Acesso por aprovação manual
+- [ ] Bloquear novas contas até aprovação, preservar proprietário e isolamento de dados.
+- [ ] Criar controle exclusivo do proprietário para liberar/bloquear contas.
+- [ ] Validar autorização, navegação e preservação offline; não publicar.
+
 ## Seleção de refeições em Apontar
 - [x] Substituir diária por seleção independente de Almoço e Janta, incluindo ambos e nenhum.
 - [x] Permitir janta avulsa no banco e nos cálculos, mantendo diárias antigas, snapshots e fluxo offline.
