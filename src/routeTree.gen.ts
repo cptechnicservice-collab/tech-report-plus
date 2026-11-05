@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AcessoPendenteRouteImport } from './routes/acesso-pendente'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
@@ -30,6 +31,7 @@ import { Route as AuthenticatedRelatorioRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRelatoriosSalvosRouteImport } from './routes/_authenticated/relatorios-salvos'
 import { Route as AuthenticatedRelatoriosTotaisRouteImport } from './routes/_authenticated/relatorios-totais'
 import { Route as AuthenticatedResumosRouteImport } from './routes/_authenticated/resumos'
+import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedValoresRouteImport } from './routes/_authenticated/valores'
 import { Route as AuthenticatedApontamentoIdRouteImport } from './routes/_authenticated/apontamento.$id'
 
@@ -40,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcessoPendenteRoute = AcessoPendenteRouteImport.update({
+  id: '/acesso-pendente',
+  path: '/acesso-pendente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -143,6 +150,11 @@ const AuthenticatedResumosRoute = AuthenticatedResumosRouteImport.update({
   path: '/resumos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedValoresRoute = AuthenticatedValoresRouteImport.update({
   id: '/valores',
   path: '/valores',
@@ -157,6 +169,7 @@ const AuthenticatedApontamentoIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acesso-pendente': typeof AcessoPendenteRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
@@ -176,11 +189,13 @@ export interface FileRoutesByFullPath {
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
   '/resumos': typeof AuthenticatedResumosRoute
+  '/usuarios': typeof AuthenticatedUsuariosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acesso-pendente': typeof AcessoPendenteRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
@@ -200,6 +215,7 @@ export interface FileRoutesByTo {
   '/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
   '/resumos': typeof AuthenticatedResumosRoute
+  '/usuarios': typeof AuthenticatedUsuariosRoute
   '/valores': typeof AuthenticatedValoresRoute
   '/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -207,6 +223,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/acesso-pendente': typeof AcessoPendenteRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
@@ -226,6 +243,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios-salvos': typeof AuthenticatedRelatoriosSalvosRoute
   '/_authenticated/relatorios-totais': typeof AuthenticatedRelatoriosTotaisRoute
   '/_authenticated/resumos': typeof AuthenticatedResumosRoute
+  '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/_authenticated/valores': typeof AuthenticatedValoresRoute
   '/_authenticated/apontamento/$id': typeof AuthenticatedApontamentoIdRoute
 }
@@ -233,6 +251,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/acesso-pendente'
     | '/auth'
     | '/reset-password'
     | '/agenda'
@@ -252,11 +271,13 @@ export interface FileRouteTypes {
     | '/relatorios-salvos'
     | '/relatorios-totais'
     | '/resumos'
+    | '/usuarios'
     | '/valores'
     | '/apontamento/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/acesso-pendente'
     | '/auth'
     | '/reset-password'
     | '/agenda'
@@ -276,12 +297,14 @@ export interface FileRouteTypes {
     | '/relatorios-salvos'
     | '/relatorios-totais'
     | '/resumos'
+    | '/usuarios'
     | '/valores'
     | '/apontamento/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/acesso-pendente'
     | '/auth'
     | '/reset-password'
     | '/_authenticated/agenda'
@@ -301,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios-salvos'
     | '/_authenticated/relatorios-totais'
     | '/_authenticated/resumos'
+    | '/_authenticated/usuarios'
     | '/_authenticated/valores'
     | '/_authenticated/apontamento/$id'
   fileRoutesById: FileRoutesById
@@ -308,6 +332,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AcessoPendenteRoute: typeof AcessoPendenteRoute
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
@@ -326,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acesso-pendente': {
+      id: '/acesso-pendente'
+      path: '/acesso-pendente'
+      fullPath: '/acesso-pendente'
+      preLoaderRoute: typeof AcessoPendenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -461,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResumosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/usuarios': {
+      id: '/_authenticated/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/valores': {
       id: '/_authenticated/valores'
       path: '/valores'
@@ -496,6 +535,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRelatoriosSalvosRoute: typeof AuthenticatedRelatoriosSalvosRoute
   AuthenticatedRelatoriosTotaisRoute: typeof AuthenticatedRelatoriosTotaisRoute
   AuthenticatedResumosRoute: typeof AuthenticatedResumosRoute
+  AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedValoresRoute: typeof AuthenticatedValoresRoute
   AuthenticatedApontamentoIdRoute: typeof AuthenticatedApontamentoIdRoute
 }
@@ -519,6 +559,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRelatoriosSalvosRoute: AuthenticatedRelatoriosSalvosRoute,
   AuthenticatedRelatoriosTotaisRoute: AuthenticatedRelatoriosTotaisRoute,
   AuthenticatedResumosRoute: AuthenticatedResumosRoute,
+  AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedValoresRoute: AuthenticatedValoresRoute,
   AuthenticatedApontamentoIdRoute: AuthenticatedApontamentoIdRoute,
 }
@@ -529,6 +570,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AcessoPendenteRoute: AcessoPendenteRoute,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
 }
