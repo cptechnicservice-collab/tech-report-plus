@@ -139,7 +139,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isPublicAuth = pathname === "/auth" || pathname === "/reset-password";
+  const isPublicAuth = pathname === "/auth" || pathname === "/reset-password" || pathname === "/acesso-pendente";
+
+  useEffect(() => {
+    const recheck = () => { if (navigator.onLine) void router.invalidate(); };
+    window.addEventListener("online", recheck);
+    window.addEventListener("focus", recheck);
+    return () => { window.removeEventListener("online", recheck); window.removeEventListener("focus", recheck); };
+  }, [router]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {

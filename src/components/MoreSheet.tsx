@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
   CheckCircle2,
@@ -39,6 +39,7 @@ type MoreSheetProps = {
 };
 
 export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
+  const isAdmin = useRouterState({ select: (state) => state.matches.some((match) => "access" in match.context && match.context.access?.admin === true) });
   const [pending, setPending] = useState(0);
 
   const refreshStatus = useCallback(async () => {
@@ -84,6 +85,7 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
 
         <div className="mx-5 mb-5 overflow-hidden rounded-2xl border border-border bg-card">
           <div className="divide-y divide-border">
+            {isAdmin ? <DrawerClose asChild><Link to="/usuarios" className="press flex min-h-14 items-center gap-3 px-4"><Users className="h-5 w-5" /><span className="flex-1 font-semibold">Usuários e liberações</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose> : null}
             {options.map(({ to, label, icon: Icon }) => (
               <DrawerClose asChild key={to}>
                 <Link to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4">

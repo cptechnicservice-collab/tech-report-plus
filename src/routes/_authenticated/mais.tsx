@@ -25,10 +25,12 @@ const options = [
 ] as const;
 
 function Mais() {
+  const { access } = Route.useRouteContext();
   return (
     <PageShell title="Mais" subtitle="Cadastros e documentos">
       <Section title="Opções">
         <div className="-my-3 divide-y divide-border">
+          {access.admin ? <Link to="/usuarios" className="flex min-h-16 items-center gap-3 py-3 press"><Users className="h-5 w-5 text-primary" /><span className="flex-1 font-semibold">Usuários e liberações</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link> : null}
           {options.map(({ to, label, detail, icon: Icon }) => (
             <Link key={to} to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="flex min-h-16 items-center gap-3 py-3 press">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Icon className="h-5 w-5" /></span>

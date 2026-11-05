@@ -1,5 +1,11 @@
 # Roadmap
 
+## Acesso por aprovação manual
+- [x] Bloquear novas contas até aprovação com políticas restritivas nas 13 tabelas existentes; proprietário preservado e dados continuam isolados.
+- [x] Criar Usuários e liberações em Mais, exclusivo do proprietário; funções validam papel administrativo e impedem bloquear proprietários.
+- [x] 102 testes passaram, lint sem erros e compilação automática OK. Navegação autenticada e offline validada em 440×807; resposta pendente simulada redireciona sem mostrar navegação. Nenhum registro de cliente alterado e nada publicado.
+- [ ] Validar liberação/bloqueio real de outra conta: existe somente a conta do proprietário, portanto nenhuma conta de terceiros foi alterada. Bloqueio offline só é reconhecido ao reconectar.
+
 ## Seleção de refeições em Apontar
 - [x] Substituir diária por seleção independente de Almoço e Janta, incluindo ambos e nenhum.
 - [x] Permitir janta avulsa no banco e nos cálculos, mantendo diárias antigas, snapshots e fluxo offline.
