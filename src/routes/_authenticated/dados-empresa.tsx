@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CnpjInput } from "@/components/CnpjInput";
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,10 @@ function DadosEmpresaPage() {
       </Section>
       <Section title="Identificação">
         <Field id="empresa-nome" label="Nome fantasia" value={draft.nome_fantasia} onChange={(value) => setDraft({ ...draft, nome_fantasia: value })} />
-        <Field id="empresa-cnpj" label="CNPJ" value={draft.cnpj} onChange={(value) => setDraft({ ...draft, cnpj: value })} inputMode="numeric" />
+        <div className="space-y-1.5">
+          <Label htmlFor="empresa-cnpj">CNPJ</Label>
+          <CnpjInput id="empresa-cnpj" value={draft.cnpj} onChange={(value) => setDraft({ ...draft, cnpj: value })} className="h-12 rounded-xl" />
+        </div>
         <Field id="empresa-email" label="E-mail" value={draft.email} onChange={(value) => setDraft({ ...draft, email: value })} inputMode="email" />
         <Field id="empresa-contato" label="Nome do contato" value={draft.contato} onChange={(value) => setDraft({ ...draft, contato: value })} />
         <Field id="empresa-telefone" label="Telefone (opcional)" value={draft.telefone ?? ""} onChange={(value) => setDraft({ ...draft, telefone: value || null })} inputMode="tel" />
