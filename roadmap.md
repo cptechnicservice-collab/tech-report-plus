@@ -160,3 +160,4 @@
 - [x] Explicar o ícone sem logo no iPhone e mostrar o motivo real quando salvar parcelas falhar.
 - [x] Aba Resumos com total financeiro, resumos mensal/anual e gráficos (fora do Painel)
 - [x] Previsão mensal de recebimentos de parcelas (tela própria, ligada em Resumos)
+- [x] Ocultar recebimentos avulsos em Relatórios salvos, mostrando o bloco somente quando selecionado.

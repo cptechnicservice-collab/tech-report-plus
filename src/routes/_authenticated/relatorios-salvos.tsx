@@ -2,7 +2,7 @@ import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Camera, Download, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Camera, Download, Eye, EyeOff, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -31,6 +31,7 @@ type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos
 
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 const STATUS_FILTER_STORAGE_KEY = "cp-technic-relatorios-status";
+const AVULSOS_FILTER_STORAGE_KEY = "cp-technic-relatorios-avulsos";
 const STATUS_RELATORIO_ORDER: Record<StatusRelatorio, number> = {
   pendente: 0,
   aguardando_pagamento: 1,
@@ -114,6 +115,7 @@ function RelatoriosSalvos() {
   const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
   const [parcelamento, setParcelamento] = useState<ParcelamentoState>({ parcelar: false, quantidade: 2, primeiro: "", parcelas: [], dataPrevista: "" });
   const [filtroVencimento, setFiltroVencimento] = useState<FiltroVencimento>(search.vencimento ?? "todos");
+  const [mostrarAvulsos, setMostrarAvulsos] = useState(false);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
 
@@ -127,6 +129,18 @@ function RelatoriosSalvos() {
       setStatus(savedStatus);
     }
   }, [search.status]);
+
+  useEffect(() => {
+    setMostrarAvulsos(window.localStorage.getItem(AVULSOS_FILTER_STORAGE_KEY) === "1");
+  }, []);
+
+  const toggleAvulsos = () => {
+    setMostrarAvulsos((atual) => {
+      const proximo = !atual;
+      window.localStorage.setItem(AVULSOS_FILTER_STORAGE_KEY, proximo ? "1" : "0");
+      return proximo;
+    });
+  };
 
   const selectStatus = (value: "todos" | "aberto" | "recebido" | PagamentoStatus) => {
     setStatus(value);
@@ -429,7 +443,6 @@ function RelatoriosSalvos() {
 
   return (
     <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`} backTo="/mais">
-      {status === "todos" || status === "recebido" || status === "pago" ? <RecebimentosAvulsosSection periodo={search.periodo} busca={busca} /> : null}
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar cliente" className="h-14 rounded-xl bg-card pl-12 pr-12 shadow-card" />
@@ -489,6 +502,16 @@ function RelatoriosSalvos() {
           ))}
         </div>
       </div>
+
+      <div className="space-y-2">
+        <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Recebimentos avulsos</p>
+        <Button type="button" size="sm" variant={mostrarAvulsos ? "default" : "outline"} aria-pressed={mostrarAvulsos} className="rounded-full px-4" onClick={toggleAvulsos}>
+          {mostrarAvulsos ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+          {mostrarAvulsos ? "Ocultar" : "Mostrar"}
+        </Button>
+      </div>
+
+      {mostrarAvulsos ? <RecebimentosAvulsosSection periodo={search.periodo} busca={busca} /> : null}
 
       {isLoading ? <p className="px-1 text-sm text-muted-foreground">Carregando...</p> : relatoriosVisiveis.length === 0 ? (
         <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">{relatorios.length ? "Nenhum resultado para estes filtros" : "Nenhum relatório salvo"}</p><p className="mt-1 text-sm text-muted-foreground">{relatorios.length ? "Ajuste ou limpe os filtros para ver outros relatórios." : "Salve um relatório para consultá-lo aqui."}</p>{relatorios.length ? <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={clearFilters}>Limpar filtros</Button> : null}</div>
