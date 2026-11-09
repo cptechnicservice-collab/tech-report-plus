@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ChevronRight, CircleDollarSign, Clock3, HandCoins, ReceiptText, Users } from "lucide-react";
 
 import { PageShell, Section } from "@/components/PageShell";
+import { coberturaPeriodo } from "@/lib/cobertura-periodo";
 import { formatCurrency } from "@/lib/financeiro";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
 import { fetchClientes } from "@/lib/apontamentos";
@@ -72,15 +73,23 @@ function RelatoriosTotais() {
     };
   }, [relatorios, avulsos, cadastroClientes]);
 
+  const cobertura = useMemo(() => coberturaPeriodo(relatorios), [relatorios]);
+
   return (
-    <PageShell title="Relatórios totais" subtitle="Visão financeira geral" backTo="/resumos">
+    <PageShell title="Relatórios totais" subtitle="Visão financeira de todos os relatórios salvos" backTo="/resumos">
       <section className="rounded-2xl bg-brand-header p-5 text-brand-header-foreground shadow-nav">
         <p className="flex items-center gap-2 text-xs text-brand-header-foreground/65"><CircleDollarSign className="h-4 w-4" />Total faturado</p>
         <p className="mt-2 break-words text-[2rem] font-bold leading-none tabular-nums">{formatCurrency(resumo.totalFaturado)}</p>
+        <p className="mt-3 text-xs leading-snug text-brand-header-foreground/70">{cobertura ? cobertura.frase : "Nenhum relatório salvo ainda."}</p>
         <div className="mt-6 grid grid-cols-2 gap-3 text-xs">
           <div><p className="text-brand-header-foreground/55">Recebidos</p><p className="mt-1 break-words font-semibold tabular-nums">{formatCurrency(resumo.totalRecebido)}</p></div>
           <div><p className="text-brand-header-foreground/55">A receber</p><p className="mt-1 break-words font-semibold tabular-nums">{formatCurrency(resumo.totalAReceber)}</p></div>
         </div>
+        <p className="mt-3 text-[0.68rem] leading-snug text-brand-header-foreground/50">
+          {cobertura
+            ? `Valores do ${cobertura.inicio === cobertura.fim ? "dia" : "período"} ${cobertura.intervalo}${avulsos.length > 0 ? `; recebimentos avulsos de ${avulsos.length} lançamento(s) à parte` : ""}.`
+            : "Sem valores para somar."}
+        </p>
       </section>
 
       <section className="grid grid-cols-3 gap-2">

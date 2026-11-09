@@ -9,6 +9,7 @@ import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
 
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
+import { coberturaPeriodo } from "@/lib/cobertura-periodo";
 import { fetchApontamentos, fetchValores, todayISO } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency } from "@/lib/financeiro";
 import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
