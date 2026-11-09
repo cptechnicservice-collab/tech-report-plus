@@ -97,7 +97,7 @@ describe("Digitação no campo de CNPJ", () => {
     });
   });
 
-  test("colcar um número longo mantém apenas 14 dígitos", () => {
+  test("colar um número longo mantém apenas 14 dígitos", () => {
     expect(typeInto("", ["12345678901234567"])).toEqual({
       value: "12.345.678/9012-34",
       caret: 18,
