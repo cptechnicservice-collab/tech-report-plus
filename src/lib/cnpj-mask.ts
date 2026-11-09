@@ -40,7 +40,7 @@ export function caretAfterDigits(masked: string, digitsBefore: number): number {
   if (digitsBefore <= 0) return 0;
   let seen = 0;
   for (let i = 0; i < masked.length; i += 1) {
-    if (/\d/.test(masked[i])) {
+    if (/\d/.test(masked.charAt(i))) {
       seen += 1;
       if (seen === digitsBefore) return i + 1;
     }
