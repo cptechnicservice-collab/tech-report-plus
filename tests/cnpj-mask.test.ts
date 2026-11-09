@@ -1,10 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  caretAfterDigits,
-  cnpjDigits,
-  formatCNPJ,
-  maskCNPJ,
-} from "@/lib/cnpj-mask";
+import { caretAfterDigits, cnpjDigits, formatCNPJ, maskCNPJ } from "@/lib/cnpj-mask";
 
 describe("Máscara de CNPJ", () => {
   test("insere os dois pontos, a barra e o traço no número completo", () => {
