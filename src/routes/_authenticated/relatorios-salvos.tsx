@@ -31,6 +31,7 @@ type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos
 
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 const STATUS_FILTER_STORAGE_KEY = "cp-technic-relatorios-status";
+const AVULSOS_FILTER_STORAGE_KEY = "cp-technic-relatorios-avulsos";
 const STATUS_RELATORIO_ORDER: Record<StatusRelatorio, number> = {
   pendente: 0,
   aguardando_pagamento: 1,
@@ -114,6 +115,7 @@ function RelatoriosSalvos() {
   const [anexoAberto, setAnexoAberto] = useState<string | null>(null);
   const [parcelamento, setParcelamento] = useState<ParcelamentoState>({ parcelar: false, quantidade: 2, primeiro: "", parcelas: [], dataPrevista: "" });
   const [filtroVencimento, setFiltroVencimento] = useState<FiltroVencimento>(search.vencimento ?? "todos");
+  const [mostrarAvulsos, setMostrarAvulsos] = useState(false);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
 
