@@ -50,6 +50,7 @@ function Resumos() {
   const totalRelatorios = relatorios.reduce((total, item) => total + item.total_geral, 0);
   const totalRecebidoGeral = relatorios.reduce((total, item) => total + item.valor_recebido, 0) + totalRecebimentosAvulsos(avulsos);
   const totalAReceberGeral = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
+  const cobertura = useMemo(() => coberturaPeriodo(relatorios), [relatorios]);
 
   const graficoMensal = useMemo(() => {
     const meses = new Map<string, { mes: string; faturado: number; recebido: number }>();
@@ -139,6 +140,7 @@ function Resumos() {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-muted-foreground">Total financeiro</span>
           <span className="mt-0.5 block break-words text-xl font-bold tabular-nums">{formatCurrency(totalRelatorios)}</span>
+          <span className="mt-1 block text-xs leading-snug text-muted-foreground">{cobertura ? cobertura.frase : "Nenhum relatório salvo ainda."}</span>
           <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>Recebidos {formatCurrency(totalRecebidoGeral)}</span>
             <span>A receber {formatCurrency(totalAReceberGeral)}</span>
