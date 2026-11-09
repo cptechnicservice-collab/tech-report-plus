@@ -2,7 +2,7 @@ import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Camera, Download, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Camera, Download, Eye, EyeOff, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -502,6 +502,16 @@ function RelatoriosSalvos() {
           ))}
         </div>
       </div>
+
+      <div className="space-y-2">
+        <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Recebimentos avulsos</p>
+        <Button type="button" size="sm" variant={mostrarAvulsos ? "default" : "outline"} aria-pressed={mostrarAvulsos} className="rounded-full px-4" onClick={toggleAvulsos}>
+          {mostrarAvulsos ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+          {mostrarAvulsos ? "Ocultar" : "Mostrar"}
+        </Button>
+      </div>
+
+      {mostrarAvulsos ? <RecebimentosAvulsosSection periodo={search.periodo} busca={busca} /> : null}
 
       {isLoading ? <p className="px-1 text-sm text-muted-foreground">Carregando...</p> : relatoriosVisiveis.length === 0 ? (
         <div className="ios-group px-5 py-10 text-center"><FileText className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">{relatorios.length ? "Nenhum resultado para estes filtros" : "Nenhum relatório salvo"}</p><p className="mt-1 text-sm text-muted-foreground">{relatorios.length ? "Ajuste ou limpe os filtros para ver outros relatórios." : "Salve um relatório para consultá-lo aqui."}</p>{relatorios.length ? <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={clearFilters}>Limpar filtros</Button> : null}</div>
