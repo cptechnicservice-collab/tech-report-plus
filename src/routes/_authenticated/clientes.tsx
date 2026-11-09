@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
+import { CnpjInput } from "@/components/CnpjInput";
 import { PageShell, Section } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,12 +147,11 @@ function Clientes() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="c-cnpj">CNPJ (opcional)</Label>
-            <Input
+            <CnpjInput
               id="c-cnpj"
               value={draft.cnpj}
-              onChange={(e) => setDraft({ ...draft, cnpj: e.target.value })}
+              onChange={(value) => setDraft({ ...draft, cnpj: value })}
               className="h-12 rounded-xl"
-              inputMode="numeric"
             />
           </div>
           <div className="space-y-1.5">
