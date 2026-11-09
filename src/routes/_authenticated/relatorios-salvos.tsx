@@ -130,6 +130,18 @@ function RelatoriosSalvos() {
     }
   }, [search.status]);
 
+  useEffect(() => {
+    setMostrarAvulsos(window.localStorage.getItem(AVULSOS_FILTER_STORAGE_KEY) === "1");
+  }, []);
+
+  const toggleAvulsos = () => {
+    setMostrarAvulsos((atual) => {
+      const proximo = !atual;
+      window.localStorage.setItem(AVULSOS_FILTER_STORAGE_KEY, proximo ? "1" : "0");
+      return proximo;
+    });
+  };
+
   const selectStatus = (value: "todos" | "aberto" | "recebido" | PagamentoStatus) => {
     setStatus(value);
     window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, value);
@@ -431,7 +443,6 @@ function RelatoriosSalvos() {
 
   return (
     <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`} backTo="/mais">
-      {status === "todos" || status === "recebido" || status === "pago" ? <RecebimentosAvulsosSection periodo={search.periodo} busca={busca} /> : null}
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar cliente" className="h-14 rounded-xl bg-card pl-12 pr-12 shadow-card" />
