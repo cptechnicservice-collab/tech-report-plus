@@ -1,5 +1,11 @@
 # Roadmap
 
+## Máscara automática de CNPJ
+- [x] Inserir os dois pontos, a barra e o traço sozinhos ao digitar o CNPJ em Clientes e em Dados da empresa.
+- [x] Reformatar os CNPJs já cadastrados: 3 estavam sem máscara (FINGER, HENN, TODESCHINI) e ficaram no padrão XX.XXX.XXX/XXXX-XX.
+- [x] 22 testes da máscara passaram (digitação, apagar separador, colar número longo, edição no meio) e compilação automática OK.
+- [ ] Testar o campo no iPhone: o servidor de desenvolvimento do preview está entregando tela em branco em qualquer rota nova (inclusive /auth, sem login), então a conferência no navegador não foi possível; exige recarga dura do preview.
+
 ## Acesso por aprovação manual
 - [x] Bloquear novas contas até aprovação com políticas restritivas nas 13 tabelas existentes; proprietário preservado e dados continuam isolados.
 - [x] Criar Usuários e liberações em Mais, exclusivo do proprietário; funções validam papel administrativo e impedem bloquear proprietários.
