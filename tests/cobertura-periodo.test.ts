@@ -36,7 +36,9 @@ describe("Cobertura de um total", () => {
     expect(cobertura?.fim).toBe("2026-11-08");
     expect(cobertura?.relatorios).toBe(3);
     expect(cobertura?.intervalo).toBe("12/03/2025 a 08/11/2026");
-    expect(cobertura?.frase).toBe("Total de 3 relatórios de 12/03/2025 a 08/11/2026 — 1 ano e 7 meses");
+    expect(cobertura?.frase).toBe(
+      "Total de 3 relatórios de 12/03/2025 a 08/11/2026 — 1 ano e 7 meses",
+    );
   });
   test("um relatório usa o singular", () => {
     const cobertura = coberturaPeriodo([{ inicio: "2026-05-01", fim: "2026-05-09" }]);

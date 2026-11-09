@@ -61,7 +61,13 @@ export function duracaoEntre(inicio: string, fim: string): string {
 
 /** Coverage of a set of records; `null` when there is nothing to describe. */
 export function coberturaPeriodo(relatorios: RelatorioPeriodo[]): CoberturaPeriodo | null {
-  const validos = relatorios.filter((item) => typeof item.inicio === "string" && typeof item.fim === "string" && item.inicio.length >= 10 && item.fim.length >= 10);
+  const validos = relatorios.filter(
+    (item) =>
+      typeof item.inicio === "string" &&
+      typeof item.fim === "string" &&
+      item.inicio.length >= 10 &&
+      item.fim.length >= 10,
+  );
   if (validos.length === 0) return null;
 
   let inicio = validos[0]?.inicio.slice(0, 10) ?? "";
