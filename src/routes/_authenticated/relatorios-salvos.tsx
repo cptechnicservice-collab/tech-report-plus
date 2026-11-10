@@ -2,7 +2,7 @@ import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarRange, Camera, Download, Eye, EyeOff, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarRange, Camera, Download, Eye, EyeOff, FilePenLine, FileText, HandCoins, ImagePlus, MessageSquareText, Paperclip, Plus, ReceiptText, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageShell, Section } from "@/components/PageShell";
@@ -116,6 +116,7 @@ function RelatoriosSalvos() {
   const [parcelamento, setParcelamento] = useState<ParcelamentoState>({ parcelar: false, quantidade: 2, primeiro: "", parcelas: [], dataPrevista: "" });
   const [filtroVencimento, setFiltroVencimento] = useState<FiltroVencimento>(search.vencimento ?? "todos");
   const [mostrarAvulsos, setMostrarAvulsos] = useState(false);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const queryClient = useQueryClient();
   const { data: relatorios = [], isLoading } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
 
@@ -441,6 +442,15 @@ function RelatoriosSalvos() {
     pago: { label: "Pago", className: "bg-success/15 text-success" },
   };
 
+  const filtrosAtivos = [periodo !== "ultimos", status !== "todos", filtroVencimento !== "todos", statusRelatorio !== "ativos"].filter(Boolean).length;
+  const resumoFiltros = [
+    filtros.find((f) => f.id === periodo)?.label,
+    status === "todos" ? null : status === "aberto" ? "Em aberto" : status === "recebido" ? "Recebidos" : statusInfo[status].label,
+    filtroVencimento === "todos" ? null : `Vencimento: ${FILTROS_VENCIMENTO.find((f) => f.id === filtroVencimento)?.label}`,
+    statusRelatorio === "ativos" ? "Ativos" : statusRelatorio === "todos" ? "Todas as situações" : statusRelatorioOptions.find((f) => f.value === statusRelatorio)?.label,
+    mostrarAvulsos ? "Avulsos visíveis" : null,
+  ].filter(Boolean).join(" · ");
+
   return (
     <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`} backTo="/mais">
       <div className="relative">
@@ -456,7 +466,27 @@ function RelatoriosSalvos() {
         </div>
       ) : null}
 
-      <div className="-mx-4 border-b border-border bg-card px-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">{resumoFiltros}</p>
+        <Button type="button" variant="outline" className="h-11 shrink-0 gap-2 rounded-lg bg-card px-3" onClick={() => setFiltrosAbertos(true)} aria-haspopup="dialog" aria-expanded={filtrosAbertos}>
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtros
+          {filtrosAtivos > 0 ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-xs text-primary-foreground">{filtrosAtivos}</span> : null}
+        </Button>
+      </div>
+
+      <Drawer open={filtrosAbertos} onOpenChange={setFiltrosAbertos} shouldScaleBackground={false}>
+        <DrawerContent className="mx-auto max-w-lg overflow-hidden bg-card">
+          <DrawerHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center text-left">
+            <div className="min-w-0">
+              <DrawerTitle>Filtros</DrawerTitle>
+              <DrawerDescription>{relatoriosVisiveis.length} documento(s) encontrado(s)</DrawerDescription>
+            </div>
+            <DrawerClose asChild><Button type="button" variant="ghost" size="icon" aria-label="Fechar filtros"><X className="h-5 w-5" /></Button></DrawerClose>
+          </DrawerHeader>
+          <div className="min-h-0 space-y-5 overflow-y-auto overscroll-contain px-4 pb-4" data-vaul-no-drag>
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">Período dos relatórios</p>
         <div className="grid grid-cols-4" role="tablist" aria-label="Período dos relatórios">
           {filtros.map((filtro) => (
             <Button
@@ -475,41 +505,50 @@ function RelatoriosSalvos() {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Status do pagamento">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">Status do pagamento</p>
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Status do pagamento">
         {(["todos", "aberto", "recebido", "pendente", "parcial", "pago"] as const).map((value) => (
-          <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={status === value} onClick={() => selectStatus(value)}>
+          <Button key={value} type="button" size="sm" variant={status === value ? "default" : "outline"} className="h-10 rounded-lg px-2" aria-pressed={status === value} onClick={() => selectStatus(value)}>
             {value === "todos" ? "Todos" : value === "aberto" ? "Em aberto" : value === "recebido" ? "Recebidos" : statusInfo[value].label}
           </Button>
         ))}
       </div>
+      </div>
 
       <div className="space-y-2">
         <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Vencimento</p>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Vencimento">
+        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Vencimento">
           {FILTROS_VENCIMENTO.map((f) => (
-            <Button key={f.id} type="button" size="sm" variant={filtroVencimento === f.id ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={filtroVencimento === f.id} onClick={() => setFiltroVencimento(f.id)}>{f.label}</Button>
+            <Button key={f.id} type="button" size="sm" variant={filtroVencimento === f.id ? "default" : "outline"} className="h-10 rounded-lg px-2" aria-pressed={filtroVencimento === f.id} onClick={() => setFiltroVencimento(f.id)}>{f.label}</Button>
           ))}
         </div>
       </div>
 
       <div className="space-y-2">
         <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Situação do relatório</p>
-        <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Situação do relatório">
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Situação do relatório">
           {(["todos", "ativos", "pendente", "aguardando_pagamento", "concluido"] as const).map((value) => (
-            <Button key={value} type="button" size="sm" variant={statusRelatorio === value ? "default" : "outline"} className="shrink-0 rounded-full px-4" aria-selected={statusRelatorio === value} onClick={() => setStatusRelatorio(value)}>
+            <Button key={value} type="button" size="sm" variant={statusRelatorio === value ? "default" : "outline"} className={`min-h-10 h-auto whitespace-normal rounded-lg px-2 py-2 leading-snug ${value === "aguardando_pagamento" ? "col-span-2" : ""}`} aria-pressed={statusRelatorio === value} onClick={() => setStatusRelatorio(value)}>
               {value === "todos" ? "Todos" : value === "ativos" ? "Ativos" : statusRelatorioOptions.find((option) => option.value === value)?.label}
             </Button>
           ))}
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="px-1 text-xs font-semibold uppercase text-muted-foreground">Recebimentos avulsos</p>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border pt-4">
+        <p className="min-w-0 text-sm font-medium">Recebimentos avulsos</p>
         <Button type="button" size="sm" variant={mostrarAvulsos ? "default" : "outline"} aria-pressed={mostrarAvulsos} className="rounded-full px-4" onClick={toggleAvulsos}>
           {mostrarAvulsos ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
           {mostrarAvulsos ? "Ocultar" : "Mostrar"}
         </Button>
       </div>
+          </div>
+          <DrawerFooter className="shrink-0 border-t border-border bg-card">
+            <DrawerClose asChild><Button type="button" className="h-11 w-full">Ver {relatoriosVisiveis.length} documento(s)</Button></DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {mostrarAvulsos ? <RecebimentosAvulsosSection periodo={search.periodo} busca={busca} /> : null}
 

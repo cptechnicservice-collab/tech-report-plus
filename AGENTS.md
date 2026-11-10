@@ -41,3 +41,4 @@
 - Keep CNPJ masking in one shared helper and one shared field component so every document-number input formats identically while typing; stored values keep the separators exactly as documents print them.
 - Enforce manual app approval with restrictive RLS alongside existing ownership policies; administrator RPCs validate protected roles in PostgreSQL, while scoped approval markers provide only offline continuity until reconnection.
 - State the time span behind every financial total through the shared cobertura-periodo helper, so aggregate figures always say which dates and how long they cover.
+- Keep saved-report filter controls in the existing bottom Drawer with a compact selection summary; reuse the page's filter state so filtering and offline behavior remain unchanged.
