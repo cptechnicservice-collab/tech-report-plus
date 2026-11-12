@@ -42,3 +42,4 @@
 - Enforce manual app approval with restrictive RLS alongside existing ownership policies; administrator RPCs validate protected roles in PostgreSQL, while scoped approval markers provide only offline continuity until reconnection.
 - State the time span behind every financial total through the shared cobertura-periodo helper, so aggregate figures always say which dates and how long they cover.
 - Keep saved-report filter controls in the existing bottom Drawer with a compact selection summary; reuse the page's filter state so filtering and offline behavior remain unchanged.
+- Normalize customer names before offline persistence and with a database write trigger, so old queued writes cannot undo the normalization.

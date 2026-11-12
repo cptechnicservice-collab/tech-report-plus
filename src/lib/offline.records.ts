@@ -18,7 +18,7 @@ type ClienteWrite = Omit<Cliente, "created_at" | "updated_at" | "user_id"> &
 
 export async function saveClienteOffline(payload: ClienteWrite) {
   const userId = await requireUserId();
-  payload = { ...payload, user_id: userId };
+  payload = { ...payload, nome: payload.nome.toUpperCase(), user_id: userId };
   const now = new Date().toISOString();
   const cliente: Cliente = { created_at: now, updated_at: now, ...payload, user_id: userId };
   const cached = (await readCached<Cliente[]>(CACHE_CLIENTES)) ?? [];

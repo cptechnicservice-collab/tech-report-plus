@@ -56,7 +56,7 @@ const emptyDraft: Draft = {
 
 function toDraft(c: Cliente): Draft {
   return {
-    nome: c.nome,
+    nome: c.nome.toUpperCase(),
     cidade: c.cidade ?? "",
     cnpj: c.cnpj ?? "",
     contato: c.contato ?? "",
@@ -90,7 +90,7 @@ function Clientes() {
   const salvar = useMutation({
     mutationFn: async () => {
       const payload = {
-        nome: draft.nome.trim(),
+        nome: draft.nome.trim().toUpperCase(),
         cidade: draft.cidade.trim() || null,
         cnpj: draft.cnpj.trim() || null,
         contato: draft.contato.trim() || null,
@@ -132,7 +132,8 @@ function Clientes() {
             <Input
               id="c-nome"
               value={draft.nome}
-              onChange={(e) => setDraft({ ...draft, nome: e.target.value })}
+              onChange={(e) => setDraft({ ...draft, nome: e.target.value.toUpperCase() })}
+              autoCapitalize="characters"
               className="h-12 rounded-xl"
             />
           </div>
