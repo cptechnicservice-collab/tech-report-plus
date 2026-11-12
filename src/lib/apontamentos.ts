@@ -211,7 +211,7 @@ export async function fetchClientes(): Promise<Cliente[]> {
     return result;
   } catch (error) {
     const cached = await readCached<Cliente[]>(offlineCacheKeys.clientes);
-    if (cached) return cached.sort((a, b) => a.nome.localeCompare(b.nome));
+    if (cached) return cached.map((cliente) => ({ ...cliente, nome: cliente.nome.toUpperCase() })).sort((a, b) => a.nome.localeCompare(b.nome));
     throw error;
   }
 }
