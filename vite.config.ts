@@ -28,11 +28,11 @@ export default defineConfig({
       globPatterns: ["**/*.{js,css,png,jpg,jpeg,svg,woff,woff2,webmanifest}"],
       // A visitor-independent root document is always available, even for an
       // address never previously opened under service-worker control.
-      additionalManifestEntries: [{ url: "/", revision: cacheVersion }],
+      additionalManifestEntries: [{ url: "/?offline-shell=1", revision: cacheVersion }],
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       navigateFallback: null,
       runtimeCaching: [
-        { urlPattern: ({ request, url }) => request.mode === "navigate" && url.origin === self.location.origin && !url.pathname.startsWith("/~oauth") && !url.pathname.startsWith("/api/"), handler: "NetworkFirst", options: { cacheName: `cp-technic-pages-${cacheVersion}`, networkTimeoutSeconds: 5, cacheableResponse: { statuses: [200] }, precacheFallback: { fallbackURL: "/" } } },
+        { urlPattern: ({ request, url }) => request.mode === "navigate" && url.origin === self.location.origin && !url.pathname.startsWith("/~oauth") && !url.pathname.startsWith("/api/"), handler: "NetworkFirst", options: { cacheName: `cp-technic-pages-${cacheVersion}`, networkTimeoutSeconds: 5, cacheableResponse: { statuses: [200] }, precacheFallback: { fallbackURL: "/?offline-shell=1" } } },
         { urlPattern: ({ url }) => url.origin === self.location.origin && /\/assets\/.*-[\w-]+\.(js|css|woff2?)$/.test(url.pathname), handler: "CacheFirst", options: { cacheName: `cp-technic-hashed-${cacheVersion}`, cacheableResponse: { statuses: [200] } } },
         { urlPattern: ({ request, url }) => url.origin === self.location.origin && ["script", "style", "image", "font"].includes(request.destination), handler: "StaleWhileRevalidate", options: { cacheName: `cp-technic-static-${cacheVersion}`, cacheableResponse: { statuses: [200] } } },
       ],

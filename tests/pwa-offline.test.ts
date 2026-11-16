@@ -13,7 +13,7 @@ describe("offline startup policy", () => {
     expect(config.tanstackStart?.pages).toEqual([{ path: "/" }]);
     expect(config.tanstackStart?.prerender).toEqual({ enabled: true, autoStaticPathsDiscovery: false });
     const options = mocks.pwa.mock.calls[0]?.[0];
-    expect(options.workbox.additionalManifestEntries[0].url).toBe("/");
+    expect(options.workbox.additionalManifestEntries[0].url).toBe("/?offline-shell=1");
   });
 
   it("uses a network-first root fallback for unopened pages, never OAuth or API", async () => {
@@ -23,7 +23,7 @@ describe("offline startup policy", () => {
     const navigation = options.workbox.runtimeCaching[0];
     const matches = (path: string) => navigation.urlPattern({ request: { mode: "navigate" }, url: new URL(path, self.location.origin) });
     expect(navigation.handler).toBe("NetworkFirst");
-    expect(navigation.options.precacheFallback.fallbackURL).toBe("/");
+    expect(navigation.options.precacheFallback.fallbackURL).toBe("/?offline-shell=1");
     expect(matches("/relatorios-salvos")).toBe(true);
     expect(matches("/auth")).toBe(true);
     expect(matches("/~oauth/callback")).toBe(false);
