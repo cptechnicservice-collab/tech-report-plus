@@ -1,10 +1,11 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({ pwa: vi.fn((options) => options) }));
 vi.mock("@lovable.dev/vite-tanstack-config", () => ({ defineConfig: (config: unknown) => config }));
 vi.mock("vite-plugin-pwa", () => ({ VitePWA: mocks.pwa }));
 
 describe("offline startup policy", () => {
+  beforeEach(() => vi.resetModules());
   afterEach(() => vi.unstubAllGlobals());
 
   it("prepares the public root without discovering private pages", async () => {
