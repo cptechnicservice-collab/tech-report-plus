@@ -1,5 +1,8 @@
 # Roadmap
 
+## Idioma das respostas
+- [x] Responder sempre em português do Brasil; preferência salva na memória do usuário.
+
 ## Máscara automática de CNPJ
 - [x] Inserir os dois pontos, a barra e o traço sozinhos ao digitar o CNPJ em Clientes e em Dados da empresa.
 - [x] Reformatar os CNPJs já cadastrados: 3 estavam sem máscara (FINGER, HENN, TODESCHINI) e ficaram no padrão XX.XXX.XXX/XXXX-XX.
