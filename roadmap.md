@@ -1,5 +1,10 @@
 # Roadmap
 
+## Abertura em modo avião
+- [x] Reproduzir na versão publicada a falha de abrir endereço sem internet: o cache inicial tinha arquivos, mas nenhuma página de abertura.
+- [x] Preparar a página inicial sem dados pessoais e usá-la como alternativa quando a conexão falhar, preservando autenticação, fila e registros por usuário.
+- [ ] Validar a correção publicada e no iPhone após abrir online e fechar: depende de publicação autorizada e atualização no aparelho; nada publicado nesta correção.
+
 ## Idioma das respostas
 - [x] Responder sempre em português do Brasil; preferência salva na memória do usuário.
 

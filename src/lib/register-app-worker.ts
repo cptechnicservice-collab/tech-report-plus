@@ -1,9 +1,11 @@
 /** The single app-shell worker registrar; messaging workers are never touched. */
 export async function registerAppWorker() {
   if (!("serviceWorker" in navigator)) return;
-  const host = window.location.hostname;
+  const host = window.location.hostname.toLowerCase();
+  const previewHost = /^(?:id-preview|preview)(?:-[a-z0-9]+)?--.+\.(?:lovable\.app|gpt-eng\.com|gptengineer\.run)$/.test(host) ||
+    /^project--.+-dev\.(?:lovable\.app|gpt-eng\.com|gptengineer\.run)$/.test(host);
   const blocked = !import.meta.env.PROD || window.self !== window.top ||
-    host.startsWith("id-preview--") || host.startsWith("preview--") ||
+    previewHost ||
     ["lovableproject.com", "lovableproject-dev.com", "beta.lovable.dev"].some(domain => host === domain || host.endsWith(`.${domain}`)) ||
     new URLSearchParams(window.location.search).get("sw") === "off";
   if (blocked) {
@@ -18,5 +20,6 @@ export async function registerAppWorker() {
     return;
   }
   const registration = await navigator.serviceWorker.register("/sw.js");
-  await registration.update();
+  // An offline update failure must not discard an already installed worker.
+  if (navigator.onLine) await registration.update().catch(() => undefined);
 }
