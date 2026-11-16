@@ -33,6 +33,7 @@ const MAX_PDF_SIZE = 5 * 1024 * 1024;
 const STATUS_FILTER_STORAGE_KEY = "cp-technic-relatorios-status";
 const AVULSOS_FILTER_STORAGE_KEY = "cp-technic-relatorios-avulsos";
 const STATUS_RELATORIO_ORDER: Record<StatusRelatorio, number> = {
+  orcamento_nao_confirmado: 3,
   pendente: 0,
   aguardando_pagamento: 1,
   concluido: 2,
@@ -70,7 +71,7 @@ const tiposDespesa = [
 type TipoDespesa = typeof tiposDespesa[number]["value"];
 
 export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
-  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" | "recebido"; periodo?: string; financeiro?: boolean; abrir?: string; vencimento?: FiltroVencimento } => {
+  validateSearch: (search: Record<string, unknown>): { status?: PagamentoStatus | "aberto" | "recebido"; periodo?: string; financeiro?: boolean; abrir?: string; vencimento?: FiltroVencimento; naoConfirmados?: boolean } => {
     const value = search["status"];
     const periodo = typeof search["periodo"] === "string" && /^\d{4}(?:-\d{2})?$/.test(search["periodo"])
       ? search["periodo"]
@@ -82,6 +83,7 @@ export const Route = createFileRoute("/_authenticated/relatorios-salvos")({
       ...(status ? { status } : {}),
       ...(periodo ? { periodo } : {}),
       ...(search["financeiro"] === true ? { financeiro: true } : {}),
+      ...(search["naoConfirmados"] === true ? { naoConfirmados: true } : {}),
       ...(typeof search["abrir"] === "string" ? { abrir: search["abrir"] } : {}),
       ...(typeof search["vencimento"] === "string" && FILTROS_VENCIMENTO.some((f) => f.id === search["vencimento"]) ? { vencimento: search["vencimento"] as FiltroVencimento } : {}),
     };
@@ -162,6 +164,9 @@ function RelatoriosSalvos() {
     return [...relatorios]
       .filter((item) => {
         if (term && !normalizeSearchText(item.cliente_nome).includes(term)) return false;
+        const naoConfirmado = item.status_relatorio === "orcamento_nao_confirmado";
+        if (Boolean(search.naoConfirmados) !== naoConfirmado) return false;
+        if (search.naoConfirmados) return true;
         if (statusRelatorio === "ativos" && item.status_relatorio === "concluido") return false;
         if (statusRelatorio !== "todos" && statusRelatorio !== "ativos" && item.status_relatorio !== statusRelatorio) return false;
         if (status === "aberto" && item.pagamento_status === "pago") return false;
@@ -190,7 +195,7 @@ function RelatoriosSalvos() {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       })
       .slice(0, periodo === "ultimos" ? 12 : undefined);
-  }, [busca, periodo, relatorios, search.periodo, status, statusRelatorio, filtroVencimento]);
+  }, [busca, periodo, relatorios, search.naoConfirmados, search.periodo, status, statusRelatorio, filtroVencimento]);
 
   useEffect(() => {
     if (!search.abrir) return;
@@ -452,7 +457,7 @@ function RelatoriosSalvos() {
   ].filter(Boolean).join(" · ");
 
   return (
-    <PageShell title="Relatórios salvos" subtitle={`${relatorios.length} documento(s)`} backTo="/mais">
+    <PageShell title={search.naoConfirmados ? "Orçamentos não confirmados" : "Relatórios salvos"} subtitle={search.naoConfirmados ? "Mude para Pendente quando o cliente confirmar" : `${relatorios.filter((item) => item.status_relatorio !== "orcamento_nao_confirmado").length} documento(s)`} backTo="/mais">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(event) => setBusca(event.target.value)} placeholder="Buscar cliente" className="h-14 rounded-xl bg-card pl-12 pr-12 shadow-card" />

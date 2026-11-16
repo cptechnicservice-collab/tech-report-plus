@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatDateBR, todayISO } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
 import { todosRecebimentos, type RecebimentoItem } from "@/lib/parcelas";
-import { fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/previsao-recebimentos")({
   head: () => ({
@@ -46,7 +46,7 @@ function LinhaRecebimento({ item }: { item: RecebimentoItem }) {
 
 function PrevisaoRecebimentos() {
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
-  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos, select: relatoriosConfirmados });
 
   const pendentes = useMemo(
     () => todosRecebimentos(relatorios).filter((item) => item.info.tipo !== "pago"),

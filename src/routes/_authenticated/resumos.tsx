@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { coberturaPeriodo } from "@/lib/cobertura-periodo";
 import { fetchApontamentos, fetchValores, todayISO } from "@/lib/apontamentos";
 import { calcularValoresPeriodo, formatCurrency } from "@/lib/financeiro";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/resumos")({
   head: () => ({
@@ -36,7 +36,7 @@ function Resumos() {
   const [periodo, setPeriodo] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [] } = useQuery({ queryKey: ["apontamentos"], queryFn: fetchApontamentos });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
-  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos, select: relatoriosConfirmados });
 
   const doPeriodo = useMemo(() => apontamentos.filter((a) => a.data.startsWith(periodo)), [apontamentos, periodo]);
   const financeiro = useMemo(() => calcularValoresPeriodo(doPeriodo, valores), [doPeriodo, valores]);

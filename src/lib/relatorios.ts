@@ -60,13 +60,19 @@ export function numeroRelatorio(id: string, date = new Date()) {
 
 export type PagamentoStatus = "pendente" | "parcial" | "pago";
 export type FormaPagamento = "pix" | "transferencia" | "dinheiro" | "boleto" | "outro";
-export type StatusRelatorio = "pendente" | "aguardando_pagamento" | "concluido";
+export type StatusRelatorio = "orcamento_nao_confirmado" | "pendente" | "aguardando_pagamento" | "concluido";
 
 export const statusRelatorioOptions: Array<{ value: StatusRelatorio; label: string }> = [
   { value: "pendente", label: "Pendente" },
   { value: "aguardando_pagamento", label: "Aguardando pagamento" },
   { value: "concluido", label: "Concluído" },
+  { value: "orcamento_nao_confirmado", label: "Orçamento não confirmado" },
 ];
+
+/** Orçamentos não confirmados ficam fora de totais, avisos e cobranças até virarem Pendente. */
+export function relatoriosConfirmados<T extends { status_relatorio?: string | null }>(items: T[]): T[] {
+  return items.filter((item) => item.status_relatorio !== "orcamento_nao_confirmado");
+}
 
 export const formasPagamento: Array<{ value: FormaPagamento; label: string }> = [
   { value: "pix", label: "Pix" },
