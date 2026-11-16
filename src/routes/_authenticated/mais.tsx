@@ -19,6 +19,7 @@ const options = [
   { to: "/dados-empresa", label: "Dados da empresa", detail: "Identificação e logo dos documentos", icon: Building2 },
   { to: "/clientes", label: "Clientes", detail: "Cadastro e contatos", icon: Users },
   { to: "/pecas", label: "Peças", detail: "Catálogo e preços", icon: Package },
+  { to: "/orcamentos-nao-confirmados", label: "Orçamentos não confirmados", detail: "Aguardando confirmação do cliente", icon: ClipboardList },
   { to: "/valores", label: "Valores", detail: "Horas, viagem, KM e diárias", icon: CircleDollarSign },
   { to: "/recebimentos-avulsos", label: "Recebimento avulso", detail: "Entradas por cliente", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", detail: "Propostas, valores e aprovação", icon: ClipboardList },

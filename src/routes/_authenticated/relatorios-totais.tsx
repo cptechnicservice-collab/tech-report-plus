@@ -8,7 +8,7 @@ import { CheckCircle2, ChevronRight, CircleDollarSign, Clock3, HandCoins, Receip
 import { PageShell, Section } from "@/components/PageShell";
 import { coberturaPeriodo } from "@/lib/cobertura-periodo";
 import { formatCurrency } from "@/lib/financeiro";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos, formasPagamento, saldoRelatorio } from "@/lib/relatorios";
 import { fetchClientes } from "@/lib/apontamentos";
 
 export const Route = createFileRoute("/_authenticated/relatorios-totais")({
@@ -31,6 +31,7 @@ function RelatoriosTotais() {
   const { data: relatorios = [], isLoading } = useQuery({
     queryKey: ["relatorios-salvos"],
     queryFn: fetchRelatoriosSalvos,
+    select: relatoriosConfirmados,
   });
 
   const resumo = useMemo(() => {

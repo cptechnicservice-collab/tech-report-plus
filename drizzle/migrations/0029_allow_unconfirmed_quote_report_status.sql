@@ -1,0 +1,2 @@
+ALTER TABLE public.relatorios_salvos DROP CONSTRAINT IF EXISTS relatorios_salvos_status_relatorio_check;
+ALTER TABLE public.relatorios_salvos ADD CONSTRAINT relatorios_salvos_status_relatorio_check CHECK (status_relatorio IN ('orcamento_nao_confirmado', 'pendente', 'aguardando_pagamento', 'concluido'));

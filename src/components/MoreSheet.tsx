@@ -28,6 +28,7 @@ const options = [
   { to: "/dados-empresa", label: "Dados da empresa", icon: Building2 },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/pecas", label: "Peças", icon: Package },
+  { to: "/orcamentos-nao-confirmados", label: "Orçamentos não confirmados", icon: ClipboardList },
   { to: "/valores", label: "Valores", icon: CircleDollarSign },
   { to: "/recebimentos-avulsos", label: "Recebimento avulso", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", icon: ClipboardList },

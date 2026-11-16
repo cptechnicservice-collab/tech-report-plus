@@ -15,7 +15,7 @@ import {
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
-import { fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -44,7 +44,7 @@ function Resumo() {
     queryKey: ["apontamentos"],
     queryFn: fetchApontamentos,
   });
-  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos, select: relatoriosConfirmados });
 
   const doMes = useMemo(
     () => apontamentos.filter((a) => a.data.startsWith(mes)),

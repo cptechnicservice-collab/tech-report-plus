@@ -23,6 +23,7 @@ import { Route as AuthenticatedNovoRouteImport } from './routes/_authenticated/n
 import { Route as AuthenticatedOrcamentoRouteImport } from './routes/_authenticated/orcamento'
 import { Route as AuthenticatedOrcamentoHorasRouteImport } from './routes/_authenticated/orcamento-horas'
 import { Route as AuthenticatedOrcamentosRouteImport } from './routes/_authenticated/orcamentos'
+import { Route as AuthenticatedOrcamentosNaoConfirmadosRouteImport } from './routes/_authenticated/orcamentos-nao-confirmados'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedPecasRouteImport } from './routes/_authenticated/pecas'
 import { Route as AuthenticatedPrevisaoRecebimentosRouteImport } from './routes/_authenticated/previsao-recebimentos'
@@ -106,6 +107,12 @@ const AuthenticatedOrcamentosRoute = AuthenticatedOrcamentosRouteImport.update({
   path: '/orcamentos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrcamentosNaoConfirmadosRoute =
+  AuthenticatedOrcamentosNaoConfirmadosRouteImport.update({
+    id: '/orcamentos-nao-confirmados',
+    path: '/orcamentos-nao-confirmados',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/orcamento': typeof AuthenticatedOrcamentoRoute
   '/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/orcamentos': typeof AuthenticatedOrcamentosRoute
+  '/orcamentos-nao-confirmados': typeof AuthenticatedOrcamentosNaoConfirmadosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
@@ -207,6 +215,7 @@ export interface FileRoutesByTo {
   '/orcamento': typeof AuthenticatedOrcamentoRoute
   '/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/orcamentos': typeof AuthenticatedOrcamentosRoute
+  '/orcamentos-nao-confirmados': typeof AuthenticatedOrcamentosNaoConfirmadosRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/pecas': typeof AuthenticatedPecasRoute
   '/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
@@ -235,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/orcamento': typeof AuthenticatedOrcamentoRoute
   '/_authenticated/orcamento-horas': typeof AuthenticatedOrcamentoHorasRoute
   '/_authenticated/orcamentos': typeof AuthenticatedOrcamentosRoute
+  '/_authenticated/orcamentos-nao-confirmados': typeof AuthenticatedOrcamentosNaoConfirmadosRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/pecas': typeof AuthenticatedPecasRoute
   '/_authenticated/previsao-recebimentos': typeof AuthenticatedPrevisaoRecebimentosRoute
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/orcamento'
     | '/orcamento-horas'
     | '/orcamentos'
+    | '/orcamentos-nao-confirmados'
     | '/painel'
     | '/pecas'
     | '/previsao-recebimentos'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/orcamento'
     | '/orcamento-horas'
     | '/orcamentos'
+    | '/orcamentos-nao-confirmados'
     | '/painel'
     | '/pecas'
     | '/previsao-recebimentos'
@@ -316,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/orcamento'
     | '/_authenticated/orcamento-horas'
     | '/_authenticated/orcamentos'
+    | '/_authenticated/orcamentos-nao-confirmados'
     | '/_authenticated/painel'
     | '/_authenticated/pecas'
     | '/_authenticated/previsao-recebimentos'
@@ -437,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrcamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orcamentos-nao-confirmados': {
+      id: '/_authenticated/orcamentos-nao-confirmados'
+      path: '/orcamentos-nao-confirmados'
+      fullPath: '/orcamentos-nao-confirmados'
+      preLoaderRoute: typeof AuthenticatedOrcamentosNaoConfirmadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/painel': {
       id: '/_authenticated/painel'
       path: '/painel'
@@ -527,6 +547,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOrcamentoRoute: typeof AuthenticatedOrcamentoRoute
   AuthenticatedOrcamentoHorasRoute: typeof AuthenticatedOrcamentoHorasRoute
   AuthenticatedOrcamentosRoute: typeof AuthenticatedOrcamentosRoute
+  AuthenticatedOrcamentosNaoConfirmadosRoute: typeof AuthenticatedOrcamentosNaoConfirmadosRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedPecasRoute: typeof AuthenticatedPecasRoute
   AuthenticatedPrevisaoRecebimentosRoute: typeof AuthenticatedPrevisaoRecebimentosRoute
@@ -550,6 +571,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOrcamentoRoute: AuthenticatedOrcamentoRoute,
   AuthenticatedOrcamentoHorasRoute: AuthenticatedOrcamentoHorasRoute,
   AuthenticatedOrcamentosRoute: AuthenticatedOrcamentosRoute,
+  AuthenticatedOrcamentosNaoConfirmadosRoute:
+    AuthenticatedOrcamentosNaoConfirmadosRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedPecasRoute: AuthenticatedPecasRoute,
   AuthenticatedPrevisaoRecebimentosRoute:

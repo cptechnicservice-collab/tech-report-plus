@@ -204,6 +204,13 @@
       "when": 1794507885498,
       "tag": "0028_uppercase_cliente_names",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794832337855,
+      "tag": "0029_allow_unconfirmed_quote_report_status",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,7 @@ import { MoreSheet } from "@/components/MoreSheet";
 import { Button } from "@/components/ui/button";
 import { PagamentosBanner } from "@/components/PagamentosAlertas";
 import { urgentes } from "@/lib/parcelas";
-import { fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
 
 const items = [
   { to: "/painel", label: "Painel", icon: LayoutGrid, exact: true },
@@ -20,7 +20,7 @@ const items = [
 
 export function BottomNav() {
   const [moreOpen, setMoreOpen] = useState(false);
-  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
+  const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos, select: relatoriosConfirmados });
   const urgentesCount = urgentes(relatorios).length;
 
   return (
