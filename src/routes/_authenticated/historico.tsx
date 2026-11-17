@@ -205,40 +205,85 @@ function Historico() {
           {hasFilters ? <Button type="button" variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button> : null}
         </div>
       ) : (
-        <ul className="space-y-3">
-           {filtrados.slice(0, visibleCount).map((a) => {
-            const t = calcularTotais(a);
-            return (
-              <li key={a.id} className="ios-group">
-                <Link
-                  to="/apontamento/$id"
-                  params={{ id: a.id }}
-                  className="press flex min-h-[5rem] items-center gap-3 px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-semibold tabular-nums">
-                        {formatDateBR(a.data)}
-                      </span>
-                      <span className="truncate text-sm text-muted-foreground">
-                        {a.clientes?.nome ?? "—"}
-                      </span>
-                    </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {normalizeTime(a.trabalho_inicio) || "--:--"} às{" "}
-                      {normalizeTime(a.trabalho_fim) || "--:--"} · {formatMinutes(t.trabalho)}{" "}
-                      trabalho · {formatMinutes(t.viagem)} viagem · {t.km} km
-                    </p>
-                    {pendingIds.has(a.id) ? <span className="mt-1 inline-block text-xs font-medium text-primary">Pendente de envio</span> : null}
+        <div className="space-y-5">
+          {agruparPorMes(filtrados.slice(0, visibleCount)).map((mes) => (
+            <section key={mes.chave} className="space-y-2">
+              <div className="flex items-baseline justify-between px-1">
+                <h2 className="text-sm font-semibold capitalize">{mes.rotulo}</h2>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {formatMinutes(mes.trabalho)} trab. · {formatMinutes(mes.viagem)} viag. · {mes.km} km
+                </span>
+              </div>
+              {mes.atendimentos.map((grupo) => (
+                <div key={grupo.itens[0]!.id} className="ios-group overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/60 px-4 py-2">
+                    <span className="truncate text-xs font-semibold uppercase tracking-wide">{grupo.cliente}</span>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {grupo.itens.length} {grupo.itens.length === 1 ? "dia" : "dias"}
+                    </span>
                   </div>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                </Link>
-              </li>
-            );
-          })}
-         </ul>
+                  <ul className="divide-y divide-border">
+                    {grupo.itens.map((a) => {
+                      const t = calcularTotais(a);
+                      const [, , dia] = a.data.split("-");
+                      const semana = new Date(`${a.data}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+                      const ini = normalizeTime(a.trabalho_inicio);
+                      const fim = normalizeTime(a.trabalho_fim);
+                      const partes = [
+                        t.trabalho > 0 ? `${formatMinutes(t.trabalho)} trabalho` : null,
+                        t.viagem > 0 ? `${formatMinutes(t.viagem)} viagem` : null,
+                        t.km > 0 ? `${t.km} km` : null,
+                      ].filter(Boolean);
+                      return (
+                        <li key={a.id}>
+                          <Link to="/apontamento/$id" params={{ id: a.id }} className="press flex items-center gap-3 px-4 py-2.5">
+                            <div className="flex w-10 shrink-0 flex-col items-center leading-none">
+                              <span className="text-lg font-semibold tabular-nums">{dia}</span>
+                              <span className="text-[10px] uppercase text-muted-foreground">{semana}</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm">
+                                {ini && fim ? `${ini} – ${fim}` : t.trabalho === 0 && t.viagem > 0 ? "Só viagem" : "Sem horário"}
+                              </p>
+                              <p className="truncate text-xs text-muted-foreground">{partes.length ? partes.join(" · ") : "Sem horas lançadas"}</p>
+                              {pendingIds.has(a.id) ? <span className="text-xs font-medium text-primary">Pendente de envio</span> : null}
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          ))}
+        </div>
       )}
       {filtrados.length > visibleCount ? <Button type="button" variant="outline" className="h-12 w-full rounded-xl" onClick={() => setVisibleCount((count) => count + 40)}>Carregar mais {Math.min(40, filtrados.length - visibleCount)}</Button> : null}
     </PageShell>
   );
+}
+
+type Apt = Awaited<ReturnType<typeof fetchApontamentos>>[number];
+
+function agruparPorMes(lista: Apt[]) {
+  const meses: { chave: string; rotulo: string; trabalho: number; viagem: number; km: number; atendimentos: { cliente: string; itens: Apt[] }[] }[] = [];
+  for (const a of lista) {
+    const chave = a.data.slice(0, 7);
+    let mes = meses[meses.length - 1];
+    if (!mes || mes.chave !== chave) {
+      const rotulo = new Date(`${chave}-15T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      mes = { chave, rotulo, trabalho: 0, viagem: 0, km: 0, atendimentos: [] };
+      meses.push(mes);
+    }
+    const t = calcularTotais(a);
+    mes.trabalho += t.trabalho;
+    mes.viagem += t.viagem;
+    mes.km += t.km;
+    const ultimo = mes.atendimentos[mes.atendimentos.length - 1];
+    if (ultimo && ultimo.itens[0]!.cliente_id === a.cliente_id) ultimo.itens.push(a);
+    else mes.atendimentos.push({ cliente: a.clientes?.nome ?? "—", itens: [a] });
+  }
+  return meses;
 }
