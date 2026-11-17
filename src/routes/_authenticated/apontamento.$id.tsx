@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/apontamento/$id")({
 
 function EditarApontamento() {
   const { id } = Route.useParams();
+  const [step, setStep] = useState<1 | 2>(1);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["apontamento", id],
     queryFn: () => fetchApontamento(id),
@@ -37,13 +39,14 @@ function EditarApontamento() {
       title="Editar apontamento"
       subtitle={data ? `${formatDateBR(data.data)} · ${data.clientes?.nome ?? ""}` : undefined}
       backTo="/historico"
+      onBack={step === 2 ? () => setStep(1) : undefined}
     >
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : isError || !data ? (
         <p className="text-sm text-muted-foreground">Apontamento não encontrado.</p>
       ) : (
-        <ApontamentoForm key={data.id} apontamento={data} />
+        <ApontamentoForm key={data.id} apontamento={data} step={step} onStepChange={setStep} />
       )}
     </PageShell>
   );

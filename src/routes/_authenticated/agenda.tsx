@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { dataInicialDoAgendamento } from "@/lib/agenda-apontamento";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -262,7 +263,7 @@ function Agenda() {
                     {item.observacoes ? <p className="mt-1 text-xs text-muted-foreground">{item.observacoes}</p> : null}
                     {!item.concluido ? (
                       <Button asChild variant="secondary" className="mt-3 h-10 rounded-xl px-3">
-                        <Link to="/novo" search={{ data: item.data, cliente: item.cliente_id, servico: item.maquina_servico ?? undefined, agenda: item.id, orcamento: undefined }}>
+                        <Link to="/novo" search={{ data: dataInicialDoAgendamento(item, todayISO()), cliente: item.cliente_id, servico: item.maquina_servico ?? undefined, agenda: item.id, orcamento: undefined }}>
                           <Play className="mr-1.5 h-4 w-4" /> Iniciar apontamento
                         </Link>
                       </Button>

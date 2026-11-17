@@ -3,7 +3,10 @@ import { NovoRecebimentoAvulsoButton } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarPlus, ChevronLeft, ChevronRight, Gauge, MapPin, Timer } from "lucide-react";
+import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock3, Gauge, MapPin, Play, Timer } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchAgendamentos } from "@/lib/agenda";
+import { dataInicialDoAgendamento, proximoAgendamento } from "@/lib/agenda-apontamento";
 
 import { PageShell, Section } from "@/components/PageShell";
 import { PagamentosCard } from "@/components/PagamentosAlertas";
@@ -12,6 +15,7 @@ import {
   fetchApontamentos,
   formatDateBR,
   formatMinutes,
+  normalizeTime,
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
@@ -38,7 +42,27 @@ export const Route = createFileRoute("/_authenticated/painel")({
   component: Resumo,
 });
 
+const NOME_KEY = "cp-perfil-nome";
+
+async function fetchNomePerfil(): Promise<string> {
+  try {
+    const { data, error } = await supabase.from("profiles").select("display_name").limit(1).maybeSingle();
+    if (error) throw error;
+    const nome = data?.display_name?.trim() ?? "";
+    localStorage.setItem(NOME_KEY, nome);
+    return nome;
+  } catch {
+    return localStorage.getItem(NOME_KEY) ?? "";
+  }
+}
+
 function Resumo() {
+  const { data: nomePerfil = "" } = useQuery({ queryKey: ["perfil-nome"], queryFn: fetchNomePerfil });
+  const { data: agendamentos = [] } = useQuery({ queryKey: ["agendamentos"], queryFn: fetchAgendamentos });
+  const hoje = todayISO();
+  const proximo = useMemo(() => proximoAgendamento(agendamentos, hoje), [agendamentos, hoje]);
+  const primeiroNome = nomePerfil.split(/\s+/)[0] ?? "";
+  const hojeTexto = new Date(`${hoje}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
@@ -51,7 +75,7 @@ function Resumo() {
     [apontamentos, mes],
   );
   const totais = somarTotais(doMes);
-  const ultimos = doMes.slice(0, 5);
+  const ultimos = doMes.slice(0, 3);
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
@@ -67,7 +91,36 @@ function Resumo() {
   const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
   return (
-    <PageShell title="Painel" subtitle="CP TECHNIC Horas">
+    <PageShell title={primeiroNome ? `Olá, ${primeiroNome}` : "Olá!"} subtitle={hojeTexto.charAt(0).toUpperCase() + hojeTexto.slice(1)}>
+      <Button asChild className="h-14 w-full rounded-2xl text-base">
+        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}>
+          <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
+        </Link>
+      </Button>
+
+      {proximo ? (
+        <Section title="Próximo atendimento" hint={proximo.data <= hoje ? "Hoje" : formatDateBR(proximo.data)}>
+          <div className="space-y-1">
+            <p className="truncate text-base font-semibold">{proximo.clientes?.nome ?? "Cliente"}</p>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
+              <Clock3 className="h-4 w-4" />
+              {formatDateBR(proximo.data)}{proximo.data_fim && proximo.data_fim !== proximo.data ? ` – ${formatDateBR(proximo.data_fim)}` : ""}{proximo.horario ? ` · ${normalizeTime(proximo.horario)}` : ""}
+            </p>
+            {proximo.maquina_servico ? <p className="truncate text-sm">{proximo.maquina_servico}</p> : null}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button asChild className="h-11 rounded-xl">
+              <Link to="/novo" search={{ data: dataInicialDoAgendamento(proximo, hoje), cliente: proximo.cliente_id, servico: proximo.maquina_servico ?? undefined, agenda: proximo.id, orcamento: undefined }}>
+                <Play className="mr-1.5 h-4 w-4" /> Iniciar apontamento
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-11 rounded-xl">
+              <Link to="/agenda"><CalendarDays className="mr-1.5 h-4 w-4" /> Abrir agenda</Link>
+            </Button>
+          </div>
+        </Section>
+      ) : null}
+
       <NovoRecebimentoAvulsoButton />
       <LembretesPainel />
       <section>
@@ -88,13 +141,7 @@ function Resumo() {
 
       <PagamentosCard relatorios={relatorios} />
 
-      <Button asChild className="h-14 w-full rounded-2xl text-base">
-        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}>
-          <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
-        </Link>
-      </Button>
-
-      <Section title="Últimos apontamentos" hint={`${doMes.length} no mês`}>
+      <Section title="Recentes" hint={`${doMes.length} no mês`}>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : ultimos.length === 0 ? (

@@ -170,3 +170,4 @@
 - [x] Previsão mensal de recebimentos de parcelas (tela própria, ligada em Resumos)
 - [x] Ocultar recebimentos avulsos em Relatórios salvos, mostrando o bloco somente quando selecionado.
 - [x] Explicar em Resumos e Relatórios totais o período coberto pelo total financeiro (datas, duração e quantidade de relatórios).
+- [x] Apontamento em 2 etapas, Agenda → Apontamento, "Usar atendimento parecido", Painel com saudação/próximo atendimento e Histórico por dia.

@@ -2,9 +2,9 @@ import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronRight, FileText, Search, X } from "lucide-react";
+import { Check, ChevronDown, Copy, FileText, Search, X } from "lucide-react";
 
-import { PageShell, Section } from "@/components/PageShell";
+import { PageShell } from "@/components/PageShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ function Historico() {
   const [clienteId, setClienteId] = useState("");
   const [clienteBusca, setClienteBusca] = useState("");
   const [clienteFiltroAberto, setClienteFiltroAberto] = useState(false);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -94,7 +95,7 @@ function Historico() {
   return (
     <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="rounded-full" aria-label="Abrir relatório"><Link to="/relatorio" search={{ relatorio: undefined }}><FileText className="h-5 w-5" /></Link></Button>}>
       <RecebimentosAvulsosSection clienteId={clienteId} inicio={de} fim={ate} busca={busca} />
-      <Section title="Filtros">
+      <section className="space-y-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -104,6 +105,23 @@ function Historico() {
             className="rounded-full bg-secondary pl-9"
           />
         </div>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <Button type="button" variant={clienteId ? "default" : "outline"} className="h-11 shrink-0 rounded-full px-4 text-sm" onClick={() => setFiltrosAbertos((v) => !v)}>
+            <span className="max-w-[10rem] truncate">{clienteId ? clienteBusca || "Cliente" : "Cliente"}</span>
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </Button>
+          <Button type="button" variant={de || ate ? "default" : "outline"} className="h-11 shrink-0 rounded-full px-4 text-sm tabular-nums" onClick={() => setFiltrosAbertos((v) => !v)}>
+            {de || ate ? `${de ? formatDateBR(de) : "…"} – ${ate ? formatDateBR(ate) : "…"}` : "Período"}
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </Button>
+          {hasFilters ? (
+            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full px-3 text-sm text-muted-foreground" onClick={clearFilters}>
+              <X className="mr-1 h-4 w-4" /> Limpar
+            </Button>
+          ) : null}
+        </div>
+        {filtrosAbertos ? (
+          <div className="ios-group space-y-4 p-4">
         <div className="relative space-y-1.5">
           <Label htmlFor="cliente-filtro" className="text-xs text-muted-foreground">
             Cliente
@@ -188,12 +206,14 @@ function Historico() {
             />
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-secondary/70 py-3 text-center">
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{formatMinutes(totais.trabalho)}</strong>Trabalho</p>
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{formatMinutes(totais.viagem)}</strong>Viagem</p>
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground">{totais.km}</strong>KM</p>
+          </div>
+        ) : null}
+        <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-secondary/70 py-2.5 text-center">
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{filtrados.length}</strong>Atendimentos</p>
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{formatMinutes(totais.trabalho + totais.viagem)}</strong>Horas</p>
+          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{totais.km}</strong>KM</p>
         </div>
-      </Section>
+      </section>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -206,56 +226,42 @@ function Historico() {
         </div>
       ) : (
         <div className="space-y-5">
-          {agruparPorMes(filtrados.slice(0, visibleCount)).map((mes) => (
-            <section key={mes.chave} className="space-y-2">
-              <div className="flex items-baseline justify-between px-1">
-                <h2 className="text-sm font-semibold capitalize">{mes.rotulo}</h2>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {formatMinutes(mes.trabalho)} trab. · {formatMinutes(mes.viagem)} viag. · {mes.km} km
-                </span>
-              </div>
-              {mes.atendimentos.map((grupo) => (
-                <div key={grupo.itens[0]!.id} className="ios-group overflow-hidden">
-                  <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/60 px-4 py-2">
-                    <span className="truncate text-xs font-semibold uppercase tracking-wide">{grupo.cliente}</span>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {grupo.itens.length} {grupo.itens.length === 1 ? "dia" : "dias"}
-                    </span>
-                  </div>
-                  <ul className="divide-y divide-border">
-                    {grupo.itens.map((a) => {
-                      const t = calcularTotais(a);
-                      const [, , dia] = a.data.split("-");
-                      const semana = new Date(`${a.data}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
-                      const ini = normalizeTime(a.trabalho_inicio);
-                      const fim = normalizeTime(a.trabalho_fim);
-                      const partes = [
-                        t.trabalho > 0 ? `${formatMinutes(t.trabalho)} trabalho` : null,
-                        t.viagem > 0 ? `${formatMinutes(t.viagem)} viagem` : null,
-                        t.km > 0 ? `${t.km} km` : null,
-                      ].filter(Boolean);
-                      return (
-                        <li key={a.id}>
-                          <Link to="/apontamento/$id" params={{ id: a.id }} className="press flex items-center gap-3 px-4 py-2.5">
-                            <div className="flex w-10 shrink-0 flex-col items-center leading-none">
-                              <span className="text-lg font-semibold tabular-nums">{dia}</span>
-                              <span className="text-[10px] uppercase text-muted-foreground">{semana}</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm">
-                                {ini && fim ? `${ini} – ${fim}` : t.trabalho === 0 && t.viagem > 0 ? "Só viagem" : "Sem horário"}
-                              </p>
-                              <p className="truncate text-xs text-muted-foreground">{partes.length ? partes.join(" · ") : "Sem horas lançadas"}</p>
-                              {pendingIds.has(a.id) ? <span className="text-xs font-medium text-primary">Pendente de envio</span> : null}
-                            </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+          {agruparPorData(filtrados.slice(0, visibleCount)).map((dia) => (
+            <section key={dia.data} className="space-y-2">
+              <h2 className="px-1 text-xs font-semibold tracking-wide text-muted-foreground">{dia.rotulo}</h2>
+              <ul className="ios-group divide-y divide-border overflow-hidden">
+                {dia.itens.map((a) => {
+                  const t = calcularTotais(a);
+                  const ini = normalizeTime(a.trabalho_inicio);
+                  const fim = normalizeTime(a.trabalho_fim);
+                  const pendente = pendingIds.has(a.id);
+                  return (
+                    <li key={a.id} className="flex items-stretch">
+                      <Link to="/apontamento/$id" params={{ id: a.id }} className="press min-w-0 flex-1 px-4 py-3">
+                        <p className="truncate text-sm font-semibold">{a.clientes?.nome ?? "—"}</p>
+                        {a.maquina_servico ? <p className="truncate text-xs text-muted-foreground">{a.maquina_servico}</p> : null}
+                        <p className="mt-1 truncate text-sm tabular-nums">
+                          {ini && fim ? `${ini} – ${fim} · ${formatMinutes(t.trabalho)}` : t.trabalho === 0 && t.viagem > 0 ? `Só viagem · ${formatMinutes(t.viagem)}` : "Sem horário"}
+                          {t.km > 0 ? <span className="text-muted-foreground"> · {t.km} km</span> : null}
+                        </p>
+                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-medium ${pendente ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+                          {pendente ? "Pendente de sincronização" : "Sincronizado"}
+                        </span>
+                      </Link>
+                      <Link
+                        to="/novo"
+                        search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined, parecido: a.id }}
+                        className="press flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border text-[0.6rem] text-muted-foreground"
+                        aria-label="Novo a partir deste"
+                        title="Novo a partir deste"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Novo
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           ))}
         </div>
@@ -267,23 +273,19 @@ function Historico() {
 
 type Apt = Awaited<ReturnType<typeof fetchApontamentos>>[number];
 
-function agruparPorMes(lista: Apt[]) {
-  const meses: { chave: string; rotulo: string; trabalho: number; viagem: number; km: number; atendimentos: { cliente: string; itens: Apt[] }[] }[] = [];
-  for (const a of lista) {
-    const chave = a.data.slice(0, 7);
-    let mes = meses[meses.length - 1];
-    if (!mes || mes.chave !== chave) {
-      const rotulo = new Date(`${chave}-15T12:00:00`).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-      mes = { chave, rotulo, trabalho: 0, viagem: 0, km: 0, atendimentos: [] };
-      meses.push(mes);
+function agruparPorData(lista: Apt[]) {
+  const dias: { data: string; rotulo: string; itens: Apt[] }[] = [];
+  const ordenada = [...lista].sort((x, y) => (x.data < y.data ? 1 : x.data > y.data ? -1 : 0));
+  for (const a of ordenada) {
+    let dia = dias[dias.length - 1];
+    if (!dia || dia.data !== a.data) {
+      const d = new Date(`${a.data}T12:00:00`);
+      const semana = d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+      const mes = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+      dia = { data: a.data, rotulo: `${semana}, ${d.getDate()} ${mes}`.toUpperCase(), itens: [] };
+      dias.push(dia);
     }
-    const t = calcularTotais(a);
-    mes.trabalho += t.trabalho;
-    mes.viagem += t.viagem;
-    mes.km += t.km;
-    const ultimo = mes.atendimentos[mes.atendimentos.length - 1];
-    if (ultimo && ultimo.itens[0]!.cliente_id === a.cliente_id) ultimo.itens.push(a);
-    else mes.atendimentos.push({ cliente: a.clientes?.nome ?? "—", itens: [a] });
+    dia.itens.push(a);
   }
-  return meses;
+  return dias;
 }

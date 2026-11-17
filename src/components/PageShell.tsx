@@ -13,12 +13,14 @@ export function PageShell({
   subtitle,
   action,
   backTo,
+  onBack,
   children,
 }: {
   title: string;
   subtitle?: string | undefined;
   action?: ReactNode;
   backTo?: "/mais" | "/historico" | "/relatorios-salvos" | "/orcamentos" | "/painel" | "/resumos";
+  onBack?: (() => void) | undefined;
   children: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -34,9 +36,13 @@ export function PageShell({
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-28">
       <header
-        className={`mb-7 grid min-h-16 items-center ${backTo ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}
+        className={`mb-7 grid min-h-16 items-center ${backTo || onBack ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}
       >
-        {backTo ? (
+        {onBack ? (
+          <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="Voltar" title="Voltar" onClick={onBack}>
+            <ChevronLeft className="h-7 w-7" />
+          </Button>
+        ) : backTo ? (
           <Button
             asChild
             variant="ghost"

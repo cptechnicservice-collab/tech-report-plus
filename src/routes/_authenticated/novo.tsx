@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ApontamentoForm } from "@/components/ApontamentoForm";
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/_authenticated/novo")({
     servico: typeof search["servico"] === "string" ? search["servico"] : undefined,
     agenda: typeof search["agenda"] === "string" ? search["agenda"] : undefined,
     orcamento: typeof search["orcamento"] === "string" ? search["orcamento"] : undefined,
+    ...(typeof search["parecido"] === "string" ? { parecido: search["parecido"] } : {}),
   }),
   head: () => ({
     meta: [
@@ -33,9 +35,10 @@ export const Route = createFileRoute("/_authenticated/novo")({
 
 function NovoApontamento() {
   const search = Route.useSearch();
+  const [step, setStep] = useState<1 | 2>(1);
   return (
-    <PageShell title="Novo apontamento" subtitle="Horários preenchidos manualmente">
-      <ApontamentoForm draft={{ data: search.data, clienteId: search.cliente, servico: search.servico, agendaId: search.agenda, orcamentoId: search.orcamento }} />
+    <PageShell title="Novo apontamento" subtitle="Horários preenchidos manualmente" onBack={step === 2 ? () => setStep(1) : undefined}>
+      <ApontamentoForm step={step} onStepChange={setStep} draft={{ data: search.data, clienteId: search.cliente, servico: search.servico, agendaId: search.agenda, orcamentoId: search.orcamento, parecidoId: search.parecido }} />
     </PageShell>
   );
 }
