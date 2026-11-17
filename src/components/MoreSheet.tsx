@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  CalendarDays,
   CalendarPlus,
   ChartPie,
   FileArchive,
@@ -30,6 +31,7 @@ import { openSyncPanel } from "@/lib/offline-events";
 import { useSignOut } from "@/hooks/use-sign-out";
 
 const options = [
+  { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/dados-empresa", label: "Dados da empresa", icon: Building2 },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/pecas", label: "Peças", icon: Package },

@@ -3,12 +3,10 @@ import { NovoRecebimentoAvulsoButton } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Car, ChevronLeft, ChevronRight, FileText, Gauge, Play, Timer, UserRound, Wallet, Wrench } from "lucide-react";
+import { Car, ChevronLeft, ChevronRight, FileText, Gauge, Timer, UserRound, Wallet } from "lucide-react";
 import { formatDuracao } from "@/lib/duracao-format";
 import { formatCurrency } from "@/lib/financeiro";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAgendamentos } from "@/lib/agenda";
-import { dataInicialDoAgendamento, proximoAgendamento } from "@/lib/agenda-apontamento";
 
 import { PageShell } from "@/components/PageShell";
 import { PagamentosCard } from "@/components/PagamentosAlertas";
@@ -16,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import {
   fetchApontamentos,
   formatDateBR,
-  normalizeTime,
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
@@ -59,9 +56,7 @@ async function fetchNomePerfil(): Promise<string> {
 
 function Resumo() {
   const { data: nomePerfil = "" } = useQuery({ queryKey: ["perfil-nome"], queryFn: fetchNomePerfil });
-  const { data: agendamentos = [] } = useQuery({ queryKey: ["agendamentos"], queryFn: fetchAgendamentos });
   const hoje = todayISO();
-  const proximo = useMemo(() => proximoAgendamento(agendamentos, hoje), [agendamentos, hoje]);
   const primeiroNome = nomePerfil.split(/\s+/)[0] ?? "";
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
@@ -144,36 +139,6 @@ function Resumo() {
         </div>
       </section>
 
-      {proximo ? (
-        <section className="space-y-3">
-          <h2 className="text-xl font-bold">Próximo atendimento</h2>
-          <div className="ios-group space-y-4 p-4">
-            <Link to="/agenda" className="press flex items-start gap-3">
-              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-tint text-primary"><Wrench className="h-6 w-6" /></span>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="truncate text-base font-bold uppercase">{proximo.clientes?.nome ?? "Cliente"}</p>
-                <p className="flex items-center gap-1.5 text-sm tabular-nums">
-                  <CalendarDays className="h-4 w-4 text-primary" />
-                  {proximo.data <= hoje ? "Hoje" : formatDateBR(proximo.data)}{proximo.data_fim && proximo.data_fim !== proximo.data ? ` – ${formatDateBR(proximo.data_fim)}` : ""}{proximo.horario ? ` · ${normalizeTime(proximo.horario)}` : ""}
-                </p>
-                {proximo.maquina_servico ? <p className="truncate text-sm text-muted-foreground">{proximo.maquina_servico}</p> : null}
-              </div>
-              <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
-            </Link>
-            <div className="space-y-2">
-              <Button asChild className="h-12 w-full rounded-2xl">
-                <Link to="/novo" search={{ data: dataInicialDoAgendamento(proximo, hoje), cliente: proximo.cliente_id, servico: proximo.maquina_servico ?? undefined, agenda: proximo.id, orcamento: undefined }}>
-                  <Play className="mr-1.5 h-4 w-4" /> Iniciar apontamento
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-primary/30 bg-tint text-primary hover:bg-tint hover:text-primary">
-                <Link to="/agenda">Abrir agenda</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
           <h2 className="text-xl font-bold">Recentes</h2>
@@ -182,7 +147,7 @@ function Resumo() {
         {isLoading ? (
           <p className="ios-group p-4 text-sm text-muted-foreground">Carregando...</p>
         ) : ultimos.length === 0 ? (
-          <p className="ios-group p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Comece pela Agenda ou pelo menu Mais.</p>
+          <p className="ios-group p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Comece pelo menu Mais.</p>
         ) : (
           <ul className="space-y-2.5">
             {ultimos.map((a) => (

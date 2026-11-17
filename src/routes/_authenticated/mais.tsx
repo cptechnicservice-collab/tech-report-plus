@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, CalendarPlus, ChartPie, ChevronRight, CircleDollarSign, ClipboardList, FileArchive, LogOut, Package, Users } from "lucide-react";
+import { Building2, CalendarDays, CalendarPlus, ChartPie, ChevronRight, CircleDollarSign, ClipboardList, FileArchive, LogOut, Package, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/hooks/use-sign-out";
 
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/mais")({
 });
 
 const options = [
+  { to: "/agenda", label: "Agenda", detail: "Atendimentos marcados", icon: CalendarDays },
   { to: "/dados-empresa", label: "Dados da empresa", detail: "Identificação e logo dos documentos", icon: Building2 },
   { to: "/clientes", label: "Clientes", detail: "Cadastro e contatos", icon: Users },
   { to: "/pecas", label: "Peças", detail: "Catálogo e preços", icon: Package },

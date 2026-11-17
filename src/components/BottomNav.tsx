@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Clock, Ellipsis, FileArchive, House } from "lucide-react";
+import { Clock, Ellipsis, FileArchive, House } from "lucide-react";
 
 import { MoreSheet } from "@/components/MoreSheet";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
 
 const items = [
   { to: "/painel", label: "Início", icon: House, exact: true },
-  { to: "/agenda", label: "Agenda", icon: CalendarDays, exact: false },
   { to: "/historico", label: "Histórico", icon: Clock, exact: false },
   { to: "/relatorios-salvos", label: "Relatórios", icon: FileArchive, exact: false },
   { to: "/mais", label: "Mais", icon: Ellipsis, exact: false },
@@ -25,7 +24,7 @@ export function BottomNav() {
   return (
     <>
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card">
-        <ul className="mx-auto grid max-w-md grid-cols-5 px-2 py-1">
+        <ul className="mx-auto grid max-w-md grid-cols-4 px-2 py-1">
           {items.map(({ to, label, icon: Icon, exact }) => (
             <li key={to}>
               {to === "/mais" ? (

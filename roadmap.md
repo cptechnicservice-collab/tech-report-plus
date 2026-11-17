@@ -174,6 +174,7 @@
 
 ## Barra inferior e Início
 - [x] Tirar o botão grande "Novo apontamento" do Início e recolocar "Relatórios" na barra inferior (5 itens), com aviso de pagamentos urgentes no item Relatórios. Validado em 390×844; 141 testes passaram.
+- [x] Tirar a Agenda da barra inferior (4 itens: Início, Histórico, Relatórios, Mais) e remover o cartão "Próximo atendimento" do Início; a Agenda continua acessível no menu Mais. Validado em 390×844; 141 testes passaram.
 
 ## Ícone do app na tela de início do iPhone
 - [x] Conferido: o logo já está como ícone na versão publicada (apple-touch-icon e manifesto apontam para o logo CP TECHNIC). O iPhone guarda o ícone da época em que o app foi salvo; para atualizar, apagar o atalho da tela de início e adicionar de novo pelo Safari.
