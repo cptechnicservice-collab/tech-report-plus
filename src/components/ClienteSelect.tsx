@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Plus, Search } from "lucide-react";
+import { Building2, Check, ChevronDown, ChevronRight, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,13 @@ export function ClienteSelect({
   value,
   onChange,
   recentIds = [],
+  variant = "field",
 }: {
   clientes: Cliente[];
   value: string | null;
   onChange: (id: string) => void;
   recentIds?: string[];
+  variant?: "field" | "card";
 }) {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
@@ -75,6 +77,16 @@ export function ClienteSelect({
 
   return (
     <div>
+      {variant === "card" ? (
+        <button type="button" onClick={() => setOpen(true)} className="press ios-group flex min-h-[4.5rem] w-full items-center gap-3 p-4 text-left">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-icon-bg text-muted-foreground"><Building2 className="h-5 w-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs text-muted-foreground">Cliente</span>
+            <span className={`block truncate text-lg ${selecionado ? "font-bold uppercase" : "font-semibold text-muted-foreground"}`}>{selecionado ? selecionado.nome : "Selecionar cliente"}</span>
+          </span>
+          <span className="flex shrink-0 items-center text-sm font-medium text-primary">{selecionado ? "Trocar" : "Escolher"}<ChevronRight className="h-4 w-4" /></span>
+        </button>
+      ) : (
       <Button
         type="button"
         variant="outline"
@@ -87,6 +99,7 @@ export function ClienteSelect({
         </span>
         <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
       </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[88dvh] max-w-md translate-y-0 gap-4 rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">

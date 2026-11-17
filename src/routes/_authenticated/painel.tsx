@@ -3,23 +3,24 @@ import { NovoRecebimentoAvulsoButton } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Clock3, Gauge, MapPin, Play, Timer } from "lucide-react";
+import { CalendarDays, Car, ChevronLeft, ChevronRight, FileText, Gauge, Play, Plus, Timer, UserRound, Wallet, Wrench } from "lucide-react";
+import { formatDuracao } from "@/lib/duracao-format";
+import { formatCurrency } from "@/lib/financeiro";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAgendamentos } from "@/lib/agenda";
 import { dataInicialDoAgendamento, proximoAgendamento } from "@/lib/agenda-apontamento";
 
-import { PageShell, Section } from "@/components/PageShell";
+import { PageShell } from "@/components/PageShell";
 import { PagamentosCard } from "@/components/PagamentosAlertas";
 import { Button } from "@/components/ui/button";
 import {
   fetchApontamentos,
   formatDateBR,
-  formatMinutes,
   normalizeTime,
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
-import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos, saldoRelatorio } from "@/lib/relatorios";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -62,7 +63,6 @@ function Resumo() {
   const hoje = todayISO();
   const proximo = useMemo(() => proximoAgendamento(agendamentos, hoje), [agendamentos, hoje]);
   const primeiroNome = nomePerfil.split(/\s+/)[0] ?? "";
-  const hojeTexto = new Date(`${hoje}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
@@ -90,94 +90,128 @@ function Resumo() {
   });
   const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const dataCurta = (() => {
+    const d = new Date(`${hoje}T12:00:00`);
+    const semana = d.toLocaleDateString("pt-BR", { weekday: "long" }).split("-")[0] ?? "";
+    const mesCurto = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+    return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${d.getDate()} ${mesCurto}`;
+  })();
+  const aReceber = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
+  const ontem = (() => { const d = new Date(`${hoje}T12:00:00`); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+  const diaRelativo = (iso: string) => (iso === hoje ? "Hoje" : iso === ontem ? "Ontem" : formatDateBR(iso).slice(0, 5));
+
   return (
-    <PageShell title={primeiroNome ? `Olá, ${primeiroNome}` : "Olá!"} subtitle={hojeTexto.charAt(0).toUpperCase() + hojeTexto.slice(1)}>
-      <Button asChild className="h-14 w-full rounded-2xl text-base">
+    <PageShell
+      large
+      title={primeiroNome ? `${saudacao}, ${primeiroNome}` : `${saudacao}!`}
+      subtitle={dataCurta}
+      action={
+        <Link to="/mais" aria-label="Perfil e mais opções" className="press grid h-11 w-11 place-items-center rounded-full bg-icon-bg text-muted-foreground">
+          <UserRound className="h-5 w-5" />
+        </Link>
+      }
+    >
+      <Button asChild className="h-14 w-full rounded-2xl text-base font-semibold">
         <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}>
-          <CalendarPlus className="mr-2 h-5 w-5" /> Novo apontamento
+          <Plus className="mr-1 h-5 w-5" /> Novo apontamento
         </Link>
       </Button>
 
-      {proximo ? (
-        <Section title="Próximo atendimento" hint={proximo.data <= hoje ? "Hoje" : formatDateBR(proximo.data)}>
-          <div className="space-y-1">
-            <p className="truncate text-base font-semibold">{proximo.clientes?.nome ?? "Cliente"}</p>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
-              <Clock3 className="h-4 w-4" />
-              {formatDateBR(proximo.data)}{proximo.data_fim && proximo.data_fim !== proximo.data ? ` – ${formatDateBR(proximo.data_fim)}` : ""}{proximo.horario ? ` · ${normalizeTime(proximo.horario)}` : ""}
-            </p>
-            {proximo.maquina_servico ? <p className="truncate text-sm">{proximo.maquina_servico}</p> : null}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button asChild className="h-11 rounded-xl">
-              <Link to="/novo" search={{ data: dataInicialDoAgendamento(proximo, hoje), cliente: proximo.cliente_id, servico: proximo.maquina_servico ?? undefined, agenda: proximo.id, orcamento: undefined }}>
-                <Play className="mr-1.5 h-4 w-4" /> Iniciar apontamento
-              </Link>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="shrink-0 text-xl font-bold">Resumo do mês</h2>
+          <div className="flex min-w-0 items-center text-xs text-muted-foreground">
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="Mês anterior" onClick={() => moverMes(-1)}>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button asChild variant="outline" className="h-11 rounded-xl">
-              <Link to="/agenda"><CalendarDays className="mr-1.5 h-4 w-4" /> Abrir agenda</Link>
+            <span title={periodo} className="min-w-0 truncate capitalize">{new Date(`${mes}-01T12:00:00`).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }).replace(".", "").replace(" de ", " ")}</span>
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="Próximo mês" onClick={() => moverMes(1)}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </Section>
-      ) : null}
-
-      <NovoRecebimentoAvulsoButton />
-      <LembretesPainel />
-      <section>
-        <div className="flex h-12 items-center justify-between px-1">
-          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Mês anterior" onClick={() => moverMes(-1)}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <p className="font-semibold">{periodo}</p>
-          <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" aria-label="Próximo mês" onClick={() => moverMes(1)}>
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: "Horas trabalhadas", value: formatDuracao(totais.trabalho), icon: Timer },
+            { label: "Viagem", value: formatDuracao(totais.viagem), icon: Car },
+            { label: "KM rodados", value: `${totais.km.toLocaleString("pt-BR")} km`, icon: Gauge },
+            { label: "A receber", value: formatCurrency(aReceber), icon: Wallet },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="flex items-center gap-2.5 rounded-[1.125rem] bg-chip p-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card text-primary"><Icon className="h-5 w-5" /></span>
+              <div className="min-w-0">
+                <p className="truncate text-xs text-muted-foreground">{label}</p>
+                <p className="truncate text-base font-bold tracking-tight tabular-nums">{value}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="grid grid-cols-3 gap-2">
-        {[{ label: "Horas trab.", value: formatMinutes(totais.trabalho), icon: Timer }, { label: "Horas viagem", value: formatMinutes(totais.viagem), icon: MapPin }, { label: "KM rodados", value: String(totais.km), icon: Gauge }].map(({ label, value, icon: Icon }) => <div key={label} className="ios-group p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-4 w-4" /></span><p className="mt-3 text-[0.68rem] text-muted-foreground">{label}</p><p className="mt-0.5 text-lg font-bold tabular-nums">{value}</p></div>)}
+      {proximo ? (
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold">Próximo atendimento</h2>
+          <div className="ios-group space-y-4 p-4">
+            <div className="flex items-start gap-3">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-tint text-primary"><Wrench className="h-6 w-6" /></span>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="truncate text-base font-bold uppercase">{proximo.clientes?.nome ?? "Cliente"}</p>
+                <p className="flex items-center gap-1.5 text-sm tabular-nums">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  {proximo.data <= hoje ? "Hoje" : formatDateBR(proximo.data)}{proximo.data_fim && proximo.data_fim !== proximo.data ? ` – ${formatDateBR(proximo.data_fim)}` : ""}{proximo.horario ? ` · ${normalizeTime(proximo.horario)}` : ""}
+                </p>
+                {proximo.maquina_servico ? <p className="truncate text-sm text-muted-foreground">{proximo.maquina_servico}</p> : null}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button asChild className="h-12 rounded-2xl">
+                <Link to="/novo" search={{ data: dataInicialDoAgendamento(proximo, hoje), cliente: proximo.cliente_id, servico: proximo.maquina_servico ?? undefined, agenda: proximo.id, orcamento: undefined }}>
+                  <Play className="mr-1.5 h-4 w-4" /> Iniciar
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 rounded-2xl border-primary/30 bg-tint text-primary hover:bg-tint hover:text-primary">
+                <Link to="/agenda">Abrir agenda</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-xl font-bold">Recentes</h2>
+          <span className="text-xs text-muted-foreground">{doMes.length} no mês</span>
+        </div>
+        <div className="ios-group">
+          {isLoading ? (
+            <p className="p-4 text-sm text-muted-foreground">Carregando...</p>
+          ) : ultimos.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {ultimos.map((a) => (
+                <li key={a.id}>
+                  <Link to="/apontamento/$id" params={{ id: a.id }} className="press flex min-h-16 items-center gap-3 px-4 py-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-icon-bg text-muted-foreground"><FileText className="h-5 w-5" /></span>
+                    <span className="min-w-0 flex-1 truncate text-sm">
+                      <span className="text-muted-foreground">{diaRelativo(a.data)} · </span>
+                      <strong className="font-semibold">{a.clientes?.nome ?? "—"}</strong>
+                      <span className="text-muted-foreground"> · {formatDuracao(somarTotais([a]).trabalho)}</span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
 
       <PagamentosCard relatorios={relatorios} />
-
-      <Section title="Recentes" hint={`${doMes.length} no mês`}>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        ) : ultimos.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.
-          </p>
-        ) : (
-          <ul className="-my-1 divide-y divide-border">
-            {ultimos.map((a) => (
-              <li key={a.id}>
-                <Link
-                  to="/apontamento/$id"
-                  params={{ id: a.id }}
-                  className="press flex min-h-16 items-center gap-3 py-2.5"
-                >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
-                    <Timer className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">
-                      {a.clientes?.nome ?? "—"}
-                    </span>
-                    <span className="block text-xs text-muted-foreground tabular-nums">
-                      {formatDateBR(a.data)}
-                    </span>
-                  </span>
-                  <span className="ml-auto shrink-0 text-right">
-                    <span className="block text-sm font-semibold tabular-nums">{formatMinutes(somarTotais([a]).trabalho)}</span>
-                    <ChevronRight className="ml-auto mt-0.5 h-4 w-4 text-muted-foreground" />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+      <NovoRecebimentoAvulsoButton />
+      <LembretesPainel />
     </PageShell>
   );
 }

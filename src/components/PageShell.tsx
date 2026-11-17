@@ -14,6 +14,8 @@ export function PageShell({
   action,
   backTo,
   onBack,
+  centered,
+  large,
   children,
 }: {
   title: string;
@@ -21,6 +23,8 @@ export function PageShell({
   action?: ReactNode;
   backTo?: "/mais" | "/historico" | "/relatorios-salvos" | "/orcamentos" | "/painel" | "/resumos";
   onBack?: (() => void) | undefined;
+  centered?: boolean;
+  large?: boolean;
   children: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -56,11 +60,11 @@ export function PageShell({
             </Link>
           </Button>
         ) : null}
-        <div className="min-w-0">
-          <p className="mb-2 inline-flex rounded-md bg-brand-header px-2 py-1 text-[0.62rem] font-bold uppercase text-brand-header-foreground">
+        <div className={`min-w-0 ${centered ? "text-center" : ""}`}>
+          {centered || large ? null : <p className="mb-2 inline-flex rounded-md bg-brand-header px-2 py-1 text-[0.62rem] font-bold uppercase text-brand-header-foreground">
             CP <span className="ml-1 text-primary">TECHNIC</span>
-          </p>
-          <h1 className="truncate text-[1.65rem] font-bold leading-none">{title}</h1>
+          </p>}
+          <h1 className={`truncate font-bold leading-tight ${large ? "text-[2rem] tracking-tight" : centered ? "text-lg" : "text-[1.65rem] leading-none"}`}>{title}</h1>
           {subtitle ? (
             <p className="mt-1.5 truncate text-sm text-muted-foreground">{subtitle}</p>
           ) : null}

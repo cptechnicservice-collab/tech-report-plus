@@ -2,7 +2,8 @@ import { RecebimentosAvulsosSection } from "@/components/RecebimentosAvulsos";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, Copy, FileText, Search, X } from "lucide-react";
+import { CalendarDays, Check, ChevronRight, Clock, Copy, FileText, MapPin, Search, UserRound, X } from "lucide-react";
+import { formatDuracao } from "@/lib/duracao-format";
 
 import { PageShell } from "@/components/PageShell";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
   normalizeSearchText,
   normalizeTime,
   somarTotais,
+  todayISO,
 } from "@/lib/apontamentos";
 
 export const Route = createFileRoute("/_authenticated/historico")({
@@ -43,8 +45,8 @@ export const Route = createFileRoute("/_authenticated/historico")({
 function Historico() {
   const [visibleCount, setVisibleCount] = useState(40);
   const [busca, setBusca] = useState("");
-  const [de, setDe] = useState("");
-  const [ate, setAte] = useState("");
+  const [de, setDe] = useState(() => inicioDoMes());
+  const [ate, setAte] = useState(() => fimDoMes());
   const [clienteId, setClienteId] = useState("");
   const [clienteBusca, setClienteBusca] = useState("");
   const [clienteFiltroAberto, setClienteFiltroAberto] = useState(false);
@@ -84,6 +86,8 @@ function Historico() {
 
   const totais = somarTotais(filtrados);
   const hasFilters = Boolean(busca || de || ate || clienteId);
+  const esteMes = de === inicioDoMes() && ate === fimDoMes();
+  const periodoAtivo = Boolean(de || ate) && !esteMes;
   const clearFilters = () => {
     setBusca("");
     setDe("");
@@ -93,8 +97,7 @@ function Historico() {
   };
 
   return (
-    <PageShell title="Histórico" subtitle={`${filtrados.length} apontamento(s)`} action={<Button asChild variant="outline" size="icon" className="rounded-full" aria-label="Abrir relatório"><Link to="/relatorio" search={{ relatorio: undefined }}><FileText className="h-5 w-5" /></Link></Button>}>
-      <RecebimentosAvulsosSection clienteId={clienteId} inicio={de} fim={ate} busca={busca} />
+    <PageShell large title="Histórico" action={<Button asChild variant="ghost" size="icon" className="h-11 w-11 rounded-full bg-icon-bg text-muted-foreground" aria-label="Abrir relatório"><Link to="/relatorio" search={{ relatorio: undefined }}><FileText className="h-5 w-5" /></Link></Button>}>
       <section className="space-y-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -106,16 +109,19 @@ function Historico() {
           />
         </div>
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          <Button type="button" variant={clienteId ? "default" : "outline"} className="h-11 shrink-0 rounded-full px-4 text-sm" onClick={() => setFiltrosAbertos((v) => !v)}>
-            <span className="max-w-[10rem] truncate">{clienteId ? clienteBusca || "Cliente" : "Cliente"}</span>
-            <ChevronDown className="ml-1 h-4 w-4" />
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 text-sm font-semibold ${esteMes ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => { if (esteMes) { setDe(""); setAte(""); } else { setDe(inicioDoMes()); setAte(fimDoMes()); } }}>
+            <CalendarDays className="mr-1.5 h-4 w-4" /> Este mês
           </Button>
-          <Button type="button" variant={de || ate ? "default" : "outline"} className="h-11 shrink-0 rounded-full px-4 text-sm tabular-nums" onClick={() => setFiltrosAbertos((v) => !v)}>
-            {de || ate ? `${de ? formatDateBR(de) : "…"} – ${ate ? formatDateBR(ate) : "…"}` : "Período"}
-            <ChevronDown className="ml-1 h-4 w-4" />
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 text-sm font-semibold ${clienteId ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
+            <UserRound className="mr-1.5 h-4 w-4" />
+            <span className="max-w-[9rem] truncate">{clienteId ? clienteBusca || "Cliente" : "Cliente"}</span>
           </Button>
-          {hasFilters ? (
-            <Button type="button" variant="ghost" className="h-11 shrink-0 rounded-full px-3 text-sm text-muted-foreground" onClick={clearFilters}>
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 text-sm font-semibold tabular-nums ${periodoAtivo ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
+            <CalendarDays className="mr-1.5 h-4 w-4" />
+            {periodoAtivo ? `${de ? formatDateBR(de).slice(0, 5) : "…"} – ${ate ? formatDateBR(ate).slice(0, 5) : "…"}` : "Período"}
+          </Button>
+          {hasFilters && !esteMes ? (
+            <Button type="button" variant="ghost" className="h-12 shrink-0 rounded-full px-3 text-sm text-muted-foreground" onClick={clearFilters}>
               <X className="mr-1 h-4 w-4" /> Limpar
             </Button>
           ) : null}
@@ -208,10 +214,17 @@ function Historico() {
         </div>
           </div>
         ) : null}
-        <div className="grid grid-cols-3 divide-x divide-border rounded-xl bg-secondary/70 py-2.5 text-center">
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{filtrados.length}</strong>Atendimentos</p>
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{formatMinutes(totais.trabalho + totais.viagem)}</strong>Horas</p>
-          <p className="px-1 text-xs text-muted-foreground"><strong className="block text-sm text-foreground tabular-nums">{totais.km}</strong>KM</p>
+        <div className="grid grid-cols-3 divide-x divide-border rounded-[1.125rem] bg-chip py-3">
+          {[
+            { icon: FileText, value: `${filtrados.length}`, label: filtrados.length === 1 ? "atendimento" : "atendimentos" },
+            { icon: Clock, value: formatDuracao(totais.trabalho + totais.viagem), label: "horas" },
+            { icon: MapPin, value: `${totais.km.toLocaleString("pt-BR")} km`, label: "rodados" },
+          ].map(({ icon: Icon, value, label }) => (
+            <div key={label} className="flex items-center justify-center gap-1.5 px-1.5">
+              <Icon className="h-4 w-4 shrink-0 text-primary" />
+              <p className="min-w-0 text-xs leading-tight text-muted-foreground"><strong className="block truncate text-sm text-foreground tabular-nums">{value}</strong>{label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -229,35 +242,42 @@ function Historico() {
           {agruparPorData(filtrados.slice(0, visibleCount)).map((dia) => (
             <section key={dia.data} className="space-y-2">
               <h2 className="px-1 text-xs font-semibold tracking-wide text-muted-foreground">{dia.rotulo}</h2>
-              <ul className="ios-group divide-y divide-border overflow-hidden">
+              <ul className="relative space-y-3 pl-6 before:absolute before:bottom-2 before:left-[7px] before:top-2 before:w-px before:bg-border">
                 {dia.itens.map((a) => {
                   const t = calcularTotais(a);
                   const ini = normalizeTime(a.trabalho_inicio);
                   const fim = normalizeTime(a.trabalho_fim);
                   const pendente = pendingIds.has(a.id);
                   return (
-                    <li key={a.id} className="flex items-stretch">
-                      <Link to="/apontamento/$id" params={{ id: a.id }} className="press min-w-0 flex-1 px-4 py-3">
-                        <p className="truncate text-sm font-semibold">{a.clientes?.nome ?? "—"}</p>
-                        {a.maquina_servico ? <p className="truncate text-xs text-muted-foreground">{a.maquina_servico}</p> : null}
-                        <p className="mt-1 truncate text-sm tabular-nums">
-                          {ini && fim ? `${ini} – ${fim} · ${formatMinutes(t.trabalho)}` : t.trabalho === 0 && t.viagem > 0 ? `Só viagem · ${formatMinutes(t.viagem)}` : "Sem horário"}
-                          {t.km > 0 ? <span className="text-muted-foreground"> · {t.km} km</span> : null}
-                        </p>
-                        <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[0.68rem] font-medium ${pendente ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
-                          {pendente ? "Pendente de sincronização" : "Sincronizado"}
-                        </span>
-                      </Link>
-                      <Link
-                        to="/novo"
-                        search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined, parecido: a.id }}
-                        className="press flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border text-[0.6rem] text-muted-foreground"
-                        aria-label="Novo a partir deste"
-                        title="Novo a partir deste"
-                      >
-                        <Copy className="h-4 w-4" />
-                        Novo
-                      </Link>
+                    <li key={a.id} className="relative">
+                      <span aria-hidden className="absolute -left-[22px] top-5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
+                      <div className="ios-group relative">
+                        <Link to="/apontamento/$id" params={{ id: a.id }} className="press block p-4 pr-10">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="min-w-0 truncate text-[0.95rem] font-bold">{a.clientes?.nome ?? "—"}</p>
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${pendente ? "bg-chip text-muted-foreground" : "bg-success/15 text-success"}`}>
+                              {pendente ? <FileText className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                              {pendente ? "Pendente de sincronização" : "Sincronizado"}
+                            </span>
+                          </div>
+                          {a.maquina_servico ? <p className="mt-0.5 truncate text-sm text-muted-foreground">{a.maquina_servico}</p> : null}
+                          <p className="mt-1.5 flex items-center gap-1.5 truncate text-sm tabular-nums">
+                            <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            {ini && fim ? `${ini}–${fim} · ${formatDuracao(t.trabalho)}` : t.trabalho === 0 && t.viagem > 0 ? `Só viagem · ${formatDuracao(t.viagem)}` : "Sem horário"}
+                            {t.km > 0 ? <span className="text-muted-foreground"> · {t.km} km</span> : null}
+                          </p>
+                        </Link>
+                        <ChevronRight className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                        <Link
+                          to="/novo"
+                          search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined, parecido: a.id }}
+                          className="press absolute bottom-2 right-9 grid h-10 w-10 place-items-center rounded-full text-muted-foreground"
+                          aria-label="Novo a partir deste"
+                          title="Novo a partir deste"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Link>
+                      </div>
                     </li>
                   );
                 })}
@@ -267,8 +287,19 @@ function Historico() {
         </div>
       )}
       {filtrados.length > visibleCount ? <Button type="button" variant="outline" className="h-12 w-full rounded-xl" onClick={() => setVisibleCount((count) => count + 40)}>Carregar mais {Math.min(40, filtrados.length - visibleCount)}</Button> : null}
+      <RecebimentosAvulsosSection clienteId={clienteId} inicio={de} fim={ate} busca={busca} />
     </PageShell>
   );
+}
+
+function inicioDoMes() {
+  return `${todayISO().slice(0, 7)}-01`;
+}
+
+function fimDoMes() {
+  const [ano, mes] = todayISO().split("-").map(Number);
+  const ultimo = new Date(ano ?? 2000, mes ?? 1, 0).getDate();
+  return `${todayISO().slice(0, 7)}-${String(ultimo).padStart(2, "0")}`;
 }
 
 type Apt = Awaited<ReturnType<typeof fetchApontamentos>>[number];

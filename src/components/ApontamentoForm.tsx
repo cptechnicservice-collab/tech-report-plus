@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Check, Copy, Plus } from "lucide-react";
+import { BarChart3, Briefcase, Calendar, Car, Check, ChevronRight, Coffee, Copy, Plus, Settings, Wrench, type LucideIcon } from "lucide-react";
+import { formatDuracao } from "@/lib/duracao-format";
 import { toast } from "sonner";
 
 import { Section } from "@/components/PageShell";
@@ -112,8 +113,17 @@ function FilledBadge() {
   return <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[0.68rem] font-medium text-primary"><Check className="h-3 w-3" /> Preenchido</span>;
 }
 
-function OptionalSection({
+function IconCircle({ icon: Icon, tone = "muted" }: { icon: LucideIcon; tone?: "muted" | "primary" }) {
+  return (
+    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${tone === "primary" ? "bg-tint text-primary" : "bg-icon-bg text-muted-foreground"}`}>
+      <Icon className="h-5 w-5" />
+    </span>
+  );
+}
+
+function TimeRow({
   id,
+  icon: Icon,
   title,
   addLabel,
   hasValue,
@@ -121,43 +131,66 @@ function OptionalSection({
   children,
 }: {
   id: string;
+  icon: LucideIcon;
   title: string;
-  addLabel: string;
+  addLabel?: string;
   hasValue: boolean;
-  onClear: () => void;
+  onClear?: () => void;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(hasValue);
+  const [open, setOpen] = useState(hasValue || !addLabel);
   useEffect(() => { if (hasValue) setOpen(true); }, [hasValue]);
-
-  if (!open) {
-    return (
-      <button id={id} type="button" onClick={() => setOpen(true)} className="press flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border text-sm font-medium text-muted-foreground">
-        <Plus className="h-4 w-4" /> {addLabel}
-      </button>
-    );
-  }
   return (
-    <section id={id} className="ios-group">
-      <div className="flex min-h-12 items-center gap-2 px-4">
-        <span className="text-sm font-semibold">{title}</span>
-        {hasValue ? <FilledBadge /> : null}
-        <Button type="button" variant="ghost" className="ml-auto h-11 rounded-lg px-2 text-xs text-muted-foreground" onClick={() => { onClear(); setOpen(false); }}>
-          {hasValue ? "Limpar" : "Fechar"}
-        </Button>
+    <div id={id} className="px-4 py-3.5">
+      <div className="flex items-center gap-2">
+        <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+        <span className="text-[0.95rem] font-bold">{title}</span>
+        {hasValue && addLabel ? <FilledBadge /> : null}
+        {open && addLabel && onClear ? (
+          <button type="button" className="ml-auto min-h-9 px-1 text-xs text-muted-foreground" onClick={() => { onClear(); setOpen(false); }}>
+            {hasValue ? "Limpar" : "Fechar"}
+          </button>
+        ) : null}
       </div>
-      <div className="border-t border-border px-4 pb-4 pt-4">{children}</div>
-    </section>
+      <div className="mt-2.5">
+        {open ? children : (
+          <button type="button" onClick={() => setOpen(true)} className="press flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary/50 bg-tint text-sm font-semibold text-primary">
+            <Plus className="h-4 w-4" /> {addLabel}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
 function SectionTitle({ title, filled, hint }: { title: string; filled?: boolean; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
-      <h2 className="text-sm font-semibold">{title}</h2>
+      <h2 className="text-base font-bold">{title}</h2>
       {filled ? <FilledBadge /> : hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </div>
   );
+}
+
+function ResumoCalculado({ trabalho, viagem }: { trabalho: number; viagem: number }) {
+  return (
+    <section className="rounded-[1.125rem] bg-tint p-4">
+      <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><BarChart3 className="h-4 w-4 text-primary" /> Resumo calculado</p>
+      <div className="mt-2 grid grid-cols-2 divide-x divide-primary/15">
+        <div><p className="text-xs text-muted-foreground">Trabalho</p><p className="text-2xl font-bold tabular-nums">{formatDuracao(trabalho)}</p></div>
+        <div className="pl-4"><p className="text-xs text-muted-foreground">Viagem</p><p className="text-2xl font-bold tabular-nums">{formatDuracao(viagem)}</p></div>
+      </div>
+    </section>
+  );
+}
+
+function dataChipLabel(iso: string) {
+  if (!iso) return "Escolher data";
+  const d = new Date(`${iso}T12:00:00`);
+  const curta = d.toLocaleDateString("pt-BR", { day: "numeric", month: "short" }).replace(".", "").replace(" de ", " ");
+  if (iso === todayISO()) return `Hoje, ${curta}`;
+  const semana = d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${curta}`;
 }
 
 type StepError = { anchor: string; message: string };
@@ -191,6 +224,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
   const [parecidoOpen, setParecidoOpen] = useState(false);
   const [parecidoInitial, setParecidoInitial] = useState<string | undefined>(undefined);
   const [showErrors, setShowErrors] = useState(false);
+  const [editandoMaquina, setEditandoMaquina] = useState(false);
   const [form, setForm] = useState<FormState>(() => initialState(apontamento, draft));
   const [pecaId, setPecaId] = useState("");
   const [pecasSelecionadas, setPecasSelecionadas] = useState<SelectedPart[]>([]);
@@ -382,82 +416,84 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
   };
 
   const despesasPreenchidas = form.diaria_tipo !== "nenhuma" || Boolean(form.pedagio || form.outras_despesas || form.outras_despesas_descricao);
-  const footerClass = "sticky z-30 -mx-4 space-y-2 border-t border-border bg-background/95 px-4 pb-3 pt-3 backdrop-blur bottom-[calc(5.25rem+env(safe-area-inset-bottom))]";
+  const footerClass = "sticky z-30 -mx-4 space-y-2 bg-background/95 px-4 pb-3 pt-3 backdrop-blur bottom-[calc(3.9rem+env(safe-area-inset-bottom))]";
 
   return (
     <div className="space-y-5">
-      <div className="space-y-1.5">
-        <div className="flex items-baseline justify-between px-1 text-xs">
-          <span className="font-semibold">{step === 1 ? "1 de 2 · Atendimento" : "2 de 2 · Complementos"}</span>
-          {step === 2 ? <button type="button" className="min-h-11 px-1 text-primary" onClick={() => onStepChange?.(1)}>Editar atendimento</button> : null}
-        </div>
-        <Progress value={step === 1 ? 50 : 100} className="h-1.5" />
-      </div>
+      <Progress value={step === 1 ? 50 : 100} className="-mt-4 h-1.5 rounded-full bg-border" />
 
       {step === 1 ? (
         <>
-          <section id="sec-cliente">
-            <SectionTitle title="Identificação" />
-            <div className="ios-group space-y-4 p-4">
-              <FloatingInput id="data" label="Data" type="date" value={form.data} onChange={(e) => set("data", e.target.value)} />
-              <ClienteSelect clientes={clientes} value={form.cliente_id} onChange={(id) => set("cliente_id", id)} recentIds={recentIds} />
-              {!apontamento && apontamentos.length ? (
-                <button type="button" className="-mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm text-primary" onClick={() => { setParecidoInitial(undefined); setParecidoOpen(true); }}>
-                  <Copy className="h-4 w-4" /> Usar atendimento parecido
-                </button>
-              ) : null}
-              <FloatingInput id="maquina" label="Máquina / Serviço (opcional)" value={form.maquina_servico} onChange={(e) => set("maquina_servico", e.target.value)} />
-              {errorFor("sec-cliente").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
-            </div>
+          <section id="sec-cliente" className="space-y-3">
+            <label className="press relative inline-flex min-h-11 items-center gap-2 rounded-full bg-chip px-4 text-sm font-semibold">
+              <Calendar className="h-4 w-4 text-primary" />
+              {dataChipLabel(form.data)}
+              <input aria-label="Data" type="date" value={form.data} onChange={(e) => set("data", e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+            </label>
+            <ClienteSelect variant="card" clientes={clientes} value={form.cliente_id} onChange={(id) => set("cliente_id", id)} recentIds={recentIds} />
+            {editandoMaquina ? (
+              <div className="ios-group p-3">
+                <FloatingInput id="maquina" label="Máquina / Serviço (opcional)" value={form.maquina_servico} onChange={(e) => set("maquina_servico", e.target.value)} onBlur={() => setEditandoMaquina(false)} />
+              </div>
+            ) : (
+              <button type="button" onClick={() => setEditandoMaquina(true)} className="press ios-group flex min-h-[4.5rem] w-full items-center gap-3 p-4 text-left">
+                <IconCircle icon={Wrench} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs text-muted-foreground">Máquina / serviço</span>
+                  <span className={`block truncate text-base font-bold ${form.maquina_servico ? "" : "font-medium text-muted-foreground"}`}>{form.maquina_servico || "Adicionar (opcional)"}</span>
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </button>
+            )}
+            {!apontamento && apontamentos.length ? (
+              <button type="button" className="inline-flex min-h-11 items-center gap-1.5 px-1 text-sm text-primary" onClick={() => { setParecidoInitial(undefined); setParecidoOpen(true); }}>
+                <Copy className="h-4 w-4" /> Usar atendimento parecido
+              </button>
+            ) : null}
+            {errorFor("sec-cliente").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
           </section>
 
-          <OptionalSection id="sec-ida" title="Viagem ida" addLabel="Adicionar viagem de ida" hasValue={Boolean(form.viagem_ida_saida || form.viagem_ida_chegada)} onClear={() => setForm((prev) => ({ ...prev, viagem_ida_saida: "", viagem_ida_chegada: "" }))}>
-            <div className="grid grid-cols-2 gap-3">
-              <TimeWheelField label="Saída" value={form.viagem_ida_saida} onChange={(v) => set("viagem_ida_saida", v)} />
-              <TimeWheelField label="Chegada" value={form.viagem_ida_chegada} onChange={(v) => set("viagem_ida_chegada", v)} />
-            </div>
-            {errorFor("sec-ida").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
-            {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_ida_saida, payload.viagem_ida_chegada))}</Warning> : null}
-          </OptionalSection>
-
-          <section id="sec-trabalho">
-            <SectionTitle title="Trabalho" filled={Boolean(form.trabalho_inicio && form.trabalho_fim)} hint="opcional" />
-            <div className="ios-group space-y-1 p-4">
-              <div className="grid grid-cols-2 gap-3">
+          <section className="ios-group divide-y divide-border">
+            <TimeRow id="sec-ida" icon={Car} title="Viagem ida" addLabel="Adicionar ida" hasValue={Boolean(form.viagem_ida_saida || form.viagem_ida_chegada)} onClear={() => setForm((prev) => ({ ...prev, viagem_ida_saida: "", viagem_ida_chegada: "" }))}>
+              <div className="grid grid-cols-2 gap-2.5">
+                <TimeWheelField label="Saída" value={form.viagem_ida_saida} onChange={(v) => set("viagem_ida_saida", v)} />
+                <TimeWheelField label="Chegada" value={form.viagem_ida_chegada} onChange={(v) => set("viagem_ida_chegada", v)} />
+              </div>
+              {errorFor("sec-ida").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
+              {validacoes.viagemIdaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_ida_saida, payload.viagem_ida_chegada))}</Warning> : null}
+            </TimeRow>
+            <TimeRow id="sec-trabalho" icon={Settings} title="Trabalho" hasValue={Boolean(form.trabalho_inicio && form.trabalho_fim)}>
+              <div className="grid grid-cols-2 gap-2.5">
                 <TimeWheelField label="Início" value={form.trabalho_inicio} onChange={(v) => set("trabalho_inicio", v)} />
                 <TimeWheelField label="Fim" value={form.trabalho_fim} onChange={(v) => set("trabalho_fim", v)} />
               </div>
               {errorFor("sec-trabalho").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
               {validacoes.trabalhoDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(totais.trabalho)}</Warning> : null}
               {validacoes.jornadaLonga ? <Warning>Jornada acima de 16h. Confira os horários.</Warning> : null}
-            </div>
+            </TimeRow>
+            <TimeRow id="sec-intervalo" icon={Coffee} title="Intervalo" addLabel="Adicionar intervalo" hasValue={Boolean(form.intervalo_inicio || form.intervalo_fim)} onClear={() => setForm((prev) => ({ ...prev, intervalo_inicio: "", intervalo_fim: "" }))}>
+              <div className="grid grid-cols-2 gap-2.5">
+                <TimeWheelField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
+                <TimeWheelField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
+              </div>
+              {errorFor("sec-intervalo").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
+              {validacoes.intervaloInvalido ? <Warning>Intervalo fora da jornada ou maior que o trabalho. Não será descontado.</Warning> : null}
+            </TimeRow>
+            <TimeRow id="sec-volta" icon={Car} title="Viagem retorno" addLabel="Adicionar retorno" hasValue={Boolean(form.viagem_volta_saida || form.viagem_volta_chegada)} onClear={() => setForm((prev) => ({ ...prev, viagem_volta_saida: "", viagem_volta_chegada: "" }))}>
+              <div className="grid grid-cols-2 gap-2.5">
+                <TimeWheelField label="Saída" value={form.viagem_volta_saida} onChange={(v) => set("viagem_volta_saida", v)} />
+                <TimeWheelField label="Chegada" value={form.viagem_volta_chegada} onChange={(v) => set("viagem_volta_chegada", v)} />
+              </div>
+              {errorFor("sec-volta").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
+              {validacoes.viagemVoltaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_volta_saida, payload.viagem_volta_chegada))}</Warning> : null}
+            </TimeRow>
           </section>
 
-          <OptionalSection id="sec-intervalo" title="Intervalo" addLabel="Adicionar intervalo" hasValue={Boolean(form.intervalo_inicio || form.intervalo_fim)} onClear={() => setForm((prev) => ({ ...prev, intervalo_inicio: "", intervalo_fim: "" }))}>
-            <div className="grid grid-cols-2 gap-3">
-              <TimeWheelField label="Início" value={form.intervalo_inicio} onChange={(v) => set("intervalo_inicio", v)} />
-              <TimeWheelField label="Fim" value={form.intervalo_fim} onChange={(v) => set("intervalo_fim", v)} />
-            </div>
-            {errorFor("sec-intervalo").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
-            {validacoes.intervaloInvalido ? <Warning>Intervalo fora da jornada ou maior que o trabalho. Não será descontado.</Warning> : null}
-          </OptionalSection>
-
-          <OptionalSection id="sec-volta" title="Viagem retorno" addLabel="Adicionar viagem de retorno" hasValue={Boolean(form.viagem_volta_saida || form.viagem_volta_chegada)} onClear={() => setForm((prev) => ({ ...prev, viagem_volta_saida: "", viagem_volta_chegada: "" }))}>
-            <div className="grid grid-cols-2 gap-3">
-              <TimeWheelField label="Saída" value={form.viagem_volta_saida} onChange={(v) => set("viagem_volta_saida", v)} />
-              <TimeWheelField label="Chegada" value={form.viagem_volta_chegada} onChange={(v) => set("viagem_volta_chegada", v)} />
-            </div>
-            {errorFor("sec-volta").map((e) => <Warning key={e.message}>{e.message}</Warning>)}
-            {validacoes.viagemVoltaDiaSeguinte ? <Warning>Termina no dia seguinte? Total: {formatMinutes(diffMinutes(payload.viagem_volta_saida, payload.viagem_volta_chegada))}</Warning> : null}
-          </OptionalSection>
+          <ResumoCalculado trabalho={totais.trabalho} viagem={totais.viagem} />
 
           <div className={footerClass}>
-            <div className="flex justify-around text-xs text-muted-foreground tabular-nums">
-              <span>Trabalho <strong className="text-sm text-foreground">{formatMinutes(totais.trabalho)}</strong></span>
-              <span>Viagem <strong className="text-sm text-foreground">{formatMinutes(totais.viagem)}</strong></span>
-            </div>
             <Button type="button" className="h-14 w-full rounded-2xl text-base font-semibold" onClick={continuar}>
-              Continuar · KM e despesas
+              Continuar • KM e despesas <ChevronRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
         </>
@@ -509,14 +545,12 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
             </div>
           </section>
 
-          <section>
-            <SectionTitle title="Resumo" />
-            <div className="ios-group grid grid-cols-3 gap-2 p-3 text-center">
-              <div><p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">Trabalho</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatMinutes(totais.trabalho)}</p></div>
-              <div><p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">Viagem</p><p className="mt-1 text-lg font-semibold tabular-nums">{formatMinutes(totais.viagem)}</p></div>
-              <div><p className="text-[0.65rem] font-semibold uppercase text-muted-foreground">KM</p><p className="mt-1 text-lg font-semibold tabular-nums">{totais.km}</p><p className="text-[0.65rem] text-muted-foreground tabular-nums">{formatCurrency(retornoKm)}</p></div>
-            </div>
-          </section>
+          <ResumoCalculado trabalho={totais.trabalho} viagem={totais.viagem} />
+          <div className="ios-group flex items-center gap-3 p-4">
+            <IconCircle icon={Briefcase} tone="primary" />
+            <div className="flex-1"><p className="text-xs text-muted-foreground">KM rodados</p><p className="text-lg font-bold tabular-nums">{totais.km} km</p></div>
+            <p className="text-right text-sm font-semibold tabular-nums">{formatCurrency(retornoKm)}<span className="block text-xs font-normal text-muted-foreground">Retorno KM</span></p>
+          </div>
 
           {apontamento ? (
             <AlertDialog>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { Clock, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -130,11 +130,12 @@ export function TimeWheelField({ label, value, onChange }: TimeWheelFieldProps) 
         <Button
           type="button"
           variant="outline"
-          className="h-12 w-full justify-start rounded-xl border-input bg-card px-3 text-base font-normal tabular-nums"
+          className="h-12 w-full justify-between rounded-xl border-input bg-card px-3 text-lg font-semibold tabular-nums"
           aria-label={`${label}: ${value || "vazio"}`}
           onClick={openPicker}
         >
-          <span className={value ? "text-foreground" : "text-muted-foreground"}>{value || "--:--"}</span>
+          <span className={value ? "text-foreground" : "font-normal text-muted-foreground"}>{value || "--:--"}</span>
+          {!value ? <Clock className="h-4 w-4 text-muted-foreground" /> : null}
         </Button>
         {value ? (
           <Button

@@ -66,6 +66,9 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-surface: var(--surface);
+  --color-tint: var(--tint);
+  --color-chip: var(--chip);
+  --color-icon-bg: var(--icon-bg);
   --color-brand-header: var(--brand-header);
   --color-brand-header-foreground: var(--brand-header-foreground);
   --color-highlight: var(--highlight);
@@ -79,20 +82,23 @@
   --radius: 0.75rem;
   --font-app:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  --background: oklch(0.975 0.006 78);
-  --foreground: oklch(0.22 0.025 255);
+  --background: oklch(0.98 0.003 250);
+  --foreground: oklch(0.21 0.04 265);
   --surface: oklch(1 0 0);
+  --tint: oklch(0.96 0.02 255);
+  --chip: oklch(0.97 0.005 250);
+  --icon-bg: oklch(0.95 0.01 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.006 286);
+  --card-foreground: oklch(0.21 0.04 265);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.03 255);
-  --primary: oklch(0.48 0.16 259);
+  --primary: oklch(0.57 0.19 262);
   --primary-foreground: oklch(0.99 0.002 250);
-  --secondary: oklch(0.956 0.008 78);
+  --secondary: oklch(0.97 0.005 250);
   --secondary-foreground: oklch(0.25 0.008 286);
-  --muted: oklch(0.955 0.007 78);
-  --muted-foreground: oklch(0.53 0.018 255);
-  --accent: oklch(0.94 0.025 259);
+  --muted: oklch(0.96 0.006 250);
+  --muted-foreground: oklch(0.55 0.035 257);
+  --accent: oklch(0.95 0.025 255);
   --accent-foreground: oklch(0.43 0.14 259);
   --success: oklch(0.62 0.13 155);
   --success-foreground: oklch(0.99 0.002 250);
@@ -102,9 +108,9 @@
   --info-foreground: oklch(0.99 0.002 250);
   --destructive: oklch(0.585 0.215 22);
   --destructive-foreground: oklch(0.99 0.002 250);
-  --border: oklch(0.9 0.008 78);
-  --input: oklch(0.885 0.01 78);
-  --ring: oklch(0.48 0.16 259);
+  --border: oklch(0.93 0.006 265);
+  --input: oklch(0.91 0.008 265);
+  --ring: oklch(0.57 0.19 262);
   --chart-1: oklch(0.53 0.135 252);
   --chart-2: oklch(0.72 0.15 60);
   --chart-3: oklch(0.62 0.13 155);
@@ -196,9 +202,9 @@
 
 @utility ios-group {
   background-color: var(--color-card);
-  border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  border-radius: 1.125rem;
+  box-shadow: none;
   overflow: hidden;
 }
 

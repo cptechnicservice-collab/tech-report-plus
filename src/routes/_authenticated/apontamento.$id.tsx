@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { ApontamentoForm } from "@/components/ApontamentoForm";
 import { PageShell } from "@/components/PageShell";
-import { fetchApontamento, formatDateBR } from "@/lib/apontamentos";
+import { fetchApontamento } from "@/lib/apontamentos";
 
 export const Route = createFileRoute("/_authenticated/apontamento/$id")({
   head: () => ({
@@ -37,7 +37,8 @@ function EditarApontamento() {
   return (
     <PageShell
       title="Editar apontamento"
-      subtitle={data ? `${formatDateBR(data.data)} · ${data.clientes?.nome ?? ""}` : undefined}
+      centered
+      subtitle={step === 1 ? "1 de 2 • Atendimento" : "2 de 2 • Complementos"}
       backTo="/historico"
       onBack={step === 2 ? () => setStep(1) : undefined}
     >
