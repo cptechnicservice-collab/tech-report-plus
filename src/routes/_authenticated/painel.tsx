@@ -3,7 +3,7 @@ import { NovoRecebimentoAvulsoButton } from "@/components/RecebimentosAvulsos";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Car, ChevronLeft, ChevronRight, FileText, Gauge, Play, Plus, Timer, UserRound, Wallet, Wrench } from "lucide-react";
+import { CalendarDays, Car, ChevronLeft, ChevronRight, FileText, Gauge, Play, Timer, UserRound, Wallet, Wrench } from "lucide-react";
 import { formatDuracao } from "@/lib/duracao-format";
 import { formatCurrency } from "@/lib/financeiro";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,12 +113,6 @@ function Resumo() {
         </Link>
       }
     >
-      <Button asChild className="h-14 w-full rounded-2xl text-base font-semibold">
-        <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}>
-          <Plus className="mr-1 h-5 w-5" /> Novo apontamento
-        </Link>
-      </Button>
-
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="shrink-0 text-xl font-bold">Resumo do mês</h2>
@@ -188,7 +182,7 @@ function Resumo() {
         {isLoading ? (
           <p className="ios-group p-4 text-sm text-muted-foreground">Carregando...</p>
         ) : ultimos.length === 0 ? (
-          <p className="ios-group p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.</p>
+          <p className="ios-group p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Comece pela Agenda ou pelo menu Mais.</p>
         ) : (
           <ul className="space-y-2.5">
             {ultimos.map((a) => (
