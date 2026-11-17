@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  CalendarPlus,
+  ChartPie,
+  FileArchive,
+  LogOut,
   Building2,
   CheckCircle2,
   ChevronRight,
@@ -23,6 +27,7 @@ import {
 } from "@/components/ui/drawer";
 import { getOfflineQueueStatus, subscribeOfflineStatus } from "@/lib/offline";
 import { openSyncPanel } from "@/lib/offline-events";
+import { useSignOut } from "@/hooks/use-sign-out";
 
 const options = [
   { to: "/dados-empresa", label: "Dados da empresa", icon: Building2 },
@@ -42,6 +47,7 @@ type MoreSheetProps = {
 export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
   const isAdmin = useRouterState({ select: (state) => state.matches.some((match) => "access" in match.context && match.context.access?.admin === true) });
   const [pending, setPending] = useState(0);
+  const signOut = useSignOut();
 
   const refreshStatus = useCallback(async () => {
     const status = await getOfflineQueueStatus();
@@ -86,6 +92,9 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
 
         <div className="mx-5 mb-5 overflow-hidden rounded-2xl border border-border bg-card">
           <div className="divide-y divide-border">
+            <DrawerClose asChild><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><CalendarPlus className="h-5 w-5 text-primary" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Novo apontamento</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
+            <DrawerClose asChild><Link to="/relatorios-salvos" className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><FileArchive className="h-5 w-5" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Relatórios salvos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
+            <DrawerClose asChild><Link to="/resumos" className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><ChartPie className="h-5 w-5" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Resumos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
             {isAdmin ? <DrawerClose asChild><Link to="/usuarios" className="press flex min-h-14 items-center gap-3 px-4"><Users className="h-5 w-5" /><span className="flex-1 font-semibold">Usuários e liberações</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose> : null}
             {options.map(({ to, label, icon: Icon }) => (
               <DrawerClose asChild key={to}>
@@ -108,6 +117,10 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
                 {pending === 0 ? <CheckCircle2 className="h-4 w-4" /> : null}
                 {pending === 0 ? "OK" : `${pending} pendente${pending === 1 ? "" : "s"}`}
               </span>
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => { onOpenChange(false); void signOut(); }} className="press grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-none px-4 text-left text-destructive hover:text-destructive">
+              <LogOut className="h-5 w-5" strokeWidth={1.7} />
+              <span className="font-semibold">Sair</span>
             </Button>
           </div>
         </div>

@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, ChevronRight, CircleDollarSign, ClipboardList, Package, Users } from "lucide-react";
+import { Building2, CalendarPlus, ChartPie, ChevronRight, CircleDollarSign, ClipboardList, FileArchive, LogOut, Package, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSignOut } from "@/hooks/use-sign-out";
 
 import { PageShell, Section } from "@/components/PageShell";
 
@@ -27,10 +29,14 @@ const options = [
 
 function Mais() {
   const { access } = Route.useRouteContext();
+  const signOut = useSignOut();
   return (
     <PageShell title="Mais" subtitle="Cadastros e documentos">
       <Section title="Opções">
         <div className="-my-3 divide-y divide-border">
+          <Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }} className="flex min-h-16 items-center gap-3 py-3 press"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><CalendarPlus className="h-5 w-5" /></span><span className="flex-1 font-semibold">Novo apontamento</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link>
+          <Link to="/relatorios-salvos" className="flex min-h-16 items-center gap-3 py-3 press"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><FileArchive className="h-5 w-5" /></span><span className="flex-1 font-semibold">Relatórios salvos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link>
+          <Link to="/resumos" className="flex min-h-16 items-center gap-3 py-3 press"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><ChartPie className="h-5 w-5" /></span><span className="flex-1 font-semibold">Resumos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link>
           {access.admin ? <Link to="/usuarios" className="flex min-h-16 items-center gap-3 py-3 press"><Users className="h-5 w-5 text-primary" /><span className="flex-1 font-semibold">Usuários e liberações</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link> : null}
           {options.map(({ to, label, detail, icon: Icon }) => (
             <Link key={to} to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="flex min-h-16 items-center gap-3 py-3 press">
@@ -41,6 +47,9 @@ function Mais() {
           ))}
         </div>
       </Section>
+      <Button type="button" variant="outline" className="h-12 w-full rounded-2xl text-destructive hover:text-destructive" onClick={() => void signOut()}>
+        <LogOut className="mr-2 h-5 w-5" /> Sair
+      </Button>
     </PageShell>
   );
 }

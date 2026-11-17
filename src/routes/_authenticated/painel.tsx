@@ -140,7 +140,7 @@ function Resumo() {
             { label: "A receber", value: formatCurrency(aReceber), icon: Wallet },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="flex items-center gap-2.5 rounded-[1.125rem] bg-chip p-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card text-primary"><Icon className="h-5 w-5" /></span>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-tint text-primary"><Icon className="h-5 w-5" /></span>
               <div className="min-w-0">
                 <p className="truncate text-xs text-muted-foreground">{label}</p>
                 <p className="truncate text-base font-bold tracking-tight tabular-nums">{value}</p>
@@ -154,7 +154,7 @@ function Resumo() {
         <section className="space-y-3">
           <h2 className="text-xl font-bold">Próximo atendimento</h2>
           <div className="ios-group space-y-4 p-4">
-            <div className="flex items-start gap-3">
+            <Link to="/agenda" className="press flex items-start gap-3">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-tint text-primary"><Wrench className="h-6 w-6" /></span>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="truncate text-base font-bold uppercase">{proximo.clientes?.nome ?? "Cliente"}</p>
@@ -164,14 +164,15 @@ function Resumo() {
                 </p>
                 {proximo.maquina_servico ? <p className="truncate text-sm text-muted-foreground">{proximo.maquina_servico}</p> : null}
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button asChild className="h-12 rounded-2xl">
+              <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
+            </Link>
+            <div className="space-y-2">
+              <Button asChild className="h-12 w-full rounded-2xl">
                 <Link to="/novo" search={{ data: dataInicialDoAgendamento(proximo, hoje), cliente: proximo.cliente_id, servico: proximo.maquina_servico ?? undefined, agenda: proximo.id, orcamento: undefined }}>
-                  <Play className="mr-1.5 h-4 w-4" /> Iniciar
+                  <Play className="mr-1.5 h-4 w-4" /> Iniciar apontamento
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="h-12 rounded-2xl border-primary/30 bg-tint text-primary hover:bg-tint hover:text-primary">
+              <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-primary/30 bg-tint text-primary hover:bg-tint hover:text-primary">
                 <Link to="/agenda">Abrir agenda</Link>
               </Button>
             </div>
@@ -184,29 +185,25 @@ function Resumo() {
           <h2 className="text-xl font-bold">Recentes</h2>
           <span className="text-xs text-muted-foreground">{doMes.length} no mês</span>
         </div>
-        <div className="ios-group">
-          {isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">Carregando...</p>
-          ) : ultimos.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.</p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {ultimos.map((a) => (
-                <li key={a.id}>
-                  <Link to="/apontamento/$id" params={{ id: a.id }} className="press flex min-h-16 items-center gap-3 px-4 py-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-icon-bg text-muted-foreground"><FileText className="h-5 w-5" /></span>
-                    <span className="min-w-0 flex-1 truncate text-sm">
-                      <span className="text-muted-foreground">{diaRelativo(a.data)} · </span>
-                      <strong className="font-semibold">{a.clientes?.nome ?? "—"}</strong>
-                      <span className="text-muted-foreground"> · {formatDuracao(somarTotais([a]).trabalho)}</span>
-                    </span>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {isLoading ? (
+          <p className="ios-group p-4 text-sm text-muted-foreground">Carregando...</p>
+        ) : ultimos.length === 0 ? (
+          <p className="ios-group p-4 text-sm text-muted-foreground">Nenhum apontamento ainda. Toque em “Novo apontamento” para começar.</p>
+        ) : (
+          <ul className="space-y-2.5">
+            {ultimos.map((a) => (
+              <li key={a.id}>
+                <Link to="/apontamento/$id" params={{ id: a.id }} className="press ios-group flex min-h-16 items-center gap-3 px-4 py-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-icon-bg text-muted-foreground"><FileText className="h-5 w-5" /></span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+                    {diaRelativo(a.data)} · <span className="font-semibold text-foreground">{a.clientes?.nome ?? "—"}</span> · {formatDuracao(somarTotais([a]).trabalho)}
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <PagamentosCard relatorios={relatorios} />

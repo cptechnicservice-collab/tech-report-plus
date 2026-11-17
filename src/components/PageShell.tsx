@@ -1,12 +1,8 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, LogOut } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { clearOfflineUserData } from "@/lib/offline";
-import { clearConfirmedUser } from "@/lib/auth-session";
 
 export function PageShell({
   title,
@@ -27,18 +23,8 @@ export function PageShell({
   large?: boolean;
   children: ReactNode;
 }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const signOut = async () => {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await clearOfflineUserData();
-    clearConfirmedUser();
-    await supabase.auth.signOut();
-    await navigate({ to: "/auth", replace: true });
-  };
   return (
-    <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-28">
+    <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-24">
       <header
         className={`mb-7 grid min-h-16 items-center ${backTo || onBack ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}
       >
@@ -71,17 +57,6 @@ export function PageShell({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {action}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full text-muted-foreground"
-            aria-label="Sair"
-            title="Sair"
-            onClick={signOut}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
         </div>
       </header>
       <main className="space-y-6">{children}</main>

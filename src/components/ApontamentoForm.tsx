@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { BarChart3, Briefcase, Calendar, Car, Check, ChevronRight, Coffee, Copy, Plus, Settings, Wrench, type LucideIcon } from "lucide-react";
+import { BarChart3, Briefcase, Calendar, Car, Check, ChevronRight, Coffee, Copy, Gauge, Package, Plus, Receipt, Settings, StickyNote, Wrench, type LucideIcon } from "lucide-react";
 import { formatDuracao } from "@/lib/duracao-format";
 import { toast } from "sonner";
 
-import { Section } from "@/components/PageShell";
 import { ClienteSelect } from "@/components/ClienteSelect";
 import { Button } from "@/components/ui/button";
 import {
@@ -142,31 +141,36 @@ function TimeRow({
   useEffect(() => { if (hasValue) setOpen(true); }, [hasValue]);
   return (
     <div id={id} className="px-4 py-3.5">
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
-        <span className="text-[0.95rem] font-bold">{title}</span>
-        {hasValue && addLabel ? <FilledBadge /> : null}
-        {open && addLabel && onClear ? (
-          <button type="button" className="ml-auto min-h-9 px-1 text-xs text-muted-foreground" onClick={() => { onClear(); setOpen(false); }}>
-            {hasValue ? "Limpar" : "Fechar"}
-          </button>
-        ) : null}
-      </div>
-      <div className="mt-2.5">
-        {open ? children : (
-          <button type="button" onClick={() => setOpen(true)} className="press flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary/50 bg-tint text-sm font-semibold text-primary">
-            <Plus className="h-4 w-4" /> {addLabel}
-          </button>
-        )}
+      <div className="grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-2">
+        <div className="min-h-12 pt-6">
+          <div className="flex items-center gap-2">
+            <Icon className="h-5 w-5 shrink-0 text-foreground" />
+            <span className="text-sm font-bold leading-tight">{title}</span>
+          </div>
+          {hasValue && addLabel ? <div className="mt-1.5"><FilledBadge /></div> : null}
+          {open && addLabel && onClear ? (
+            <button type="button" className="mt-1 min-h-9 text-xs text-muted-foreground" onClick={() => { onClear(); setOpen(false); }}>
+              {hasValue ? "Limpar" : "Fechar"}
+            </button>
+          ) : null}
+        </div>
+        <div className="min-w-0">
+          {open ? children : (
+            <button type="button" onClick={() => setOpen(true)} className="press flex min-h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary/50 bg-tint px-2 text-sm font-semibold text-primary">
+              <Plus className="h-4 w-4 shrink-0" /> <span className="truncate">{addLabel}</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ title, filled, hint }: { title: string; filled?: boolean; hint?: string }) {
+function SectionTitle({ title, filled, hint, icon }: { title: string; filled?: boolean; hint?: string; icon?: LucideIcon }) {
+  const Icon = icon;
   return (
     <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
-      <h2 className="text-base font-bold">{title}</h2>
+      <h2 className="flex items-center gap-2.5 text-base font-bold">{Icon ? <span className="grid h-9 w-9 place-items-center rounded-full bg-icon-bg text-muted-foreground"><Icon className="h-4 w-4" /></span> : null}{title}</h2>
       {filled ? <FilledBadge /> : hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </div>
   );
@@ -177,8 +181,8 @@ function ResumoCalculado({ trabalho, viagem }: { trabalho: number; viagem: numbe
     <section className="rounded-[1.125rem] bg-tint p-4">
       <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><BarChart3 className="h-4 w-4 text-primary" /> Resumo calculado</p>
       <div className="mt-2 grid grid-cols-2 divide-x divide-primary/15">
-        <div><p className="text-xs text-muted-foreground">Trabalho</p><p className="text-2xl font-bold tabular-nums">{formatDuracao(trabalho)}</p></div>
-        <div className="pl-4"><p className="text-xs text-muted-foreground">Viagem</p><p className="text-2xl font-bold tabular-nums">{formatDuracao(viagem)}</p></div>
+        <div><p className="text-2xl font-bold tabular-nums">{formatDuracao(trabalho)}</p><p className="text-sm text-muted-foreground">trabalho</p></div>
+        <div className="pl-4"><p className="text-2xl font-bold tabular-nums">{formatDuracao(viagem)}</p><p className="text-sm text-muted-foreground">viagem</p></div>
       </div>
     </section>
   );
@@ -500,7 +504,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
       ) : (
         <>
           <section>
-            <SectionTitle title="Quilometragem" filled={Boolean(form.km_ida || form.km_volta)} hint="opcional" />
+            <SectionTitle icon={Gauge} title="Quilometragem" filled={Boolean(form.km_ida || form.km_volta)} hint="opcional" />
             <div className="ios-group grid grid-cols-2 gap-3 p-4">
               <FloatingInput id="km-ida" label="KM total ida" inputMode="decimal" value={form.km_ida} onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("km_ida", event.target.value); }} />
               <FloatingInput id="km-volta" label="KM total volta" inputMode="decimal" value={form.km_volta} onChange={(event) => { if (isDecimalBRInput(event.target.value)) set("km_volta", event.target.value); }} />
@@ -508,7 +512,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
           </section>
 
           <section>
-            <SectionTitle title="Despesas" filled={despesasPreenchidas} hint="opcional" />
+            <SectionTitle icon={Receipt} title="Despesas" filled={despesasPreenchidas} hint="opcional" />
             <div className="ios-group space-y-4 p-4">
               <div className="space-y-1.5">
                 <p className="text-sm font-medium">Alimentação</p>
@@ -534,12 +538,15 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
             </div>
           </section>
 
-          <Section title="Peças utilizadas" hint={pecasSelecionadas.length ? `${pecasSelecionadas.length} item(ns)` : "opcional"}>
-            <PartPicker catalog={pecas} selectedId={pecaId} onSelectedIdChange={setPecaId} items={pecasSelecionadas} onItemsChange={setPecasSelecionadas} emptyText="Nenhuma peça vinculada a este apontamento." />
-          </Section>
+          <section>
+            <SectionTitle icon={Package} title="Peças utilizadas" filled={pecasSelecionadas.length > 0} hint="opcional" />
+            <div className="ios-group space-y-4 p-4">
+              <PartPicker catalog={pecas} selectedId={pecaId} onSelectedIdChange={setPecaId} items={pecasSelecionadas} onItemsChange={setPecasSelecionadas} emptyText="Nenhuma peça vinculada a este apontamento." />
+            </div>
+          </section>
 
           <section>
-            <SectionTitle title="Observações" filled={Boolean(form.observacoes.trim())} hint="opcional" />
+            <SectionTitle icon={StickyNote} title="Observações" filled={Boolean(form.observacoes.trim())} hint="opcional" />
             <div className="ios-group p-4">
               <FloatingTextarea label="Observações" value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} rows={4} />
             </div>
