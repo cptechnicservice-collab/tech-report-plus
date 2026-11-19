@@ -360,6 +360,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
     onSuccess: async (result) => {
       clearDraft();
       queryClient.invalidateQueries({ queryKey: ["apontamentos"] });
+      queryClient.invalidateQueries({ queryKey: ["apontamento"] });
       queryClient.invalidateQueries({ queryKey: ["apontamento-pecas"] });
       toast.success(
         result.queued
