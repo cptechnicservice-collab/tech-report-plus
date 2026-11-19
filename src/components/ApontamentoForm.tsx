@@ -549,7 +549,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
           <section>
             <SectionTitle icon={StickyNote} title="Observações" filled={Boolean(form.observacoes.trim())} hint="opcional" />
             <div className="ios-group p-4">
-              <FloatingTextarea label="Observações" value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} rows={4} />
+              <FloatingTextarea label="Observações" value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} rows={10} className="min-h-56 leading-relaxed" placeholder=" " />
             </div>
           </section>
 
