@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const rpc = vi.hoisted(() => vi.fn());
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc } }));
-import { changeAppAccess, resolveAppAccess, clearSavedAccess } from "@/lib/app-access";
+import { changeAccountRole, changeAppAccess, canManageAccount, resolveAppAccess, clearSavedAccess } from "@/lib/app-access";
 
 describe("manual access approval", () => {
   const storage = new Map<string, string>();
@@ -12,13 +12,13 @@ describe("manual access approval", () => {
   afterEach(() => vi.unstubAllGlobals());
   it("a new account never gets free access", async () => {
     rpc.mockResolvedValue({ data: { status: "pending", admin: false }, error: null });
-    expect(await resolveAppAccess("new-user", false)).toEqual({ status: "pending", admin: false });
-    expect(await resolveAppAccess("new-user", true)).toEqual({ status: "pending", admin: false });
+    expect(await resolveAppAccess("new-user", false)).toEqual({ status: "pending", admin: false, role: "technician" });
+    expect(await resolveAppAccess("new-user", true)).toEqual({ status: "pending", admin: false, role: "technician" });
   });
   it("keeps server-approved access offline without granting admin powers", async () => {
-    rpc.mockResolvedValue({ data: { status: "approved", admin: true }, error: null });
-    expect(await resolveAppAccess("owner", false)).toEqual({ status: "approved", admin: true });
-    expect(await resolveAppAccess("owner", true)).toEqual({ status: "approved", admin: false });
+    rpc.mockResolvedValue({ data: { status: "approved", admin: true, role: "owner" }, error: null });
+    expect(await resolveAppAccess("owner", false)).toEqual({ status: "approved", admin: true, role: "owner" });
+    expect(await resolveAppAccess("owner", true)).toEqual({ status: "approved", admin: false, role: "technician" });
   });
   it("approval does not transfer to a different account", async () => {
     rpc.mockResolvedValue({ data: { status: "approved", admin: false }, error: null });
@@ -45,5 +45,24 @@ describe("manual access approval", () => {
     rpc.mockResolvedValue({ error: { code: "42501", message: "Denied" } });
     await expect(changeAppAccess("someone", "approved")).rejects.toMatchObject({ code: "42501" });
     expect(rpc).toHaveBeenCalledWith("set_app_access", { target_user_id: "someone", new_status: "approved" });
+  });
+  it("technicians cannot manage accounts", () => {
+    expect(canManageAccount({ status: "approved", role: "technician", admin: false }, "technician")).toBe(false);
+  });
+  it("admins can only manage technicians", () => {
+    const access = { status: "approved", role: "admin", admin: true } as const;
+    expect(canManageAccount(access, "technician")).toBe(true);
+    expect(canManageAccount(access, "admin")).toBe(false);
+    expect(canManageAccount(access, "owner")).toBe(false);
+  });
+  it("owners cannot change their own access", () => {
+    const access = { status: "approved", role: "owner", admin: true } as const;
+    expect(canManageAccount(access, "owner")).toBe(false);
+    expect(canManageAccount(access, "admin")).toBe(true);
+  });
+  it("role changes use the protected RPC and preserve server errors", async () => {
+    rpc.mockResolvedValue({ error: { code: "42501", message: "Somente o proprietário pode alterar papéis." } });
+    await expect(changeAccountRole("someone", "admin")).rejects.toMatchObject({ code: "42501" });
+    expect(rpc).toHaveBeenCalledWith("set_account_role", { target_user_id: "someone", new_role: "admin" });
   });
 });

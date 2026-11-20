@@ -4,6 +4,7 @@ import { hasSavedApproval, resolveAppAccess, type AppAccess } from "@/lib/app-ac
 
 export const ACCESS_TTL_MS = 10 * 60 * 1000;
 export const ACCESS_REJECTED_EVENT = "cp-technic-access-rejected";
+export const ACCESS_UPDATED_EVENT = "cp-technic-access-updated";
 type Verification = { identity: AppIdentity; access: AppAccess; checkedAt: number };
 type Result = { identity: AppIdentity | null; access: AppAccess | null };
 let verified: Verification | null = null;
@@ -32,7 +33,12 @@ async function validateInBackground(): Promise<Result> {
       verified = null;
       notifyRejected(identity ? "/acesso-pendente" : "/auth");
     } else {
+      const previousAccess = verified?.access;
       verified = { identity, access, checkedAt: identity.offline ? 0 : Date.now() };
+      if (typeof window !== "undefined" && !identity.offline &&
+        (previousAccess?.admin !== access.admin || previousAccess?.role !== access.role)) {
+        window.dispatchEvent(new Event(ACCESS_UPDATED_EVENT));
+      }
     }
     return { identity, access };
   })();
@@ -58,7 +64,7 @@ export async function resolveNavigationAccess(): Promise<Result> {
       mode = "offline";
       const userId = getConfirmedUserId();
       if (userId && hasSavedApproval(userId)) {
-        return { identity: { user: { id: userId }, userId, offline: true }, access: { status: "approved", admin: false } };
+        return { identity: { user: { id: userId }, userId, offline: true }, access: { status: "approved", admin: false, role: "technician" } };
       }
       return { identity: null, access: null };
     }
@@ -79,7 +85,7 @@ export async function resolveNavigationAccess(): Promise<Result> {
         }
         if (hasSavedApproval(identity.userId)) {
           mode = "local-background";
-          const access: AppAccess = verified?.identity.userId === identity.userId ? verified.access : { status: "approved", admin: false };
+          const access: AppAccess = verified?.identity.userId === identity.userId ? verified.access : { status: "approved", admin: false, role: "technician" };
           void validateInBackground();
           return { identity, access };
         }

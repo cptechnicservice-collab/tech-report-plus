@@ -22,7 +22,7 @@ import { queryPersister } from "../lib/offline";
 import { supabase } from "../integrations/supabase/client";
 import { clearConfirmedUser, rememberConfirmedUser } from "../lib/auth-session";
 import { useKeyboardInset } from "../hooks/use-keyboard-inset";
-import { ACCESS_REJECTED_EVENT, invalidateNavigationAccess, revalidateNavigationAccess } from "../lib/navigation-access";
+import { ACCESS_REJECTED_EVENT, ACCESS_UPDATED_EVENT, invalidateNavigationAccess, revalidateNavigationAccess } from "../lib/navigation-access";
 import { shouldPersistQuery } from "../lib/query-persistence";
 
 function NotFoundComponent() {
@@ -145,6 +145,7 @@ function RootComponent() {
 
   useEffect(() => {
     const recheck = () => revalidateNavigationAccess();
+    const accessUpdated = () => { void router.invalidate(); };
     const rejected = (event: Event) => {
       const path = (event as CustomEvent<unknown>).detail;
       if (path === "/auth" || path === "/acesso-pendente") {
@@ -154,9 +155,10 @@ function RootComponent() {
       }
     };
     window.addEventListener(ACCESS_REJECTED_EVENT, rejected);
+    window.addEventListener(ACCESS_UPDATED_EVENT, accessUpdated);
     window.addEventListener("online", recheck);
     window.addEventListener("focus", recheck);
-    return () => { window.removeEventListener("online", recheck); window.removeEventListener("focus", recheck); window.removeEventListener(ACCESS_REJECTED_EVENT, rejected); };
+    return () => { window.removeEventListener("online", recheck); window.removeEventListener("focus", recheck); window.removeEventListener(ACCESS_REJECTED_EVENT, rejected); window.removeEventListener(ACCESS_UPDATED_EVENT, accessUpdated); };
   }, [router, queryClient]);
 
   useEffect(() => {

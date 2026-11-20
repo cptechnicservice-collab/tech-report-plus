@@ -1,5 +1,11 @@
 # Roadmap
 
+## Contas e papéis para venda
+- [x] Preservar liberações e converter o administrador atual em proprietário; dono inicial automático e único em cópias novas.
+- [x] Validar permissões no PostgreSQL sem ampliar acesso aos dados de outros usuários; atribuição inicial e alterações de gestão compartilham lock, com proprietário em registro único.
+- [x] Atualizar Usuários e liberações com papéis, situações e ações permitidas; manter aprovação offline sem poderes administrativos locais.
+- [x] 163 testes passaram, incluindo 12 testes PostgreSQL isolados; proprietário confirmado na conta atual e tela real conferida no tamanho do iPhone/computador, sem alterar terceiros ou publicar. iPhone físico não disponível.
+
 ## Abertura em modo avião
 - [x] Reproduzir na versão publicada a falha de abrir endereço sem internet: o cache inicial tinha arquivos, mas nenhuma página de abertura.
 - [x] Preparar a página inicial sem dados pessoais e usá-la como alternativa quando a conexão falhar, preservando autenticação, fila e registros por usuário.

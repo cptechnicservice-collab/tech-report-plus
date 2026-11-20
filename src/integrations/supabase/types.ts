@@ -246,6 +246,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_owner: {
+        Row: {
+          created_at: string
+          singleton: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          singleton?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          singleton?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           ativo: boolean
@@ -774,10 +792,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_role_for: { Args: { target_user_id: string }; Returns: string }
       get_app_access: { Args: never; Returns: Json }
       has_app_access: { Args: never; Returns: boolean }
       is_access_admin: { Args: never; Returns: boolean }
       list_app_users: { Args: never; Returns: Json }
+      set_account_role: {
+        Args: { new_role: string; target_user_id: string }
+        Returns: undefined
+      }
       set_app_access: {
         Args: { new_status: string; target_user_id: string }
         Returns: undefined
