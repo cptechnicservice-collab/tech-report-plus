@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, Circle, FileText, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { Bell, Check, Square, FileText, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -51,19 +51,19 @@ export function LembretesPainel() {
   return (
     <section className="space-y-3" aria-label="Lembretes">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-semibold"><Bell className="h-5 w-5 text-primary" />Lembretes {active.length > 0 ? <span className="text-sm text-muted-foreground">({active.length})</span> : null}</h2>
-        <Button variant="outline" size="sm" onClick={() => start()}><Plus className="mr-1 h-4 w-4" />Novo lembrete</Button>
+        <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"><Bell className="h-5 w-5 text-primary" />Lembretes {active.length > 0 ? <span className="text-sm text-muted-foreground">({active.length})</span> : null}</h2>
+        <Button variant="ghost" size="sm" className="text-primary" onClick={() => start()}><Plus className="mr-1 h-4 w-4" />Adicionar</Button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size="sm" className="h-auto min-h-10 whitespace-normal text-left" onClick={() => start(null, "Fazer nota fiscal — Incolar")}><FileText className="mr-2 h-4 w-4 shrink-0" />Nota fiscal · Incolar</Button>
-        <Button variant="secondary" size="sm" className="min-h-10" onClick={() => start(null, "Revisão")}><Wrench className="mr-2 h-4 w-4" />Revisão</Button>
+        <Button variant="secondary" size="sm" className="h-auto min-h-11 whitespace-normal text-left" onClick={() => start(null, "Fazer nota fiscal — Incolar")}><FileText className="mr-2 h-4 w-4 shrink-0" />Nota fiscal · Incolar</Button>
+        <Button variant="secondary" size="sm" className="min-h-11" onClick={() => start(null, "Revisão")}><Wrench className="mr-2 h-4 w-4" />Revisão</Button>
       </div>
       {isLoading ? <p className="py-3 text-sm text-muted-foreground">Carregando lembretes...</p> : isError ? <p role="alert" className="text-sm text-destructive">Não foi possível carregar os lembretes.</p> : visible.length === 0 ? <p className="py-3 text-sm text-muted-foreground">Nenhum lembrete pendente.</p> : (
-        <ul className="divide-y divide-border">
+        <ul className="ios-group divide-y divide-border px-2">
           {visible.map((item) => (
             <li key={item.id} className="flex items-start gap-1 py-3">
               <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" disabled={busy} aria-label={`${item.concluido ? "Reabrir" : "Concluir"} lembrete ${item.titulo}`} onClick={() => void toggle(item)}>
-                {item.concluido ? <Check className="h-5 w-5 text-success" /> : <Circle className="h-5 w-5 text-primary" />}
+                {item.concluido ? <Check className="h-5 w-5 text-success" /> : <Square className="h-5 w-5 rounded-md text-primary" />}
               </Button>
               <div className="min-w-0 flex-1 pt-2">
                 <p className={`break-words text-sm font-medium ${item.concluido ? "text-muted-foreground line-through" : "text-foreground"}`}>{item.titulo}</p>

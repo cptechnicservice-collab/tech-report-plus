@@ -1,6 +1,13 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -74,30 +81,41 @@
   --color-highlight: var(--highlight);
   --color-highlight-foreground: var(--highlight-foreground);
   --font-sans: var(--font-app);
-  --shadow-card: 0 1px 2px oklch(0.2 0.02 255 / 5%), 0 8px 24px oklch(0.2 0.02 255 / 4%);
-  --shadow-nav: 0 8px 32px oklch(0.2 0.03 255 / 14%);
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-hero: var(--hero);
+  --color-hero-strip: var(--hero-strip);
+  --color-hero-bar: var(--hero-bar);
+  --color-hero-pill: var(--hero-pill);
+  --color-hero-label: var(--hero-label);
+  --color-hero-glow: var(--hero-glow);
+  --color-money: var(--money);
+  --color-nav-active: var(--nav-active);
+  --color-brand-line: var(--brand-line);
+  --shadow-card: 0 2px 3px oklch(0.161 0.008 285.4 / 2%), 0 6px 20px oklch(0.161 0.008 285.4 / 3%);
+  --shadow-nav: 0 8px 32px oklch(0.161 0.008 285.4 / 12%);
+  --shadow-glow: 0 14px 30px -12px color-mix(in oklab, var(--primary) 60%, transparent);
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
   --font-app:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-  --background: oklch(0.98 0.003 250);
-  --foreground: oklch(0.21 0.04 265);
+    "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --background: oklch(0.976 0.003 264.5);
+  --foreground: oklch(0.161 0.008 285.4);
   --surface: oklch(1 0 0);
-  --tint: oklch(0.96 0.02 255);
+  --tint: oklch(0.956 0.021 271.2);
   --chip: oklch(0.97 0.005 250);
-  --icon-bg: oklch(0.95 0.01 255);
+  --icon-bg: oklch(0.956 0.021 271.2);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.04 265);
+  --card-foreground: oklch(0.161 0.008 285.4);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.03 255);
-  --primary: oklch(0.57 0.19 262);
+  --popover-foreground: oklch(0.161 0.008 285.4);
+  --primary: oklch(0.546 0.251 264.2);
   --primary-foreground: oklch(0.99 0.002 250);
-  --secondary: oklch(0.97 0.005 250);
+  --secondary: oklch(1 0 0);
   --secondary-foreground: oklch(0.25 0.008 286);
   --muted: oklch(0.96 0.006 250);
-  --muted-foreground: oklch(0.55 0.035 257);
+  --muted-foreground: oklch(0.552 0.016 268.4);
   --accent: oklch(0.95 0.025 255);
   --accent-foreground: oklch(0.43 0.14 259);
   --success: oklch(0.62 0.13 155);
@@ -106,11 +124,21 @@
   --warning-foreground: oklch(0.25 0.05 55);
   --info: oklch(0.61 0.14 245);
   --info-foreground: oklch(0.99 0.002 250);
-  --destructive: oklch(0.585 0.215 22);
+  --destructive: oklch(0.634 0.218 29);
   --destructive-foreground: oklch(0.99 0.002 250);
-  --border: oklch(0.93 0.006 265);
-  --input: oklch(0.91 0.008 265);
-  --ring: oklch(0.57 0.19 262);
+  --border: oklch(0.161 0.008 285.4 / 6%);
+  --input: oklch(0.161 0.008 285.4 / 8%);
+  --ring: oklch(0.546 0.251 264.2);
+  --hero: oklch(0.157 0.013 284.9);
+  --hero-strip: oklch(0.202 0.010 285.5);
+  --hero-bar: oklch(0.229 0.010 285.6);
+  --hero-pill: oklch(0.253 0.011 278.1);
+  --hero-label: oklch(0.591 0.006 286.2);
+  --hero-glow: oklch(0.44 0.16 266.6);
+  --money: oklch(0.941 0.199 121.5);
+  --nav-active: oklch(0.955 0.001 286.4);
+  --brand-line: oklch(0.6 0.22 255);
+  --bottom-nav-clearance: calc(7rem + env(safe-area-inset-bottom));
   --chart-1: oklch(0.53 0.135 252);
   --chart-2: oklch(0.72 0.15 60);
   --chart-3: oklch(0.62 0.13 155);
@@ -145,7 +173,16 @@
     font-family: var(--font-app);
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
   }
+
+  h1, h2, h3, h4, .tabular-nums {
+    font-family: var(--font-display);
+    letter-spacing: 0;
+  }
+
+  [class*="tracking-tight"] { letter-spacing: 0; }
 
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -195,7 +232,7 @@
 @utility card-surface {
   background-color: var(--color-card);
   border: 0.5px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: 1.5rem;
   box-shadow: var(--shadow-card);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -203,15 +240,15 @@
 @utility ios-group {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 1.125rem;
-  box-shadow: none;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
 @utility ios-field {
   background-color: var(--color-card);
   border-color: var(--color-input);
-  border-radius: var(--radius-lg);
+  border-radius: 1.125rem;
   box-shadow: none;
 }
 
@@ -225,5 +262,120 @@
 
 @utility safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+@utility font-display {
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+@layer components {
+  .more-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    min-height: 104px;
+    padding: 1rem;
+    border: 0.5px solid var(--border);
+    border-radius: 24px;
+    background: var(--card);
+    box-shadow: var(--shadow-card);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    font-weight: 600;
+    transition: transform 150ms ease;
+  }
+  .more-tile:active { transform: scale(0.985); }
+  .more-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: var(--icon-bg);
+    color: var(--primary);
+  }
+  .more-icon svg { width: 22px; height: 22px; }
+  .app-page > header > div:last-child button,
+  .app-page > header > div:last-child a:not(.brand-mark) {
+    min-height: 44px;
+    border-radius: 14px;
+  }
+  .app-page button, .keyboard-panel button { min-height: 44px; }
+  .app-page button[class*="w-9"], .app-page button[class*="w-10"] { min-width: 44px; }
+  .app-page main > .sticky,
+  .app-page main .sticky-action {
+    bottom: var(--bottom-nav-clearance);
+  }
+  .app-page .bg-icon-bg, .app-page .bg-tint { color: var(--primary); }
+  .app-page main > section[class*="bg-brand-header"] {
+    border-radius: 32px;
+    background: var(--hero);
+  }
+  .keyboard-panel [role="heading"] { font-family: var(--font-display); }
+  .brand-mark {
+    position: relative;
+    display: grid;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 1.125rem;
+    background: var(--hero);
+    color: var(--primary-foreground);
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .brand-mark > span {
+    position: absolute;
+    bottom: 0.55rem;
+    width: 1.15rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--brand-line);
+  }
+  .month-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 2rem;
+    background: var(--hero);
+    color: var(--primary-foreground);
+  }
+  .month-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(ellipse at 100% 0%, color-mix(in oklab, var(--hero-glow) 55%, transparent), transparent 65%);
+  }
+  .month-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: linear-gradient(var(--primary-foreground) 1px, transparent 1px), linear-gradient(90deg, var(--primary-foreground) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.06;
+    mask-image: linear-gradient(to bottom, var(--foreground), transparent 85%);
+  }
+  .floating-label {
+    position: absolute;
+    left: 1rem;
+    top: 0.65rem;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
+  .keyboard-panel button[type="submit"] {
+    min-height: 3.5rem;
+    border-radius: 1.25rem;
+  }
 }
 

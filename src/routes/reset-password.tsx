@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,5 +37,5 @@ function ResetPassword() {
       await navigate({ to: "/painel", replace: true });
     }
   }
-  return <main className="mx-auto flex min-h-screen max-w-lg items-center px-5"><form className="ios-group w-full space-y-4 p-5" onSubmit={submit}><div><h1 className="text-2xl font-bold">Criar nova senha</h1><p className="mt-1 text-sm text-muted-foreground">Escolha uma senha segura para continuar.</p></div>{recovery ? <><div className="space-y-1.5"><Label htmlFor="new-password">Nova senha</Label><Input id="new-password" type="password" minLength={6} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div><Button className="h-12 w-full" type="submit">Salvar nova senha</Button></> : <p className="text-sm text-destructive">Este link de recuperação é inválido ou expirou.</p>}</form></main>;
+  return <main className="mx-auto flex min-h-screen max-w-lg items-center px-5"><form className="ios-group w-full space-y-4 p-5" onSubmit={submit}><div><BrandMark className="mb-5" /><h1 className="text-2xl font-bold">Criar nova senha</h1><p className="mt-1 text-sm text-muted-foreground">Escolha uma senha segura para continuar.</p></div>{recovery ? <><div className="space-y-1.5"><Label htmlFor="new-password">Nova senha</Label><Input id="new-password" type="password" minLength={6} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div><Button className="h-12 w-full" type="submit">Salvar nova senha</Button></> : <p className="text-sm text-destructive">Este link de recuperação é inválido ou expirou.</p>}</form></main>;
 }

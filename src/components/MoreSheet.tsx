@@ -8,7 +8,6 @@ import {
   LogOut,
   Building2,
   CheckCircle2,
-  ChevronRight,
   CircleDollarSign,
   ClipboardList,
   Database,
@@ -17,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -32,13 +32,13 @@ import { useSignOut } from "@/hooks/use-sign-out";
 
 const options = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/dados-empresa", label: "Dados da empresa", icon: Building2 },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/pecas", label: "Peças", icon: Package },
   { to: "/orcamentos-nao-confirmados", label: "Orçamentos não confirmados", icon: ClipboardList },
   { to: "/valores", label: "Valores", icon: CircleDollarSign },
   { to: "/recebimentos-avulsos", label: "Recebimento avulso", icon: CircleDollarSign },
   { to: "/orcamentos", label: "Orçamentos", icon: ClipboardList },
+  { to: "/dados-empresa", label: "Dados da empresa", icon: Building2 },
 ] as const;
 
 type MoreSheetProps = {
@@ -70,61 +70,33 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
       <DrawerContent
         overlayClassName="bg-foreground/35 backdrop-blur-sm"
-        className="bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] rounded-[2rem] border-border bg-card shadow-nav sm:mx-auto sm:max-w-md"
+        className="bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] rounded-[2rem] border-border bg-background shadow-nav sm:mx-auto sm:max-w-md"
       >
-        <DrawerHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 px-5 pb-3 pt-3 text-left">
+        <DrawerHeader className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 pb-5 pt-3 text-left">
+          <BrandMark />
           <div className="min-w-0">
-            <DrawerDescription className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-primary">
-              CP TECHNIC
-            </DrawerDescription>
-            <DrawerTitle className="mt-1 text-2xl font-bold leading-tight">Mais opções</DrawerTitle>
+            <DrawerTitle className="font-display text-lg font-bold leading-tight">CP TECHNIC Horas</DrawerTitle>
+            <DrawerDescription className="mt-1 text-xs">CP TECHNIC</DrawerDescription>
           </div>
-          <DrawerClose asChild>
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              aria-label="Fechar mais opções"
-              className="h-11 w-11 shrink-0 rounded-xl"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </DrawerClose>
+          <DrawerClose asChild><Button type="button" variant="outline" size="icon" aria-label="Fechar mais opções" className="h-11 w-11 shrink-0 rounded-[14px]"><X className="h-5 w-5" /></Button></DrawerClose>
         </DrawerHeader>
 
-        <div className="mx-5 mb-5 overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="divide-y divide-border">
-            <DrawerClose asChild><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><CalendarPlus className="h-5 w-5 text-primary" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Novo apontamento</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
-            <DrawerClose asChild><Link to="/relatorios-salvos" className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><FileArchive className="h-5 w-5" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Relatórios salvos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
-            <DrawerClose asChild><Link to="/resumos" className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4"><ChartPie className="h-5 w-5" strokeWidth={1.7} /><span className="min-w-0 truncate font-semibold">Resumos</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose>
-            {isAdmin ? <DrawerClose asChild><Link to="/usuarios" className="press flex min-h-14 items-center gap-3 px-4"><Users className="h-5 w-5" /><span className="flex-1 font-semibold">Usuários e liberações</span><ChevronRight className="h-5 w-5 text-muted-foreground" /></Link></DrawerClose> : null}
+        <div className="space-y-4 px-5 pt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <DrawerClose asChild><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }} className="more-tile"><span className="more-icon"><CalendarPlus /></span><span>Novo apontamento</span></Link></DrawerClose>
+            <DrawerClose asChild><Link to="/relatorios-salvos" className="more-tile"><span className="more-icon"><FileArchive /></span><span>Relatórios salvos</span></Link></DrawerClose>
+            <DrawerClose asChild><Link to="/resumos" className="more-tile"><span className="more-icon"><ChartPie /></span><span>Resumos</span></Link></DrawerClose>
             {options.map(({ to, label, icon: Icon }) => (
-              <DrawerClose asChild key={to}>
-                <Link to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="press grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4">
-                  <Icon className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.7} />
-                  <span className="min-w-0 truncate font-semibold">{label}</span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                </Link>
-              </DrawerClose>
+              <DrawerClose asChild key={to}><Link to={to} search={to === "/recebimentos-avulsos" ? { novo: true } : {}} className="more-tile"><span className="more-icon"><Icon strokeWidth={1.7} /></span><span>{label}</span></Link></DrawerClose>
             ))}
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={showSync}
-              className="press grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-none px-4 text-left"
-            >
-              <Database className="h-5 w-5 shrink-0 text-foreground" strokeWidth={1.7} />
-              <span className="min-w-0 truncate font-semibold">Sincronização</span>
-              <span className={pending === 0 ? "flex shrink-0 items-center gap-1 text-sm font-semibold text-success" : "shrink-0 text-sm font-semibold text-warning-foreground"}>
-                {pending === 0 ? <CheckCircle2 className="h-4 w-4" /> : null}
-                {pending === 0 ? "OK" : `${pending} pendente${pending === 1 ? "" : "s"}`}
-              </span>
+            <Button type="button" variant="ghost" onClick={showSync} className="more-tile h-auto items-start whitespace-normal text-left">
+              <span className="more-icon"><Database strokeWidth={1.7} /></span>
+              <span>Sincronização</span>
+              <span className={pending === 0 ? "flex items-center gap-1 text-xs text-success" : "text-xs text-warning-foreground"}>{pending === 0 ? <CheckCircle2 className="h-4 w-4" /> : null}{pending === 0 ? "OK" : `${pending} pendente${pending === 1 ? "" : "s"}`}</span>
             </Button>
-            <Button type="button" variant="ghost" onClick={() => { onOpenChange(false); void signOut(); }} className="press grid min-h-14 w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-none px-4 text-left text-destructive hover:text-destructive">
-              <LogOut className="h-5 w-5" strokeWidth={1.7} />
-              <span className="font-semibold">Sair</span>
-            </Button>
+            {isAdmin ? <DrawerClose asChild><Link to="/usuarios" className="more-tile"><span className="more-icon"><Users /></span><span>Usuários e liberações</span></Link></DrawerClose> : null}
           </div>
+          <Button type="button" variant="outline" onClick={() => { onOpenChange(false); void signOut(); }} className="h-14 w-full rounded-[22px] text-destructive hover:text-destructive"><LogOut className="h-5 w-5" strokeWidth={1.7} />Sair</Button>
         </div>
       </DrawerContent>
     </Drawer>

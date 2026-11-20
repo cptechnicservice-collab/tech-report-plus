@@ -39,7 +39,7 @@ export function PagamentosCard({ relatorios }: { relatorios: RelatorioResumo[] }
   return (
     <section className="ios-group p-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-warning/20 text-warning-foreground"><BellRing className="h-5 w-5" /></span>
+        <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-icon-bg text-primary"><BellRing className="h-5 w-5" /></span>
         <div><h2 className="text-sm font-semibold">Pagamentos</h2><p className="text-xs text-muted-foreground">Vencimentos de parcelas e previsões</p></div>
       </div>
       {vazio ? <p className="mt-3 text-sm text-muted-foreground">Nenhum vencimento atrasado ou nos próximos 7 dias.</p> : grupos.filter((g) => g.itens.length).map((g) => (

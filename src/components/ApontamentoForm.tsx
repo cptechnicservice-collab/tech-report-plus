@@ -421,11 +421,11 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
   };
 
   const despesasPreenchidas = form.diaria_tipo !== "nenhuma" || Boolean(form.pedagio || form.outras_despesas || form.outras_despesas_descricao);
-  const footerClass = "sticky z-30 -mx-4 space-y-2 bg-background/95 px-4 pb-3 pt-3 backdrop-blur bottom-[calc(3.9rem+env(safe-area-inset-bottom))]";
+  const footerClass = "sticky z-30 -mx-4 space-y-2 bg-background/95 px-4 pb-3 pt-3 backdrop-blur bottom-[var(--bottom-nav-clearance)]";
 
   return (
     <div className="space-y-5">
-      <Progress value={step === 1 ? 50 : 100} className="-mt-4 h-1.5 rounded-full bg-border" />
+      <div className="space-y-2"><p className="text-xs font-medium text-muted-foreground">Etapa {step} de 2 · {step === 1 ? "Atendimento" : "Complementos"}</p><div className="grid grid-cols-2 gap-2"><Progress value={100} className="h-1.5 rounded-full bg-border" /><Progress value={step === 2 ? 100 : 0} className="h-1.5 rounded-full bg-border" /></div></div>
 
       {step === 1 ? (
         <>
@@ -451,7 +451,7 @@ export function ApontamentoForm({ apontamento, draft, step = 1, onStepChange }: 
               </button>
             )}
             {!apontamento && apontamentos.length ? (
-              <button type="button" className="inline-flex min-h-11 items-center gap-1.5 px-1 text-sm text-primary" onClick={() => { setParecidoInitial(undefined); setParecidoOpen(true); }}>
+              <button type="button" className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-sm font-semibold text-primary" onClick={() => { setParecidoInitial(undefined); setParecidoOpen(true); }}>
                 <Copy className="h-4 w-4" /> Usar atendimento parecido
               </button>
             ) : null}

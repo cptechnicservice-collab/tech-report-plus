@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { LockKeyhole, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { BrandMark } from "@/components/BrandMark";
 import { PageShell } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { recoverAppIdentity } from "@/lib/auth-session";
@@ -29,7 +30,7 @@ function PendingAccess() {
   const { access } = Route.useRouteContext();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  return <PageShell title="Acesso restrito">
+  return <PageShell title="Acesso restrito" brand={<BrandMark />}>
     <div className="space-y-5 py-12 text-center">
       <LockKeyhole className="mx-auto h-12 w-12 text-primary" />
       <h2 className="text-xl font-semibold">{access.status === "blocked" ? "Acesso bloqueado" : "Aguardando liberação"}</h2>

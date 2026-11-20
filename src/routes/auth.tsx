@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LockKeyhole, Mail } from "lucide-react";
 import { toast } from "sonner";
 
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,8 +91,8 @@ function AuthPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-5 py-[max(env(safe-area-inset-top),2rem)]">
       <div className="mb-8 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-[1.35rem] bg-primary text-xl font-bold text-primary-foreground shadow-sm">CP</div>
-        <h1 className="mt-5 text-[2rem] font-bold leading-none">CP TECHNIC Horas</h1>
+        <BrandMark className="mx-auto h-20 w-20 text-3xl" />
+        <h1 className="font-display mt-5 text-[2rem] font-bold leading-none">CP TECHNIC Horas</h1>
         <p className="mt-2 text-sm text-muted-foreground">Seus apontamentos, privados e sempre à mão.</p>
       </div>
 

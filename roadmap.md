@@ -184,3 +184,8 @@
 - [ ] Verificação em memória por dez minutos, retomada imediata e revalidação sem bloquear.
 - [ ] Listas leves, detalhes/fotos sob demanda e preservação dos caches completos.
 - [ ] Ajustar pré-carregamento, persistência e imports de PDF; medir e testar sem publicar.
+
+## Nova linguagem visual
+- [x] Aplicar tokens e fontes locais, cabeçalhos, campos e folhas em todas as telas.
+- [x] Reformular Início, barra flutuante e Mais sem remover controles ou navegação.
+- [x] Conferir 147 testes, lint sem erros e prévia sem erros; navegação autenticada em 390×844, 320×812 e desktop, com teclado simulado, sem salvar registros. Nada publicado; iPhone físico não disponível.

@@ -37,7 +37,7 @@ function NovoApontamento() {
   const search = Route.useSearch();
   const [step, setStep] = useState<1 | 2>(1);
   return (
-    <PageShell centered title="Novo apontamento" subtitle={step === 1 ? "1 de 2 • Atendimento" : "2 de 2 • Complementos"} backTo="/painel" onBack={step === 2 ? () => setStep(1) : undefined}>
+    <PageShell centered title="Novo apontamento" subtitle="Atendimento técnico" backTo="/painel" onBack={step === 2 ? () => setStep(1) : undefined}>
       <ApontamentoForm step={step} onStepChange={setStep} draft={{ data: search.data, clienteId: search.cliente, servico: search.servico, agendaId: search.agenda, orcamentoId: search.orcamento, parecidoId: search.parecido }} />
     </PageShell>
   );

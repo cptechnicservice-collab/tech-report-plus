@@ -89,12 +89,12 @@ const DrawerContent = React.forwardRef<
           handleFieldFocus(event);
         }}
         className={cn(
-          "keyboard-panel fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[calc(var(--vvh,100dvh)-0.75rem)] flex-col overflow-y-auto overscroll-contain rounded-t-[10px] border bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-[bottom,max-height] duration-150",
+          "keyboard-panel fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[calc(var(--vvh,100dvh)-0.75rem)] flex-col overflow-y-auto overscroll-contain rounded-t-[32px] border bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)] transition-[bottom,max-height] duration-150",
           className,
         )}
         {...props}
       >
-        <div className="mx-auto mt-4 h-2 w-[100px] shrink-0 rounded-full bg-muted" />
+        <div className="mx-auto mt-4 h-1 w-10 shrink-0 rounded-full bg-muted" />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -103,12 +103,12 @@ const DrawerContent = React.forwardRef<
 DrawerContent.displayName = "DrawerContent";
 
 const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("grid gap-1.5 p-4 text-center sm:text-left", className)} {...props} />
+  <div className={cn("grid gap-1.5 p-4 border-b border-border pb-5 text-center", className)} {...props} />
 );
 DrawerHeader.displayName = "DrawerHeader";
 
 const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("mt-auto flex flex-col gap-2 p-4", className)} {...props} />
+  <div className={cn("mt-auto flex flex-col gap-2 p-4 [&_button]:min-h-14 [&_button]:rounded-[20px]", className)} {...props} />
 );
 DrawerFooter.displayName = "DrawerFooter";
 
@@ -118,7 +118,7 @@ const DrawerTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("font-display text-xl font-bold leading-tight", className)}
     {...props}
   />
 ));

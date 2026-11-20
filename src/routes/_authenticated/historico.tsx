@@ -109,14 +109,14 @@ function Historico() {
           />
         </div>
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold ${esteMes ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => { if (esteMes) { setDe(""); setAte(""); } else { setDe(inicioDoMes()); setAte(fimDoMes()); } }}>
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold ${esteMes ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border bg-card text-foreground hover:bg-card"}`} onClick={() => { if (esteMes) { setDe(""); setAte(""); } else { setDe(inicioDoMes()); setAte(fimDoMes()); } }}>
             <CalendarDays className="mr-1.5 h-4 w-4" /> Este mês
           </Button>
-          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold ${clienteId ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold ${clienteId ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border bg-card text-foreground hover:bg-card"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
             <UserRound className="mr-1.5 h-4 w-4" />
             <span className="max-w-[9rem] truncate">{clienteId ? clienteBusca || "Cliente" : "Cliente"}</span>
           </Button>
-          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold tabular-nums ${periodoAtivo ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-chip text-foreground hover:bg-chip"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
+          <Button type="button" className={`h-12 shrink-0 rounded-full px-4 shadow-none text-sm font-semibold tabular-nums ${periodoAtivo ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border bg-card text-foreground hover:bg-card"}`} onClick={() => setFiltrosAbertos((v) => !v)}>
             <CalendarDays className="mr-1.5 h-4 w-4" />
             {periodoAtivo ? `${de ? formatDateBR(de).slice(0, 5) : "…"} – ${ate ? formatDateBR(ate).slice(0, 5) : "…"}` : "Período"}
           </Button>
@@ -217,7 +217,7 @@ function Historico() {
         <Link to="/relatorio" search={{ relatorio: undefined }} className="press inline-flex min-h-11 items-center gap-1.5 px-1 text-sm font-medium text-primary">
           <FileText className="h-4 w-4" /> Gerar relatório em PDF
         </Link>
-        <div className="grid grid-cols-3 divide-x divide-border rounded-[1.125rem] border border-border bg-chip py-3">
+        <div className="grid grid-cols-3 divide-x divide-border rounded-[24px] border border-border bg-card py-3">
           {[
             { icon: FileText, value: `${filtrados.length}`, label: filtrados.length === 1 ? "atendimento" : "atendimentos" },
             { icon: Clock, value: formatDuracao(totais.trabalho + totais.viagem), label: "horas" },
@@ -255,9 +255,9 @@ function Historico() {
                     <li key={a.id} className="relative">
                       <span aria-hidden className="absolute -left-[22px] top-5 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
                       <div className="ios-group relative">
-                        <Link to="/apontamento/$id" params={{ id: a.id }} className="press block p-4 pr-20">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="min-w-0 truncate text-[0.95rem] font-bold">{a.clientes?.nome ?? "—"}</p>
+                        <Link to="/apontamento/$id" params={{ id: a.id }} className="press block p-4 pr-14">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <p className="min-w-0 break-words text-[0.95rem] font-bold">{a.clientes?.nome ?? "—"}</p>
                             <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ${pendente ? "bg-chip text-muted-foreground" : "bg-success/15 text-success"}`}>
                               {pendente ? <FileText className="h-3 w-3" /> : <Check className="h-3 w-3" />}
                               {pendente ? "Pendente de sincronização" : "Sincronizado"}
@@ -274,7 +274,7 @@ function Historico() {
                         <Link
                           to="/novo"
                           search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined, parecido: a.id }}
-                          className="press absolute bottom-1.5 right-9 grid h-10 w-10 place-items-center rounded-full text-muted-foreground"
+                          className="press absolute bottom-1.5 right-9 grid h-11 w-11 place-items-center rounded-[14px] text-primary"
                           aria-label="Novo a partir deste"
                           title="Novo a partir deste"
                         >
