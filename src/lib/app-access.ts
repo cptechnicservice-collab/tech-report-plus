@@ -8,6 +8,10 @@ export function clearSavedAccess(userId: string) {
   if (typeof localStorage !== "undefined") localStorage.removeItem(key(userId));
 }
 
+export function hasSavedApproval(userId: string) {
+  return typeof localStorage !== "undefined" && localStorage.getItem(key(userId)) === "approved";
+}
+
 /** Offline continuity only. Administrative actions always validate the caller in PostgreSQL. */
 export async function resolveAppAccess(userId: string, offline: boolean): Promise<AppAccess> {
   const fallback: AppAccess = { status: "pending", admin: false };

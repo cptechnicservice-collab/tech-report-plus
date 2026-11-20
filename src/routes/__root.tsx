@@ -22,6 +22,8 @@ import { queryPersister } from "../lib/offline";
 import { supabase } from "../integrations/supabase/client";
 import { clearConfirmedUser, rememberConfirmedUser } from "../lib/auth-session";
 import { useKeyboardInset } from "../hooks/use-keyboard-inset";
+import { ACCESS_REJECTED_EVENT, invalidateNavigationAccess, revalidateNavigationAccess } from "../lib/navigation-access";
+import { shouldPersistQuery } from "../lib/query-persistence";
 
 function NotFoundComponent() {
   return (
@@ -142,11 +144,20 @@ function RootComponent() {
   const isPublicAuth = pathname === "/auth" || pathname === "/reset-password" || pathname === "/acesso-pendente";
 
   useEffect(() => {
-    const recheck = () => { if (navigator.onLine) void router.invalidate(); };
+    const recheck = () => revalidateNavigationAccess();
+    const rejected = (event: Event) => {
+      const path = (event as CustomEvent<unknown>).detail;
+      if (path === "/auth" || path === "/acesso-pendente") {
+        void queryClient.cancelQueries();
+        queryClient.clear();
+        void router.navigate({ to: path, replace: true });
+      }
+    };
+    window.addEventListener(ACCESS_REJECTED_EVENT, rejected);
     window.addEventListener("online", recheck);
     window.addEventListener("focus", recheck);
-    return () => { window.removeEventListener("online", recheck); window.removeEventListener("focus", recheck); };
-  }, [router]);
+    return () => { window.removeEventListener("online", recheck); window.removeEventListener("focus", recheck); window.removeEventListener(ACCESS_REJECTED_EVENT, rejected); };
+  }, [router, queryClient]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
@@ -155,6 +166,7 @@ function RootComponent() {
         clearConfirmedUser();
       }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      invalidateNavigationAccess();
       void router.invalidate();
       if (event === "SIGNED_IN" && session)
         void queryClient.invalidateQueries({ refetchType: "active" });
@@ -165,7 +177,7 @@ function RootComponent() {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 7 }}
+      persistOptions={{ persister: queryPersister, maxAge: 1000 * 60 * 60 * 24 * 7, dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery } }}
     >
       <ServiceWorkerRegistration />
       {!isPublicAuth ? <OfflineStatus /> : null}

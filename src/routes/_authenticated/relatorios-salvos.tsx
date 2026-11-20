@@ -25,7 +25,7 @@ import { ParcelamentoEditor, parcelasDoEstado, type ParcelamentoState } from "@/
 import { recebimentosDoRelatorio, relatorioComParcelas, somaParcelas, vencimentoInfo } from "@/lib/parcelas";
 import { deleteRelatorioOffline, saveRelatorioOffline } from "@/lib/offline";
 import { generateClientReport, generatePaymentReceipt } from "@/lib/pdf-report";
-import { fetchRelatoriosSalvos, formasPagamento, saldoRelatorio, statusPagamento, statusRelatorioOptions, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo, type StatusRelatorio } from "@/lib/relatorios";
+import { fetchRelatoriosSalvos, fetchRelatorioSalvo, formasPagamento, saldoRelatorio, statusPagamento, statusRelatorioOptions, type AnexoDespesa, type DespesaRelatorio, type FormaPagamento, type PagamentoStatus, type RelatorioSalvo, type RelatorioResumo, type StatusRelatorio } from "@/lib/relatorios";
 
 type DespesaEditavel = Omit<DespesaRelatorio, "valor"> & { valor: string; anexos: AnexoDespesa[] };
 
@@ -220,9 +220,10 @@ function RelatoriosSalvos() {
     onError: () => toast.error("Não foi possível excluir o relatório"),
   });
 
-  const generate = async (item: RelatorioSalvo) => {
-    setGeneratingId(item.id);
+  const generate = async (summary: RelatorioResumo) => {
+    setGeneratingId(summary.id);
     try {
+      const item = await fetchRelatorioSalvo(summary.id);
       await generateClientReport(
         item.cliente_snapshot,
         item.apontamentos_snapshot,
@@ -243,13 +244,16 @@ function RelatoriosSalvos() {
     }
   };
 
-  const openRecebimento = (item: RelatorioSalvo) => {
+  const openRecebimento = async (summary: RelatorioResumo) => {
+    try {
+    const item = await fetchRelatorioSalvo(summary.id);
     setRecebimento(item);
     setValorRecebido(String(item.valor_recebido > 0 ? item.valor_recebido : item.total_geral).replace(".", ","));
     const today = new Date();
     const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
     setDataRecebimento(item.data_recebimento ?? localToday);
     setFormaPagamento(item.forma_pagamento ?? "pix");
+    } catch { toast.error("Não foi possível abrir o relatório"); }
   };
 
   const saveRecebimento = useMutation({
@@ -294,8 +298,8 @@ function RelatoriosSalvos() {
   });
 
   const saveStatusRelatorio = useMutation({
-    mutationFn: ({ item, value }: { item: RelatorioSalvo; value: StatusRelatorio }) =>
-      saveRelatorioOffline({ ...item, status_relatorio: value }),
+    mutationFn: async ({ item, value }: { item: RelatorioResumo; value: StatusRelatorio }) =>
+      saveRelatorioOffline({ ...await fetchRelatorioSalvo(item.id), status_relatorio: value }),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["relatorios-salvos"] });
       toast.success(result.queued ? "Status salvo no aparelho" : "Status atualizado");
@@ -303,7 +307,9 @@ function RelatoriosSalvos() {
     onError: () => toast.error("Não foi possível atualizar o status"),
   });
 
-  const openObservacao = (item: RelatorioSalvo) => {
+  const openObservacao = async (summary: RelatorioResumo) => {
+    try {
+    const item = await fetchRelatorioSalvo(summary.id);
     setRelatorioObservacao(item);
     setObservacao(item.observacao_relatorio ?? "");
     setParcelamento({
@@ -321,6 +327,7 @@ function RelatoriosSalvos() {
       anexos: despesa.anexos ?? [],
       valor: String(despesa.valor).replace(".", ","),
     })));
+    } catch { toast.error("Não foi possível abrir o relatório"); }
   };
 
   const addExpensePhotos = async (despesaId: string, files: FileList | null, replaceIndex?: number) => {
@@ -420,11 +427,12 @@ function RelatoriosSalvos() {
     },
   });
 
-  const generateReceipt = async (item: RelatorioSalvo) => {
+  const generateReceipt = async (summary: RelatorioResumo) => {
     if (!item.data_recebimento || !item.forma_pagamento || item.valor_recebido <= 0) return;
     const ultimaPaga = [...item.parcelas].filter((p) => p.pago_em).sort((a, b) => (b.pago_em ?? "").localeCompare(a.pago_em ?? "") || b.numero - a.numero)[0];
-    setGeneratingId(`recibo-${item.id}`);
+    setGeneratingId(`recibo-${summary.id}`);
     try {
+      const item = await fetchRelatorioSalvo(summary.id);
       await generatePaymentReceipt({
         cliente: item.cliente_snapshot,
         inicio: item.inicio,

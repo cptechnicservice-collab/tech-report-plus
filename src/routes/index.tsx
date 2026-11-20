@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { recoverAppIdentity } from "@/lib/auth-session";
+import { resolveNavigationAccess } from "@/lib/navigation-access";
 
 export const Route = createFileRoute("/")({
   ssr: false,
   beforeLoad: async () => {
-    const recovery = await recoverAppIdentity();
+    const recovery = await resolveNavigationAccess();
     throw redirect({ to: recovery.identity ? "/painel" : "/auth" });
   },
   head: () => ({

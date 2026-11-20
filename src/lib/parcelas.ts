@@ -1,4 +1,4 @@
-import type { FormaPagamento, RelatorioSalvo } from "@/lib/relatorios";
+import type { FormaPagamento, RelatorioSalvo, RelatorioResumo } from "@/lib/relatorios";
 
 export type Parcela = {
   id: string;
@@ -60,7 +60,7 @@ export function vencimentoInfo(vencimento: string, pagoEm: string | null, hoje =
 
 /** Recebimentos derivados: parcelas próprias, ou um vencimento único previsto. */
 export type RecebimentoItem = {
-  relatorio: RelatorioSalvo;
+  relatorio: RelatorioResumo;
   parcela: Parcela | null;
   label: string;
   valor: number;
@@ -68,7 +68,7 @@ export type RecebimentoItem = {
   info: VencimentoInfo;
 };
 
-export function recebimentosDoRelatorio(relatorio: RelatorioSalvo, hoje = localTodayISO()): RecebimentoItem[] {
+export function recebimentosDoRelatorio(relatorio: RelatorioResumo, hoje = localTodayISO()): RecebimentoItem[] {
   if (relatorio.parcelas.length > 0) {
     return relatorio.parcelas.map((parcela) => ({
       relatorio,
@@ -91,11 +91,11 @@ export function recebimentosDoRelatorio(relatorio: RelatorioSalvo, hoje = localT
   }];
 }
 
-export function todosRecebimentos(relatorios: RelatorioSalvo[], hoje = localTodayISO()) {
+export function todosRecebimentos(relatorios: RelatorioResumo[], hoje = localTodayISO()) {
   return relatorios.flatMap((r) => recebimentosDoRelatorio(r, hoje)).sort((a, b) => a.vencimento.localeCompare(b.vencimento));
 }
 
-export function urgentes(relatorios: RelatorioSalvo[]) {
+export function urgentes(relatorios: RelatorioResumo[]) {
   return todosRecebimentos(relatorios).filter((r) => r.info.tipo === "hoje" || r.info.tipo === "atrasado");
 }
 

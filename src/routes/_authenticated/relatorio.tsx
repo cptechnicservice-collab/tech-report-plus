@@ -14,7 +14,7 @@ import { generateClientReport } from "@/lib/pdf-report";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import { fetchPecas } from "@/lib/pecas";
 import { saveRelatorioOffline } from "@/lib/offline";
-import { fetchRelatoriosSalvos, numeroRelatorio } from "@/lib/relatorios";
+import { fetchRelatorioSalvo, numeroRelatorio } from "@/lib/relatorios";
 import { fetchApontamentoPecas } from "@/lib/apontamento-pecas";
 import { FloatingInput, FloatingSelect } from "@/components/FloatingField";
 
@@ -138,11 +138,11 @@ function Relatorio() {
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: apontamentoPecas = [] } = useQuery({ queryKey: ["apontamento-pecas"], queryFn: fetchApontamentoPecas });
-  const { data: relatoriosSalvos = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
-  const relatorioEmEdicao = useMemo(
-    () => relatoriosSalvos.find((item) => item.id === search.relatorio),
-    [relatoriosSalvos, search.relatorio],
-  );
+  const { data: relatorioEmEdicao } = useQuery({
+    queryKey: ["relatorio-completo", search.relatorio],
+    queryFn: () => { if (!search.relatorio) throw new Error("Relatório não encontrado"); return fetchRelatorioSalvo(search.relatorio); },
+    enabled: Boolean(search.relatorio), meta: { heavy: true }, networkMode: "always",
+  });
   const apontamentosDisponiveis = relatorioEmEdicao?.apontamentos_snapshot ?? apontamentos;
   const valoresDisponiveis = relatorioEmEdicao?.valores_snapshot ?? valores;
 

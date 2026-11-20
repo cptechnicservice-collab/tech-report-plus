@@ -178,3 +178,8 @@
 
 ## Ícone do app na tela de início do iPhone
 - [x] Conferido: o logo já está como ícone na versão publicada (apple-touch-icon e manifesto apontam para o logo CP TECHNIC). O iPhone guarda o ícone da época em que o app foi salvo; para atualizar, apagar o atalho da tela de início e adicionar de novo pelo Safari.
+
+## Navegação rápida no iPhone
+- [ ] Verificação em memória por dez minutos, retomada imediata e revalidação sem bloquear.
+- [ ] Listas leves, detalhes/fotos sob demanda e preservação dos caches completos.
+- [ ] Ajustar pré-carregamento, persistência e imports de PDF; medir e testar sem publicar.

@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Cliente } from "@/lib/apontamentos";
 import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
+import { cacheCompleteRecord, measureList, mergeListCache } from "@/lib/list-cache";
+import { isRecordPending } from "@/lib/offline.queue";
+import { fetchAllPages } from "@/lib/fetch-all-pages";
 
 export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "aguardando_confirmacao" | "concluido";
 export type DescontoTipo = "valor" | "percentual";
@@ -68,12 +71,12 @@ export function proximoNumeroOrcamento(orcamentos: Orcamento[], date = new Date(
 }
 
 export async function fetchOrcamentos(): Promise<Orcamento[]> {
+  const start = performance.now();
   try {
-    const { data, error } = await supabase.from("orcamentos").select("*, orcamento_itens(*)").order("data", { ascending: false }).order("created_at", { ascending: false });
-    if (error) throw error;
-    const result = (data ?? []).map((row) => ({ ...row, itens: [...(row.orcamento_itens ?? [])].sort((a, b) => a.ordem - b.ordem) })) as unknown as Orcamento[];
-    await writeCached(offlineCacheKeys.orcamentos, result);
-    return result;
+    const data = await fetchAllPages(() => supabase.from("orcamentos").select("*").order("data", { ascending: false }).order("id", { ascending: false }));
+    measureList("orcamentos", data, start);
+    const result = await mergeListCache(offlineCacheKeys.orcamentos, "orcamentos", data as unknown as Orcamento[]);
+    return result.map((row) => ({ ...row, itens: [] }));
   } catch (error) {
     const cached = await readCached<Orcamento[]>(offlineCacheKeys.orcamentos);
     if (cached) return cached;
@@ -82,14 +85,16 @@ export async function fetchOrcamentos(): Promise<Orcamento[]> {
 }
 
 export async function fetchOrcamento(id: string): Promise<Orcamento> {
+  const cached = (await readCached<Orcamento[]>(offlineCacheKeys.orcamentos))?.find((item) => item.id === id);
+  if (cached?.itens && await isRecordPending("orcamentos", id)) return cached;
   try {
     const { data, error } = await supabase.from("orcamentos").select("*, orcamento_itens(*)").eq("id", id).maybeSingle();
     if (error || !data) throw error ?? new Error("Orçamento não encontrado");
-    return { ...data, itens: [...(data.orcamento_itens ?? [])].sort((a, b) => a.ordem - b.ordem) } as unknown as Orcamento;
+    const record = { ...data, itens: [...(data.orcamento_itens ?? [])].sort((a, b) => a.ordem - b.ordem) } as unknown as Orcamento;
+    await cacheCompleteRecord(offlineCacheKeys.orcamentos, record);
+    return record;
   } catch (error) {
-    const cached = await readCached<Orcamento[]>(offlineCacheKeys.orcamentos);
-    const item = cached?.find((entry) => entry.id === id);
-    if (item) return item;
+    if (cached?.itens) return cached;
     throw error;
   }
 }

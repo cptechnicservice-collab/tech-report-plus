@@ -15,9 +15,9 @@ import { fetchClientes, fetchValores, todayISO, type Cliente } from "@/lib/apont
 import { formatCurrency, valorVigente } from "@/lib/financeiro";
 import { resizeImage } from "@/lib/image-resize";
 import { saveOrcamentoOffline } from "@/lib/offline";
-import { calcularTotaisOrcamento, fetchOrcamentos, formasPagamentoOrcamento, proximoNumeroOrcamento, type DescontoTipo, type FormaPagamentoOrcamento, type OrcamentoItem, type OrcamentoItemTipo, type OrcamentoStatus, type UnidadeOrcamento } from "@/lib/orcamentos";
+import { calcularTotaisOrcamento, fetchOrcamentos, fetchOrcamento, formasPagamentoOrcamento, proximoNumeroOrcamento, type DescontoTipo, type FormaPagamentoOrcamento, type OrcamentoItem, type OrcamentoItemTipo, type OrcamentoStatus, type UnidadeOrcamento } from "@/lib/orcamentos";
 import { generateQuotePdf } from "@/lib/pdf-report";
-import { fetchPecas } from "@/lib/pecas";
+import { fetchPecas, fetchPeca } from "@/lib/pecas";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
@@ -44,9 +44,11 @@ function OrcamentoPage() {
   const queryClient = useQueryClient();
   const { data: orcamentos = [], isFetched: orcamentosFetched } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
-  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
+  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas, fetchPeca });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
-  const source = orcamentos.find((entry) => entry.id === search.id);
+  const { data: source } = useQuery({ queryKey: ["orcamento-completo", search.id],
+    queryFn: () => { if (!search.id) throw new Error("Orçamento não encontrado"); return fetchOrcamento(search.id); },
+    enabled: Boolean(search.id), meta: { heavy: true }, networkMode: "always" });
   const idRef = useRef(search.id ?? crypto.randomUUID());
   const initialized = useRef<string | null>(null);
   const [formReady, setFormReady] = useState(false);
@@ -82,11 +84,15 @@ function OrcamentoPage() {
 
   useEffect(() => {
     if (!source || pecas.length === 0) return;
-    setItens((current) => current.map((item) => {
-      if (item.foto_data_url) return item;
-      const catalogPart = pecas.find((part) => part.id === item.peca_id || (item.codigo && part.codigo === item.codigo));
-      return catalogPart?.foto_data_url ? { ...item, foto_data_url: catalogPart.foto_data_url } : item;
+    let active = true;
+    void Promise.all(source.itens.filter((item) => !item.foto_data_url).map(async (item) => {
+      const part = pecas.find((entry) => entry.id === item.peca_id || (item.codigo && entry.codigo === item.codigo));
+      if (!part) return;
+      try { const complete = await fetchPeca(part.id);
+        if (active && complete.foto_data_url) setItens((current) => current.map((entry) => entry.id === item.id && !entry.foto_data_url ? { ...entry, foto_data_url: complete.foto_data_url } : entry));
+      } catch { /* Retain existing item when offline photo is unavailable. */ }
     }));
+    return () => { active = false; };
   }, [pecas, source]);
 
   const numericItems = useMemo(() => itens.map((item) => ({ ...item, quantidade: numberValue(item.quantidadeTexto), valor_unitario: numberValue(item.valorTexto) })), [itens]);
@@ -99,8 +105,8 @@ function OrcamentoPage() {
     if (!cliente) throw new Error("Selecione o cliente.");
     return { id: idRef.current, numero: numero.trim(), cliente_id: cliente.id, cliente_snapshot: structuredClone(cliente) as Cliente, data, validade_dias: Number(validade), desconto_tipo: descontoTipo, desconto_valor: numberValue(desconto), formas_pagamento: formas, condicoes_pagamento: condicoes.trim() || null, observacoes: observacoes.trim() || null, status, total_produtos: totals.produtos, total_servicos: totals.servicos, subtotal: totals.subtotal, total: totals.total, ...(source ? { created_at: source.created_at } : {}), itens: numericItems.map(({ quantidadeTexto: _q, valorTexto: _v, ...item }, index) => ({ ...item, ordem: index })) };
   };
-  const save = useMutation({ mutationFn: () => saveOrcamentoOffline(payload()), onSuccess: (result) => { clearDraft(); void queryClient.invalidateQueries({ queryKey: ["orcamentos"] }); toast.success(result.queued ? "Orçamento salvo no aparelho" : "Orçamento salvo"); void navigate({ to: "/orcamentos" }); }, onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar") });
-  const addCatalogItem = (id = pecaId) => { const part = pecas.find((entry) => entry.id === id); if (!part) return; setItens((current) => [...current, { ...newItem(idRef.current), peca_id: part.id, nome: part.descricao, codigo: part.codigo, unidade: part.unidade === "unidade" ? "un" : (part.unidade as UnidadeOrcamento), valor_unitario: part.preco, valorTexto: String(part.preco).replace(".", ","), foto_data_url: part.foto_data_url }]); setPecaId(""); };
+  const save = useMutation({ mutationFn: () => saveOrcamentoOffline(payload()), onSuccess: (result) => { clearDraft(); void queryClient.invalidateQueries({ queryKey: ["orcamentos"] }); void queryClient.invalidateQueries({ queryKey: ["orcamento-completo"] }); toast.success(result.queued ? "Orçamento salvo no aparelho" : "Orçamento salvo"); void navigate({ to: "/orcamentos" }); }, onError: (error) => toast.error(error instanceof Error ? error.message : "Não foi possível salvar") });
+  const addCatalogItem = async (id = pecaId) => { if (!id) return; try { const part = await fetchPeca(id); setItens((current) => [...current, { ...newItem(idRef.current), peca_id: part.id, nome: part.descricao, codigo: part.codigo, unidade: part.unidade === "unidade" ? "un" : (part.unidade as UnidadeOrcamento), valor_unitario: part.preco, valorTexto: String(part.preco).replace(".", ","), foto_data_url: part.foto_data_url }]); setPecaId(""); } catch { toast.error("Não foi possível carregar a peça"); } };
   const addServiceItem = (nome: string, unidade: UnidadeOrcamento, valor: number) => {
     setItens((current) => [...current, { ...newItem(idRef.current), tipo: "servico", nome, unidade, valor_unitario: valor, valorTexto: String(valor).replace(".", ",") }]);
   };

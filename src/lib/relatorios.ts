@@ -5,6 +5,8 @@ import { offlineCacheKeys, readCached, writeCached } from "@/lib/offline";
 import type { ReportPartItem } from "@/lib/pdf-report";
 import type { Parcela } from "@/lib/parcelas";
 import { fetchAllPages } from "@/lib/fetch-all-pages";
+import { cacheCompleteRecord, measureList, mergeListCache } from "@/lib/list-cache";
+import { isRecordPending } from "@/lib/offline.queue";
 
 export type AnexoDespesa = string | {
   tipo: "imagem" | "pdf";
@@ -123,19 +125,44 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
   };
 }
 
-export async function fetchRelatoriosSalvos(): Promise<RelatorioSalvo[]> {
+export type RelatorioResumo = Omit<RelatorioSalvo, "cliente_snapshot" | "apontamentos_snapshot" | "valores_snapshot" | "pecas_snapshot" | "financeiro_snapshot" | "despesas_snapshot" | "observacao_relatorio">;
+export const RELATORIO_LIST_COLUMNS = "id,numero_relatorio,user_id,cliente_id,cliente_nome,inicio,fim,total_servicos,total_pecas,total_geral,total_despesas,desconto,status_relatorio,pagamento_status,valor_recebido,data_recebimento,forma_pagamento,source_orcamento_id,parcelas,data_pagamento_prevista,created_at,updated_at";
+
+function resumo(item: RelatorioResumo): RelatorioResumo {
+  return { ...item, numero_relatorio: item.numero_relatorio || numeroRelatorio(item.id, new Date(item.created_at)), valor_recebido: Number(item.valor_recebido ?? 0), pagamento_status: statusPagamento(item.total_geral, Number(item.valor_recebido ?? 0)), parcelas: item.parcelas ?? [], status_relatorio: item.status_relatorio ?? "pendente" };
+}
+
+export async function fetchRelatoriosSalvos(): Promise<RelatorioResumo[]> {
+  const start = performance.now();
   try {
     const data = await fetchAllPages(() => supabase
       .from("relatorios_salvos")
-      .select("*")
+      .select(RELATORIO_LIST_COLUMNS)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false }));
-    const result = (data as unknown as RelatorioSalvo[]).map(normalizeRelatorio);
-    await writeCached(offlineCacheKeys.relatorios, result);
-    return result;
+    measureList("relatorios_salvos", data, start);
+    const result = await mergeListCache(offlineCacheKeys.relatorios, "relatorios_salvos", data as unknown as RelatorioResumo[]);
+    // Return only projected fields, even when the offline cache holds complete documents.
+    return result.map((item) => resumo(Object.fromEntries(RELATORIO_LIST_COLUMNS.split(",").map((key) => [key, item[key as keyof RelatorioResumo]])) as RelatorioResumo));
   } catch (error) {
     const cached = await readCached<RelatorioSalvo[]>(offlineCacheKeys.relatorios);
-    if (cached) return cached.map(normalizeRelatorio);
+    if (cached) return cached.map((item) => resumo(Object.fromEntries(RELATORIO_LIST_COLUMNS.split(",").map((key) => [key, item[key as keyof RelatorioResumo]])) as RelatorioResumo));
+    throw error;
+  }
+}
+
+export async function fetchRelatorioSalvo(id: string): Promise<RelatorioSalvo> {
+  const cached = (await readCached<RelatorioSalvo[]>(offlineCacheKeys.relatorios))?.find((item) => item.id === id);
+  const complete = cached && Array.isArray(cached.apontamentos_snapshot) && cached.cliente_snapshot && cached.financeiro_snapshot;
+  if (complete && await isRecordPending("relatorios_salvos", id)) return normalizeRelatorio(cached);
+  try {
+    const { data, error } = await supabase.from("relatorios_salvos").select("*").eq("id", id).single();
+    if (error) throw error;
+    const record = normalizeRelatorio(data as unknown as RelatorioSalvo);
+    await cacheCompleteRecord(offlineCacheKeys.relatorios, record);
+    return record;
+  } catch (error) {
+    if (complete) return normalizeRelatorio(cached);
     throw error;
   }
 }

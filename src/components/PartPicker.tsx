@@ -2,7 +2,9 @@ import { PackagePlus, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Peca } from "@/lib/pecas";
+import { fetchPeca, type Peca } from "@/lib/pecas";
+import { toast } from "sonner";
+import { useState } from "react";
 import { formatCurrency } from "@/lib/financeiro";
 
 export type SelectedPart = {
@@ -24,14 +26,19 @@ export function PartPicker({ catalog, selectedId, onSelectedIdChange, items, onI
   onItemsChange: (items: SelectedPart[]) => void;
   emptyText?: string;
 }) {
-  const add = () => {
-    const part = catalog.find((item) => item.id === selectedId);
-    if (!part) return;
+  const [loading, setLoading] = useState(false);
+  const add = async () => {
+    if (!selectedId || loading) return;
+    setLoading(true);
+    try {
+    const part = await fetchPeca(selectedId);
     const existing = items.find((item) => item.peca_id === part.id);
     onItemsChange(existing
       ? items.map((item) => item.id === existing.id ? { ...item, quantidade: (Number(item.quantidade) || 0) + 1 } : item)
       : [...items, { id: crypto.randomUUID(), peca_id: part.id, descricao: part.descricao, codigo: part.codigo, unidade: part.unidade, preco: part.preco, foto_data_url: part.foto_data_url, quantidade: 1 }]);
     onSelectedIdChange("");
+    } catch { toast.error("Não foi possível carregar a peça"); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -42,7 +49,7 @@ export function PartPicker({ catalog, selectedId, onSelectedIdChange, items, onI
           {catalog.map((part) => <option key={part.id} value={part.id}>{part.descricao} · {formatCurrency(part.preco)}</option>)}
         </select>
         {selectedId ? <Button type="button" size="icon" variant="outline" className="h-12 w-12" aria-label="Limpar peça selecionada" onClick={() => onSelectedIdChange("")}><X className="h-5 w-5" /></Button> : null}
-        <Button type="button" size="icon" className="h-12 w-12" aria-label="Adicionar peça" disabled={!selectedId} onClick={add}><PackagePlus className="h-5 w-5" /></Button>
+        <Button type="button" size="icon" className="h-12 w-12" aria-label="Adicionar peça" disabled={!selectedId || loading} onClick={() => void add()}><PackagePlus className="h-5 w-5" /></Button>
       </div>
       {items.length === 0 ? <p className="text-sm text-muted-foreground">{emptyText}</p> : (
         <ul className="divide-y divide-border">
