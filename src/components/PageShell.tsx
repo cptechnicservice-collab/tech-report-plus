@@ -12,6 +12,7 @@ export function PageShell({
   onBack,
   centered,
   large,
+  compact,
   children,
 }: {
   title: string;
@@ -21,12 +22,13 @@ export function PageShell({
   onBack?: (() => void) | undefined;
   centered?: boolean;
   large?: boolean;
+  compact?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-24">
       <header
-        className={`mb-7 grid min-h-16 items-center ${backTo || onBack ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}
+        className={`mb-7 grid min-h-16 items-center ${compact ? "mb-4 min-h-11" : ""} ${backTo || onBack ? "grid-cols-[auto_minmax(0,1fr)_auto] gap-2" : "grid-cols-[minmax(0,1fr)_auto] gap-3"}`}
       >
         {onBack ? (
           <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="Voltar" title="Voltar" onClick={onBack}>
@@ -47,12 +49,12 @@ export function PageShell({
           </Button>
         ) : null}
         <div className={`min-w-0 ${centered ? "text-center" : ""}`}>
-          {centered || large ? null : <p className="mb-2 inline-flex rounded-md bg-brand-header px-2 py-1 text-[0.62rem] font-bold uppercase text-brand-header-foreground">
+          {centered || large || compact ? null : <p className="mb-2 inline-flex rounded-md bg-brand-header px-2 py-1 text-[0.62rem] font-bold uppercase text-brand-header-foreground">
             CP <span className="ml-1 text-primary">TECHNIC</span>
           </p>}
-          <h1 className={`truncate font-bold leading-tight ${large ? "text-[2rem] tracking-tight" : centered ? "text-lg" : "text-[1.65rem] leading-none"}`}>{title}</h1>
+          <h1 className={`truncate font-bold leading-tight ${compact ? "text-[0.95rem] tracking-tight" : large ? "text-[2rem] tracking-tight" : centered ? "text-lg" : "text-[1.65rem] leading-none"}`}>{title}</h1>
           {subtitle ? (
-            <p className="mt-1.5 truncate text-sm text-muted-foreground">{subtitle}</p>
+            <p className={`truncate text-muted-foreground ${compact ? "mt-0.5 text-[0.72rem] leading-snug" : "mt-1.5 text-sm"}`}>{subtitle}</p>
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">

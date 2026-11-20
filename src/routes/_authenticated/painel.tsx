@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Car, ChevronLeft, ChevronRight, FileText, Gauge, Timer, UserRound, Wallet } from "lucide-react";
 import { formatDuracao } from "@/lib/duracao-format";
 import { formatCurrency } from "@/lib/financeiro";
-import { supabase } from "@/integrations/supabase/client";
+import { empresaPadrao, fetchEmpresa } from "@/lib/empresa";
 
 import { PageShell } from "@/components/PageShell";
 import { PagamentosCard } from "@/components/PagamentosAlertas";
@@ -40,24 +40,9 @@ export const Route = createFileRoute("/_authenticated/painel")({
   component: Resumo,
 });
 
-const NOME_KEY = "cp-perfil-nome";
-
-async function fetchNomePerfil(): Promise<string> {
-  try {
-    const { data, error } = await supabase.from("profiles").select("display_name").limit(1).maybeSingle();
-    if (error) throw error;
-    const nome = data?.display_name?.trim() ?? "";
-    localStorage.setItem(NOME_KEY, nome);
-    return nome;
-  } catch {
-    return localStorage.getItem(NOME_KEY) ?? "";
-  }
-}
-
 function Resumo() {
-  const { data: nomePerfil = "" } = useQuery({ queryKey: ["perfil-nome"], queryFn: fetchNomePerfil });
+  const { data: empresa } = useQuery({ queryKey: ["dados-empresa"], queryFn: fetchEmpresa });
   const hoje = todayISO();
-  const primeiroNome = nomePerfil.split(/\s+/)[0] ?? "";
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
@@ -85,8 +70,6 @@ function Resumo() {
   });
   const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
-  const hora = new Date().getHours();
-  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
   const dataCurta = (() => {
     const d = new Date(`${hoje}T12:00:00`);
     const semana = d.toLocaleDateString("pt-BR", { weekday: "long" }).split("-")[0] ?? "";
@@ -99,9 +82,9 @@ function Resumo() {
 
   return (
     <PageShell
-      large
-      title={primeiroNome ? `${saudacao}, ${primeiroNome}` : `${saudacao}!`}
-      subtitle={dataCurta}
+      compact
+      title={(empresa ?? empresaPadrao).nome_fantasia}
+      subtitle={`CNPJ ${(empresa ?? empresaPadrao).cnpj} · ${dataCurta}`}
       action={
         <Link to="/mais" aria-label="Perfil e mais opções" className="press grid h-11 w-11 place-items-center rounded-full bg-icon-bg text-muted-foreground">
           <UserRound className="h-5 w-5" />
