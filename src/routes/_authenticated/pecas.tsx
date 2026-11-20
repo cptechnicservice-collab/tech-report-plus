@@ -100,6 +100,8 @@ function Pecas() {
         {busca ? <Button type="button" variant="ghost" size="icon" aria-label="Limpar busca" onClick={() => setBusca("")} className="absolute right-1.5 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full"><X className="h-4 w-4" /></Button> : null}
       </div>
 
+      <Button className="h-14 w-full rounded-xl shadow-glow" onClick={openNew}><Package className="mr-2 h-5 w-5" /> Cadastrar peça</Button>
+
       {isLoading ? <p className="text-sm text-muted-foreground">Carregando...</p> : lista.length === 0 ? (
         <div className="ios-group px-5 py-10 text-center"><Package className="mx-auto h-9 w-9 text-muted-foreground" /><p className="mt-3 font-semibold">Nenhuma peça encontrada</p><p className="mt-1 text-sm text-muted-foreground">Cadastre uma peça para começar.</p></div>
       ) : (
@@ -117,8 +119,6 @@ function Pecas() {
           </li>)}
         </ul>
       )}
-
-      <Button className="sticky bottom-24 z-20 h-14 w-full rounded-xl shadow-lg" onClick={openNew}><Package className="mr-2 h-5 w-5" /> Cadastrar peça</Button>
 
       <Dialog open={editing !== null} onOpenChange={(open) => { if (!open) setEditing(null); }}>
         <DialogContent keyboardPosition="bottom" onOpenAutoFocus={(event) => event.preventDefault()} className="bottom-0 top-auto max-h-[92dvh] max-w-md translate-y-0 overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-5 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border">
