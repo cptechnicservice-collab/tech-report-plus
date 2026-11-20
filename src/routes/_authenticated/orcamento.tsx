@@ -44,7 +44,7 @@ function OrcamentoPage() {
   const queryClient = useQueryClient();
   const { data: orcamentos = [], isFetched: orcamentosFetched } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
   const { data: clientes = [] } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
-  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas, fetchPeca });
+  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: valores = [] } = useQuery({ queryKey: ["valores"], queryFn: fetchValores });
   const { data: source } = useQuery({ queryKey: ["orcamento-completo", search.id],
     queryFn: () => { if (!search.id) throw new Error("Orçamento não encontrado"); return fetchOrcamento(search.id); },

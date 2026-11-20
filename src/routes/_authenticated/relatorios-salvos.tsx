@@ -428,11 +428,11 @@ function RelatoriosSalvos() {
   });
 
   const generateReceipt = async (summary: RelatorioResumo) => {
-    if (!item.data_recebimento || !item.forma_pagamento || item.valor_recebido <= 0) return;
-    const ultimaPaga = [...item.parcelas].filter((p) => p.pago_em).sort((a, b) => (b.pago_em ?? "").localeCompare(a.pago_em ?? "") || b.numero - a.numero)[0];
     setGeneratingId(`recibo-${summary.id}`);
     try {
       const item = await fetchRelatorioSalvo(summary.id);
+      if (!item.data_recebimento || !item.forma_pagamento || item.valor_recebido <= 0) return;
+      const ultimaPaga = [...item.parcelas].filter((p) => p.pago_em).sort((a, b) => (b.pago_em ?? "").localeCompare(a.pago_em ?? "") || b.numero - a.numero)[0];
       await generatePaymentReceipt({
         cliente: item.cliente_snapshot,
         inicio: item.inicio,

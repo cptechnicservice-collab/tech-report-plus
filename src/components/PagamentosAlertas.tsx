@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatDateBR } from "@/lib/apontamentos";
 import { formatCurrency } from "@/lib/financeiro";
 import { localTodayISO, todosRecebimentos, urgentes, type RecebimentoItem } from "@/lib/parcelas";
-import type { RelatorioSalvo } from "@/lib/relatorios";
+import type { RelatorioResumo } from "@/lib/relatorios";
 
 const BANNER_KEY = "cp-technic-aviso-pagamentos";
 
@@ -28,7 +28,7 @@ function Linha({ item }: { item: RecebimentoItem }) {
   );
 }
 
-export function PagamentosCard({ relatorios }: { relatorios: RelatorioSalvo[] }) {
+export function PagamentosCard({ relatorios }: { relatorios: RelatorioResumo[] }) {
   const abertos = todosRecebimentos(relatorios).filter((r) => r.info.tipo !== "pago");
   const grupos = [
     { titulo: "Atrasados", itens: abertos.filter((r) => r.info.tipo === "atrasado") },
@@ -53,7 +53,7 @@ export function PagamentosCard({ relatorios }: { relatorios: RelatorioSalvo[] })
 }
 
 /** Banner único por dia e notificação local quando há vencimento hoje ou atraso. */
-export function PagamentosBanner({ relatorios }: { relatorios: RelatorioSalvo[] }) {
+export function PagamentosBanner({ relatorios }: { relatorios: RelatorioResumo[] }) {
   const [visivel, setVisivel] = useState(false);
   const lista = urgentes(relatorios);
   const hoje = localTodayISO();

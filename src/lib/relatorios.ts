@@ -125,8 +125,8 @@ function normalizeRelatorio(item: RelatorioSalvo): RelatorioSalvo {
   };
 }
 
-export type RelatorioResumo = Omit<RelatorioSalvo, "cliente_snapshot" | "apontamentos_snapshot" | "valores_snapshot" | "pecas_snapshot" | "financeiro_snapshot" | "despesas_snapshot" | "observacao_relatorio">;
-export const RELATORIO_LIST_COLUMNS = "id,numero_relatorio,user_id,cliente_id,cliente_nome,inicio,fim,total_servicos,total_pecas,total_geral,total_despesas,desconto,status_relatorio,pagamento_status,valor_recebido,data_recebimento,forma_pagamento,source_orcamento_id,parcelas,data_pagamento_prevista,created_at,updated_at";
+export type RelatorioResumo = Omit<RelatorioSalvo, "cliente_snapshot" | "apontamentos_snapshot" | "valores_snapshot" | "pecas_snapshot" | "financeiro_snapshot" | "despesas_snapshot">;
+export const RELATORIO_LIST_COLUMNS = "id,numero_relatorio,user_id,cliente_id,cliente_nome,inicio,fim,total_servicos,total_pecas,total_geral,total_despesas,desconto,status_relatorio,pagamento_status,valor_recebido,data_recebimento,forma_pagamento,source_orcamento_id,parcelas,data_pagamento_prevista,created_at,updated_at,observacao_relatorio";
 
 function resumo(item: RelatorioResumo): RelatorioResumo {
   return { ...item, numero_relatorio: item.numero_relatorio || numeroRelatorio(item.id, new Date(item.created_at)), valor_recebido: Number(item.valor_recebido ?? 0), pagamento_status: statusPagamento(item.total_geral, Number(item.valor_recebido ?? 0)), parcelas: item.parcelas ?? [], status_relatorio: item.status_relatorio ?? "pendente" };

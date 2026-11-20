@@ -6,6 +6,8 @@ vi.mock("@/lib/offline", () => ({
   offlineCacheKeys: { apontamentos: "apontamentos", clientes: "clientes", relatorios: "relatorios", pecas: "pecas" },
   readCached: mocks.readCached, writeCached: mocks.writeCached,
 }));
+vi.mock("@/lib/offline.cache", () => ({ readCached: mocks.readCached, writeCached: mocks.writeCached }));
+vi.mock("@/lib/offline.queue", () => ({ getQueueItems: async () => [], isRecordPending: async () => false }));
 import { fetchApontamentos, fetchClientes } from "@/lib/apontamentos";
 import { fetchRelatoriosSalvos } from "@/lib/relatorios";
 import { fetchPecas } from "@/lib/pecas";
@@ -33,10 +35,13 @@ describe("Listas completas e cache offline", () => {
     expect(mocks.from).toHaveBeenCalledWith(table);
     expect(query.order).toHaveBeenCalledWith("id", { ascending: table === "clientes" || table === "pecas" });
     expect(mocks.writeCached).toHaveBeenCalledTimes(1);
-    expect(mocks.writeCached.mock.calls[0]?.[1]).toEqual(result);
+    if (table === "apontamentos" || table === "clientes") {
+      expect(mocks.writeCached.mock.calls[0]?.[1]).toEqual(result);
+    }
     if (table === "pecas") expect(query.abortSignal).toHaveBeenCalledTimes(3);
     if (table === "relatorios_salvos") {
-      expect(result[2499]).toMatchObject({
+      expect(result[2499]).not.toHaveProperty("pecas_snapshot");
+      expect(mocks.writeCached.mock.calls[0]?.[1]?.[2499]).toMatchObject({
         cliente_snapshot: rows[2499]?.cliente_snapshot,
         apontamentos_snapshot: rows[2499]?.apontamentos_snapshot,
         pecas_snapshot: rows[2499]?.pecas_snapshot,

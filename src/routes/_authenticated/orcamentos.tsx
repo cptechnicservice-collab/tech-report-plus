@@ -42,7 +42,7 @@ function OrcamentosPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: orcamentos = [], isLoading } = useQuery({ queryKey: ["orcamentos"], queryFn: fetchOrcamentos });
-  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas, fetchPeca });
+  const { data: pecas = [] } = useQuery({ queryKey: ["pecas"], queryFn: fetchPecas });
   const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos });
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<"todos" | OrcamentoStatus>("todos");
