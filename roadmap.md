@@ -1,5 +1,9 @@
 # Roadmap
 
+## Resumo do Início por período
+- [x] Fazer horas, viagem, KM e saldo a receber seguirem o mês ou ano selecionado, com seletor compacto e gráfico correspondente; saldo por data final do atendimento, igual a Resumos.
+- [x] 167 testes aprovados, lint sem erros e prévia sem erros; troca mês/ano e navegação entre períodos conferidas na conta atual, online/offline, em 390px, 320px e computador, sem alterar dados ou publicar. iPhone físico não disponível.
+
 ## Contas e papéis para venda
 - [x] Preservar liberações e converter o administrador atual em proprietário; dono inicial automático e único em cópias novas.
 - [x] Validar permissões no PostgreSQL sem ampliar acesso aos dados de outros usuários; atribuição inicial e alterações de gestão compartilham lock, com proprietário em registro único.

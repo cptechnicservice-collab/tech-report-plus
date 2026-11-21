@@ -18,7 +18,8 @@ import {
   somarTotais,
   todayISO,
 } from "@/lib/apontamentos";
-import { relatoriosConfirmados, fetchRelatoriosSalvos, saldoRelatorio } from "@/lib/relatorios";
+import { relatoriosConfirmados, fetchRelatoriosSalvos } from "@/lib/relatorios";
+import { chavePeriodoPainel, registrosDoPeriodo, saldoDoPeriodo, type EscalaPainel } from "@/lib/painel-periodo";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -45,23 +46,25 @@ function Resumo() {
   const { data: empresa } = useQuery({ queryKey: ["dados-empresa"], queryFn: fetchEmpresa });
   const hoje = todayISO();
   const [mes, setMes] = useState(() => todayISO().slice(0, 7));
+  const [escala, setEscala] = useState<EscalaPainel>("mes");
+  const chavePeriodo = chavePeriodoPainel(mes, escala);
   const { data: apontamentos = [], isLoading } = useQuery({
     queryKey: ["apontamentos"],
     queryFn: fetchApontamentos,
   });
   const { data: relatorios = [] } = useQuery({ queryKey: ["relatorios-salvos"], queryFn: fetchRelatoriosSalvos, select: relatoriosConfirmados });
 
-  const doMes = useMemo(
-    () => apontamentos.filter((a) => a.data.startsWith(mes)),
-    [apontamentos, mes],
+  const doPeriodo = useMemo(
+    () => registrosDoPeriodo(apontamentos, chavePeriodo),
+    [apontamentos, chavePeriodo],
   );
-  const totais = somarTotais(doMes);
-  const ultimos = doMes.slice(0, 3);
+  const totais = somarTotais(doPeriodo);
+  const ultimos = doPeriodo.slice(0, 3);
 
   const moverMes = (diferenca: number) => {
     const [ano, numeroMes] = mes.split("-").map(Number);
     if (!ano || !numeroMes) return;
-    const data = new Date(ano, numeroMes - 1 + diferenca, 1);
+    const data = new Date(ano + (escala === "ano" ? diferenca : 0), numeroMes - 1 + (escala === "mes" ? diferenca : 0), 1);
     setMes(`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`);
   };
 
@@ -69,7 +72,7 @@ function Resumo() {
     month: "long",
     year: "numeric",
   });
-  const periodo = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+  const periodo = escala === "ano" ? mes.slice(0, 4) : nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
 
   const dataCurta = (() => {
     const d = new Date(`${hoje}T12:00:00`);
@@ -77,18 +80,24 @@ function Resumo() {
     const mesCurto = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
     return `${semana.charAt(0).toUpperCase()}${semana.slice(1)}, ${d.getDate()} ${mesCurto}`;
   })();
-  const aReceber = relatorios.reduce((total, item) => total + saldoRelatorio(item), 0);
+  const aReceber = saldoDoPeriodo(relatorios, chavePeriodo);
   const ontem = (() => { const d = new Date(`${hoje}T12:00:00`); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
   const diaRelativo = (iso: string) => (iso === hoje ? "Hoje" : iso === ontem ? "Ontem" : formatDateBR(iso).slice(0, 5));
 
   const barras = useMemo(() => {
+    if (escala === "ano") {
+      return Array.from({ length: 12 }, (_, index) => {
+        const dia = `${mes.slice(0, 4)}-${String(index + 1).padStart(2, "0")}`;
+        return { dia, minutos: somarTotais(registrosDoPeriodo(doPeriodo, dia)).trabalho };
+      });
+    }
     const inicio = new Date(`${mes}-01T12:00:00`);
     const dias = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0).getDate();
     return Array.from({ length: dias }, (_, index) => {
       const dia = `${mes}-${String(index + 1).padStart(2, "0")}`;
-      return { dia, minutos: somarTotais(doMes.filter((item) => item.data === dia)).trabalho };
+      return { dia, minutos: somarTotais(doPeriodo.filter((item) => item.data === dia)).trabalho };
     });
-  }, [mes, doMes]);
+  }, [mes, doPeriodo, escala]);
   const maximoDia = Math.max(1, ...barras.map((item) => item.minutos));
 
   return (
@@ -103,18 +112,18 @@ function Resumo() {
         </Link>
       }
     >
-      <section aria-label="Resumo do mês" className="month-hero p-5">
+      <section aria-label={escala === "mes" ? "Resumo do mês" : "Resumo do ano"} className="month-hero p-5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center rounded-full bg-hero-pill">
-            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" aria-label="Mês anterior" onClick={() => moverMes(-1)}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" aria-label={escala === "mes" ? "Mês anterior" : "Ano anterior"} onClick={() => moverMes(-1)}><ChevronLeft className="h-4 w-4" /></Button>
             <span className="min-w-0 text-[10px] font-medium" title={periodo}>{periodo}</span>
-            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" aria-label="Próximo mês" onClick={() => moverMes(1)}><ChevronRight className="h-4 w-4" /></Button>
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0 rounded-full text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" aria-label={escala === "mes" ? "Próximo mês" : "Próximo ano"} onClick={() => moverMes(1)}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <span className="rounded-full border border-primary-foreground/15 px-3 py-2 text-[10px] font-semibold">MÊS</span>
+          <Button type="button" variant="ghost" aria-label={escala === "mes" ? "Mostrar total do ano" : "Mostrar informações do mês"} onClick={() => setEscala(escala === "mes" ? "ano" : "mes")} className="h-11 shrink-0 rounded-full border border-primary-foreground/15 px-3 text-[10px] font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">{escala === "mes" ? "Ver ano" : "Ver mês"}</Button>
         </div>
         <h2 className="mt-6 font-sans text-xs font-medium uppercase tracking-[0.2em] text-hero-label">Horas trabalhadas</h2>
         <p className="font-display mt-1 text-[60px] font-bold leading-tight tabular-nums">{formatDuracao(totais.trabalho)}</p>
-        <svg role="img" aria-label={`Horas trabalhadas por dia em ${periodo}`} className="my-5 h-16 w-full" viewBox={`0 0 ${barras.length * 10} 64`} preserveAspectRatio="none">
+        <svg role="img" aria-label={`Horas trabalhadas por ${escala === "mes" ? "dia" : "mês"} em ${periodo}`} className="my-5 h-16 w-full" viewBox={`0 0 ${barras.length * 10} 64`} preserveAspectRatio="none">
           {barras.map(({ dia, minutos }, index) => {
             const altura = minutos > 0 ? Math.max(5, minutos / maximoDia * 60) : 0;
             return <g key={dia}><title>{dia}: {formatDuracao(minutos)}</title><rect x={index * 10 + 1} y={0} width={6} height={64} rx={3} className="fill-hero-bar" /><rect x={index * 10 + 1} y={64 - altura} width={6} height={altura} rx={3} className="fill-primary" />{dia === hoje ? <rect x={index * 10 + 1} y={0} width={6} height={64} rx={3} className="fill-none stroke-primary-foreground/70" strokeWidth={1} /> : null}</g>;
@@ -134,11 +143,11 @@ function Resumo() {
       </div>
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recentes <span className="font-normal">· {doMes.length} no mês</span></h2>
+          <h2 className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recentes <span className="font-normal">· {doPeriodo.length} no {escala === "mes" ? "mês" : "ano"}</span></h2>
           <Link to="/historico" className="inline-flex min-h-11 items-center text-xs font-semibold text-primary">Ver tudo</Link>
         </div>
         {isLoading ? <p className="ios-group p-4 text-sm text-muted-foreground">Carregando...</p> : ultimos.length === 0 ? (
-          <div className="ios-group space-y-3 px-5 py-8 text-center"><p className="font-display font-bold">Nenhum apontamento neste mês</p><p className="text-sm text-muted-foreground">Registre o primeiro atendimento para começar a somar suas horas.</p><Button asChild className="rounded-full"><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}><Plus />Novo apontamento</Link></Button></div>
+          <div className="ios-group space-y-3 px-5 py-8 text-center"><p className="font-display font-bold">Nenhum apontamento neste {escala === "mes" ? "mês" : "ano"}</p><p className="text-sm text-muted-foreground">Registre o primeiro atendimento para começar a somar suas horas.</p><Button asChild className="rounded-full"><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }}><Plus />Novo apontamento</Link></Button></div>
         ) : <ul className="space-y-2.5">{ultimos.map((a) => <li key={a.id}><Link to="/apontamento/$id" params={{ id: a.id }} className="press ios-group flex min-h-20 items-center gap-3 rounded-[22px] px-3 py-3"><span className="grid h-14 w-12 shrink-0 content-center rounded-[14px] bg-icon-bg text-center text-primary"><span className="font-display text-xl font-bold">{Number(a.data.slice(8, 10))}</span><span className="text-[9px] font-semibold uppercase">{new Date(`${a.data}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}</span></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold">{a.clientes?.nome ?? "—"}</span><span className="mt-1 block text-xs text-muted-foreground">{diaRelativo(a.data)}</span></span><span className="font-display shrink-0 rounded-full bg-icon-bg px-3 py-2 text-xs font-bold text-primary tabular-nums">{formatDuracao(somarTotais([a]).trabalho)}</span></Link></li>)}</ul>}
       </section>
 
