@@ -54,50 +54,21 @@ export type TamanhoEtiqueta = "grande" | "media" | "pequena";
 
 export const TAMANHOS: Record<
   TamanhoEtiqueta,
-  { label: string; descricao: string; w: number; h: number; cols: number; rows: number }
+  { label: string; descricao: string; w: number; h: number }
 > = {
-  grande: { label: "Grande", descricao: "10 × 14,8 cm", w: 100, h: 148, cols: 2, rows: 2 },
-  media: { label: "Média", descricao: "10 × 7,4 cm", w: 100, h: 74, cols: 2, rows: 4 },
-  pequena: { label: "Pequena", descricao: "7 × 5,9 cm", w: 70, h: 59, cols: 3, rows: 5 },
+  grande: { label: "Grande", descricao: "10 × 14,8 cm", w: 100, h: 148 },
+  media: { label: "Média", descricao: "10 × 7,4 cm", w: 100, h: 74 },
+  pequena: { label: "Pequena", descricao: "7 × 5,9 cm", w: 70, h: 59 },
 };
 export const TAMANHO_PADRAO: TamanhoEtiqueta = "media";
 export const A4 = { w: 210, h: 297 };
 
-export function porFolha(t: TamanhoEtiqueta) {
-  return TAMANHOS[t].cols * TAMANHOS[t].rows;
-}
+export type PosicaoEtiqueta = { x: number; y: number; w: number; h: number };
 
-export type PosicaoEtiqueta = {
-  page: number;
-  slot: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-
-/** Grid cell (0-based slot) on an A4 sheet, grid centered on the page. */
-export function celula(t: TamanhoEtiqueta, slot: number) {
-  const { w, h, cols, rows } = TAMANHOS[t];
-  const x0 = (A4.w - w * cols) / 2;
-  const y0 = (A4.h - h * rows) / 2;
-  return { x: x0 + (slot % cols) * w, y: y0 + Math.floor(slot / cols) * h, w, h };
-}
-
-/** Positions for `quantidade` labels starting at 1-based `inicio`; overflow continues on new pages. */
-export function posicoesEtiquetas(
-  t: TamanhoEtiqueta,
-  quantidade: number,
-  inicio = 1,
-): PosicaoEtiqueta[] {
-  const n = porFolha(t);
-  const start = Math.min(n, Math.max(1, Math.round(inicio))) - 1;
-  const qtd = Math.max(1, Math.round(quantidade));
-  return Array.from({ length: qtd }, (_, k) => {
-    const i = start + k;
-    const slot = i % n;
-    return { page: Math.floor(i / n), slot, ...celula(t, slot) };
-  });
+/** The single label, centered on an A4 sheet: the user cuts it out by hand. */
+export function posicaoUnica(t: TamanhoEtiqueta): PosicaoEtiqueta {
+  const { w, h } = TAMANHOS[t];
+  return { x: (A4.w - w) / 2, y: (A4.h - h) / 2, w, h };
 }
 
 export function linhasDestinatario(e: EnderecoEtiqueta, abreviar = false): LinhaEtiqueta[] {

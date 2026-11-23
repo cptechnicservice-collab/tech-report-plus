@@ -1,11 +1,8 @@
 import type { jsPDF as JsPDF } from "jspdf";
 import {
-  A4,
-  TAMANHOS,
-  celula,
+  posicaoUnica,
   linhasDestinatario,
   linhasRemetente,
-  posicoesEtiquetas,
   type EnderecoEtiqueta,
   type RemetenteEtiqueta,
   type TamanhoEtiqueta,
@@ -115,46 +112,32 @@ export function ajustarEtiqueta(
   return last;
 }
 
-function cortes(doc: JsPDF, t: TamanhoEtiqueta) {
-  const { cols, rows } = TAMANHOS[t];
-  const first = celula(t, 0);
-  doc.setDrawColor(170, 170, 170).setLineWidth(0.15);
-  doc.setLineDashPattern([1.5, 1.5], 0);
-  for (let c = 0; c <= cols; c++) doc.line(first.x + c * first.w, 0, first.x + c * first.w, A4.h);
-  for (let r = 0; r <= rows; r++) doc.line(0, first.y + r * first.h, A4.w, first.y + r * first.h);
+/** Dashed guide just outside the label, so the user knows where to cut. */
+function guiaDeCorte(doc: JsPDF, box: Box) {
+  const m = 3;
+  doc
+    .setDrawColor(150, 150, 150)
+    .setLineWidth(0.15)
+    .setLineDashPattern([1.5, 1.5], 0)
+    .rect(box.x - m, box.y - m, box.w + m * 2, box.h + m * 2);
   doc.setLineDashPattern([], 0);
 }
 
-/** A4 portrait sheet(s) with several labels and dashed cut lines; jspdf loaded on demand. */
+/** One A4 portrait sheet with a single centered label; jspdf loaded on demand. */
 export async function buildEtiquetaPdf(
   dest: EnderecoEtiqueta,
   remetente: RemetenteEtiqueta,
-  opts: { tamanho: TamanhoEtiqueta; quantidade: number; inicio?: number },
+  opts: { tamanho: TamanhoEtiqueta },
 ) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const t = opts.tamanho;
-  const pos = posicoesEtiquetas(t, opts.quantidade, opts.inicio ?? 1);
-  const c0 = celula(t, 0);
-  const fit = ajustarEtiqueta(
-    doc,
-    { x: c0.x + 1, y: c0.y + 1, w: c0.w - 2, h: c0.h - 2 },
-    dest,
-    remetente,
-    t,
-  );
-  let page = 0;
-  cortes(doc, t);
-  for (const p of pos) {
-    while (p.page > page) {
-      doc.addPage("a4", "portrait");
-      page++;
-      cortes(doc, t);
-    }
-    const box = { x: p.x + 1, y: p.y + 1, w: p.w - 2, h: p.h - 2 };
-    doc.setDrawColor(0, 0, 0).setLineWidth(0.2).setTextColor(0, 0, 0);
-    doc.rect(box.x, box.y, box.w, box.h);
-    layout(doc, box, dest, remetente, t, fit.scale, fit.semEmpresa, true);
-  }
+  const c0 = posicaoUnica(t);
+  const box = { x: c0.x + 1, y: c0.y + 1, w: c0.w - 2, h: c0.h - 2 };
+  const fit = ajustarEtiqueta(doc, box, dest, remetente, t);
+  doc.setDrawColor(0, 0, 0).setLineWidth(0.2).setTextColor(0, 0, 0);
+  doc.rect(box.x, box.y, box.w, box.h);
+  layout(doc, box, dest, remetente, t, fit.scale, fit.semEmpresa, true);
+  guiaDeCorte(doc, box);
   return doc;
 }

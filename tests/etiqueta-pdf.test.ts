@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ajustarEtiqueta, buildEtiquetaPdf } from "@/lib/pdf-etiqueta";
 import {
-  porFolha,
+  posicaoUnica,
   type EnderecoEtiqueta,
   type RemetenteEtiqueta,
   type TamanhoEtiqueta,
@@ -37,32 +37,30 @@ const rem: RemetenteEtiqueta = {
 
 const TAMANHOS_TESTE: TamanhoEtiqueta[] = ["grande", "media", "pequena"];
 
+/** Box real impresso pela folha: a etiqueta centralizada, menos a margem de 1 mm. */
+function boxReal(t: TamanhoEtiqueta) {
+  const c = posicaoUnica(t);
+  return { x: c.x + 1, y: c.y + 1, w: c.w - 2, h: c.h - 2 };
+}
+
 describe("montagem do PDF de etiqueta", () => {
   for (const t of TAMANHOS_TESTE) {
     it(`o conteúdo cabe na etiqueta ${t}`, async () => {
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const fit = ajustarEtiqueta(doc, { x: 6, y: 6, w: 100, h: 74 }, dest, rem, t);
+      const fit = ajustarEtiqueta(doc, boxReal(t), dest, rem, t);
       expect(fit.fits).toBe(true);
     });
   }
 
-  it("gera uma folha A4 por tamanho, com a quantidade pedida", async () => {
+  it("sempre uma única folha, com uma só etiqueta, em qualquer tamanho", async () => {
     for (const t of TAMANHOS_TESTE) {
-      const doc = await buildEtiquetaPdf(dest, rem, { tamanho: t, quantidade: porFolha(t) });
+      const doc = await buildEtiquetaPdf(dest, rem, { tamanho: t });
       expect(doc.getNumberOfPages()).toBe(1);
+      // O PDF não é comprimido: dá para contar quantas etiquetas foram desenhadas.
+      const pdf = Buffer.from(doc.output("arraybuffer")).toString("latin1");
+      expect((pdf.match(/DESTINAT/g) ?? []).length).toBe(1);
+      expect((pdf.match(/REMETENTE/g) ?? []).length).toBe(1);
     }
-  });
-
-  it("passa para a segunda folha quando passa de uma folha", async () => {
-    for (const t of TAMANHOS_TESTE) {
-      const doc = await buildEtiquetaPdf(dest, rem, { tamanho: t, quantidade: porFolha(t) + 2 });
-      expect(doc.getNumberOfPages()).toBe(2);
-    }
-  });
-
-  it("começa na posição escolhida sem perder etiquetas", async () => {
-    const doc = await buildEtiquetaPdf(dest, rem, { tamanho: "media", quantidade: 3, inicio: 7 });
-    expect(doc.getNumberOfPages()).toBe(2);
   });
 });

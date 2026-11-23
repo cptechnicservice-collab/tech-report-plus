@@ -21,7 +21,6 @@ import {
   enderecoIncompleto,
   linhasDestinatario,
   linhasRemetente,
-  porFolha,
   remetenteSemEndereco,
   type EnderecoEtiqueta,
   type RemetenteEtiqueta,
@@ -64,19 +63,14 @@ export function EtiquetaSheet({ cliente, open, onOpenChange, onEditCliente }: Pr
     enabled: open,
   });
   const [tamanho, setTamanho] = useState<TamanhoEtiqueta>(TAMANHO_PADRAO);
-  const [quantidade, setQuantidade] = useState(1);
-  const [inicio, setInicio] = useState(1);
   useEffect(() => {
     const v = localStorage.getItem(TAM_KEY);
     if (v === "grande" || v === "media" || v === "pequena") setTamanho(v);
   }, []);
   const escolherTamanho = (t: TamanhoEtiqueta) => {
     setTamanho(t);
-    setInicio(1);
-    setQuantidade((q) => Math.min(q, porFolha(t)));
     localStorage.setItem(TAM_KEY, t);
   };
-  const max = porFolha(tamanho);
   const cfg = TAMANHOS[tamanho];
   const [file, setFile] = useState<File | null>(null);
 
@@ -95,7 +89,7 @@ export function EtiquetaSheet({ cliente, open, onOpenChange, onEditCliente }: Pr
     setFile(null);
     void import("@/lib/pdf-etiqueta")
       .then(async ({ buildEtiquetaPdf }) => {
-        const doc = await buildEtiquetaPdf(dest, rem, { tamanho, quantidade, inicio });
+        const doc = await buildEtiquetaPdf(dest, rem, { tamanho });
         const nome = `etiqueta-${(cliente.nome || "cliente").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`;
         if (active) setFile(new File([doc.output("blob")], nome, { type: "application/pdf" }));
       })
@@ -103,7 +97,7 @@ export function EtiquetaSheet({ cliente, open, onOpenChange, onEditCliente }: Pr
     return () => {
       active = false;
     };
-  }, [open, cliente, dest, rem, tamanho, quantidade, inicio]);
+  }, [open, cliente, dest, rem, tamanho]);
 
   const imprimir = async () => {
     if (!file) return;
@@ -126,9 +120,7 @@ export function EtiquetaSheet({ cliente, open, onOpenChange, onEditCliente }: Pr
       <DrawerContent className="keyboard-panel">
         <DrawerHeader>
           <DrawerTitle>Etiqueta de envio</DrawerTitle>
-          <DrawerDescription>
-            {max} etiquetas por folha A4 · {cfg.descricao}
-          </DrawerDescription>
+          <DrawerDescription>Uma etiqueta por folha A4 · {cfg.descricao}</DrawerDescription>
         </DrawerHeader>
         <div
           className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-4"
@@ -213,65 +205,14 @@ export function EtiquetaSheet({ cliente, open, onOpenChange, onEditCliente }: Pr
               </p>
             ))}
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium">Quantidade</span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-11 rounded-xl"
-                aria-label="Diminuir"
-                disabled={quantidade <= 1}
-                onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
-              >
-                −
-              </Button>
-              <span className="w-8 text-center text-lg font-semibold" aria-live="polite">
-                {quantidade}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 w-11 rounded-xl"
-                aria-label="Aumentar"
-                onClick={() => setQuantidade((q) => q + 1)}
-              >
-                +
-              </Button>
-            </div>
-          </div>
-          {inicio - 1 + quantidade > max ? (
-            <p className="text-xs text-muted-foreground">
-              Passa de uma folha: serão geradas {Math.ceil((inicio - 1 + quantidade) / max)} folhas.
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            <span className="text-sm font-medium">Começar na posição {inicio}</span>
-            <div
-              className="mx-auto grid w-44 gap-1"
-              style={{ gridTemplateColumns: `repeat(${cfg.cols}, 1fr)` }}
-              role="group"
-              aria-label="Posição inicial na folha"
-            >
-              {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  aria-label={`Posição ${n}`}
-                  aria-pressed={inicio === n}
-                  onClick={() => setInicio(n)}
-                  className={`min-h-8 rounded border text-xs ${n === inicio ? "bg-primary text-primary-foreground" : n < inicio ? "bg-muted text-muted-foreground" : "bg-card"}`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Sai uma única etiqueta no meio da folha A4. Corte na linha tracejada.
+          </p>
         </div>
         <DrawerFooter className="shrink-0 border-t border-border bg-card">
           <p className="text-xs text-muted-foreground">
             Imprima em tamanho real (100%), sem "ajustar à página".
-          </p>
+          </p>{" "}
           <Button
             className="h-14 w-full rounded-xl text-base font-semibold"
             disabled={!file}

@@ -3,8 +3,7 @@ import {
   A4,
   TAMANHOS,
   formatTelefone,
-  porFolha,
-  posicoesEtiquetas,
+  posicaoUnica,
   cidadeUf,
   enderecoIncompleto,
   linhasDestinatario,
@@ -67,30 +66,22 @@ describe("etiqueta de envio", () => {
     expect(formatTelefone("5433221100")).toBe("(54) 3322-1100");
     expect(formatTelefone("54991291187")).toBe("(54) 99129-1187");
   });
-  it("grade cabe na A4 para cada tamanho", () => {
+  it("uma etiqueta única, centralizada e dentro da A4 para cada tamanho", () => {
     for (const t of ["grande", "media", "pequena"] as const) {
-      const pos = posicoesEtiquetas(t, porFolha(t));
-      expect(
-        pos.every(
-          (p) =>
-            p.page === 0 &&
-            p.x >= 0 &&
-            p.y >= 0 &&
-            p.x + p.w <= A4.w + 1e-9 &&
-            p.y + p.h <= A4.h + 1e-9,
-        ),
-      ).toBe(true);
+      const p = posicaoUnica(t);
+      expect(p.w).toBe(TAMANHOS[t].w);
+      expect(p.h).toBe(TAMANHOS[t].h);
+      expect(p.x).toBeCloseTo((A4.w - p.w) / 2, 6);
+      expect(p.y).toBeCloseTo((A4.h - p.h) / 2, 6);
+      expect(p.x).toBeGreaterThan(0);
+      expect(p.y).toBeGreaterThan(0);
+      expect(p.x + p.w).toBeLessThan(A4.w);
+      expect(p.y + p.h).toBeLessThan(A4.h);
     }
-    expect([porFolha("grande"), porFolha("media"), porFolha("pequena")]).toEqual([4, 8, 15]);
     expect(TAMANHOS.pequena.w).toBe(70);
   });
-  it("respeita posição inicial e quebra página", () => {
-    const pos = posicoesEtiquetas("media", 3, 7);
-    expect(pos.map((p) => [p.page, p.slot])).toEqual([
-      [0, 6],
-      [0, 7],
-      [1, 0],
-    ]);
+  it("tamanhos continuam os mesmos", () => {
+    expect([TAMANHOS.grande.h, TAMANHOS.media.h, TAMANHOS.pequena.h]).toEqual([148, 74, 59]);
   });
   it("ViaCEP não sobrescreve o que foi digitado", () => {
     const r = mergeViaCep(

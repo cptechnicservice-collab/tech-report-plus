@@ -207,3 +207,8 @@
 - [x] Remetente completo (empresa, contato, endereço, bairro, cidade–UF · CEP, telefone e e-mail) e telefone do destinatário no mesmo formato, com aviso quando o endereço do remetente está vazio.
 - [x] Texto reduzido progressivamente até caber (mínimo 6 pontos) sem cortar nada; conferido nos três tamanhos com o pior caso de endereço longo.
 - [x] Prévia no iPhone (390×844): botão "Imprimir / Compartilhar PDF" fixo na parte de baixo, sempre visível, com o resto rolável; 183 testes passaram, lint e verificação de tipos sem erros e compilação OK. Nada publicado; iPhone físico não disponível.
+
+## Etiqueta: uma só por folha
+- [x] O PDF passou a trazer uma única etiqueta centralizada na folha A4, com linha tracejada de corte em volta; os três tamanhos continuam iguais e lembrados no aparelho.
+- [x] Saiu a escolha de quantidade e "Começar na posição"; a prévia mostra "Uma etiqueta por folha A4" e o aviso de cortar na tracejada.
+- [x] 181 testes passaram (incluindo a checagem de que só uma etiqueta é desenhada em cada tamanho), lint e verificação de tipos sem erros, compilação OK; prévia conferida em 390×844 com cliente real e as três folhas de exemplo vistas uma a uma. Nada publicado; iPhone físico e impressora não disponíveis.
