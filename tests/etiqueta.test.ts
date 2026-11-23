@@ -97,3 +97,9 @@ describe("etiqueta de envio", () => {
     expect(enderecoIncompleto({ logradouro: "Rua", cidade: "X", uf: "SC" })).toBe(true);
   });
 });
+
+import { linhasDestinatario as ld } from "@/lib/etiqueta";
+import { test as t2, expect as e2 } from "vitest";
+t2("etiqueta mostra CNPJ do cliente", () => {
+  e2(ld({ cnpj: "46.696.388/0001-08" })).toEqual([{ rotulo: "CNPJ:", valor: "46.696.388/0001-08" }]);
+});

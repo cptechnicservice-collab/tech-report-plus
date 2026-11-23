@@ -9,6 +9,7 @@ export type EnderecoEtiqueta = {
   uf?: string | null;
   cep?: string | null;
   telefone?: string | null;
+  cnpj?: string | null;
 };
 
 export type LinhaEtiqueta = { rotulo: string; valor: string; destaque?: boolean };
@@ -80,6 +81,7 @@ export function linhasDestinatario(e: EnderecoEtiqueta, abreviar = false): Linha
     { rotulo: "CEP:", valor: cep, destaque: true },
     { rotulo: abreviar ? "Tel.:" : "Telefone:", valor: formatTelefone(e.telefone) },
     { rotulo: "Empresa:", valor: clean(e.razao_social) },
+    { rotulo: "CNPJ:", valor: clean(e.cnpj) },
   ].filter((linha) => linha.valor);
 }
 
