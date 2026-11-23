@@ -18,6 +18,7 @@ import { saveOrcamentoOffline } from "@/lib/offline";
 import { calcularTotaisOrcamento, fetchOrcamentos, fetchOrcamento, formasPagamentoOrcamento, proximoNumeroOrcamento, type DescontoTipo, type FormaPagamentoOrcamento, type OrcamentoItem, type OrcamentoItemTipo, type OrcamentoStatus, type UnidadeOrcamento } from "@/lib/orcamentos";
 import { generateQuotePdf } from "@/lib/pdf-report";
 import { fetchPecas, fetchPeca } from "@/lib/pecas";
+import { EtiquetaButton, EtiquetaSheet } from "@/components/EtiquetaSheet";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
@@ -64,6 +65,7 @@ function OrcamentoPage() {
   const [observacoes, setObservacoes] = useState("");
   const [itens, setItens] = useState<DraftItem[]>([]);
   const [pecaId, setPecaId] = useState("");
+  const [etiquetaOpen, setEtiquetaOpen] = useState(false);
   const draftValue = useMemo(() => ({ numero, clienteId, data, validade, status, descontoTipo, desconto, formas, condicoes, observacoes, itens }), [clienteId, condicoes, data, desconto, descontoTipo, formas, itens, numero, observacoes, status, validade]);
   const { clearDraft, isDirty } = useFormDraft({
     key: `orcamento:${search.id ?? idRef.current}`,
@@ -125,6 +127,7 @@ function OrcamentoPage() {
     <Section title="Dados do orçamento">
       <div className="grid grid-cols-2 gap-3"><Field label="Número" value={numero} onChange={setNumero} /><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={data} onChange={(event) => setData(event.target.value)} className="h-12 rounded-xl" /></div></div>
       <ClienteSelect clientes={clientes} value={clienteId} onChange={setClienteId} />
+      {cliente ? <EtiquetaButton className="h-11 w-full rounded-xl" onClick={() => setEtiquetaOpen(true)} /> : null}
       <div className="grid grid-cols-2 gap-3"><Field label="Validade (dias)" value={validade} onChange={setValidade} inputMode="numeric" /><div className="space-y-1.5"><Label>Status</Label><select value={status} onChange={(event) => setStatus(event.target.value as OrcamentoStatus)} className="ios-field h-12 w-full border px-3"><option value="rascunho">Rascunho</option><option value="enviado">Enviado</option><option value="aprovado">Aprovado</option><option value="recusado">Recusado</option><option value="aguardando_confirmacao">Aguardando confirmação</option><option value="concluido">Concluído</option></select></div></div>
     </Section>
     <Section title="Itens" hint={`${itens.length} item(ns)`}>
@@ -142,6 +145,7 @@ function OrcamentoPage() {
     <Section title="Totais"><div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Desconto</Label><select value={descontoTipo} onChange={(event) => setDescontoTipo(event.target.value as DescontoTipo)} className="ios-field h-12 w-full border px-3"><option value="valor">Em reais</option><option value="percentual">Percentual</option></select></div><Field label={descontoTipo === "valor" ? "Valor (R$)" : "Percentual (%)"} value={desconto} onChange={setDesconto} inputMode="decimal" /></div><dl className="space-y-2 text-sm"><Total label="Produtos" value={totals.produtos} /><Total label="Serviços" value={totals.servicos} /><Total label="Subtotal" value={totals.subtotal} /><Total label="Desconto" value={-totals.desconto} /><div className="flex justify-between border-t pt-3 text-lg font-bold"><dt>Total</dt><dd className="text-primary">{formatCurrency(totals.total)}</dd></div></dl></Section>
     <Section title="Pagamento e observações"><div className="grid grid-cols-2 gap-2">{formasPagamentoOrcamento.map((forma) => <label key={forma} className="flex min-h-11 items-center gap-2 rounded-xl bg-secondary px-3 text-sm"><Checkbox checked={formas.includes(forma)} onCheckedChange={(checked) => setFormas((current) => checked ? [...current, forma] : current.filter((entry) => entry !== forma))} />{forma}</label>)}</div><Textarea value={condicoes} onChange={(event) => setCondicoes(event.target.value)} placeholder="Condições de pagamento" className="rounded-xl" /><Textarea value={observacoes} onChange={(event) => setObservacoes(event.target.value)} placeholder="Observações gerais" className="rounded-xl" /></Section>
     <div className="grid grid-cols-2 gap-2"><Button variant="outline" className="h-14 rounded-xl" disabled={!valid} onClick={() => void generate()}><FileText className="mr-2 h-5 w-5" />Gerar PDF</Button><Button className="h-14 rounded-xl" disabled={!valid || save.isPending} onClick={() => save.mutate()}><Save className="mr-2 h-5 w-5" />{save.isPending ? "Salvando..." : "Salvar"}</Button></div>
+    <EtiquetaSheet cliente={cliente} open={etiquetaOpen} onOpenChange={setEtiquetaOpen} onEditCliente={() => void navigate({ to: "/clientes" })} />
   </PageShell>;
 }
 

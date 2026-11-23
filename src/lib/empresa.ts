@@ -10,6 +10,13 @@ export type DadosEmpresa = {
   contato: string;
   telefone: string | null;
   logo_data_url: string | null;
+  cep?: string | null;
+  logradouro?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
   created_at: string;
   updated_at: string;
 };

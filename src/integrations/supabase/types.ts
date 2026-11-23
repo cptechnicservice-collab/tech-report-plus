@@ -267,40 +267,64 @@ export type Database = {
       clientes: {
         Row: {
           ativo: boolean
+          bairro: string | null
+          cep: string | null
           cidade: string | null
           cnpj: string | null
+          complemento: string | null
           contato: string | null
           created_at: string
+          email: string | null
           id: string
+          logradouro: string | null
           nome: string
+          numero: string | null
           observacoes: string | null
+          razao_social: string | null
           telefone: string | null
+          uf: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           contato?: string | null
           created_at?: string
+          email?: string | null
           id?: string
+          logradouro?: string | null
           nome: string
+          numero?: string | null
           observacoes?: string | null
+          razao_social?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
           cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           contato?: string | null
           created_at?: string
+          email?: string | null
           id?: string
+          logradouro?: string | null
           nome?: string
+          numero?: string | null
           observacoes?: string | null
+          razao_social?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -308,38 +332,59 @@ export type Database = {
       }
       dados_empresa: {
         Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
           cnpj: string
+          complemento: string | null
           contato: string
           created_at: string
           email: string
           id: string
           logo_data_url: string | null
+          logradouro: string | null
           nome_fantasia: string
+          numero: string | null
           telefone: string | null
+          uf: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
           cnpj?: string
+          complemento?: string | null
           contato?: string
           created_at?: string
           email?: string
           id?: string
           logo_data_url?: string | null
+          logradouro?: string | null
           nome_fantasia?: string
+          numero?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
           cnpj?: string
+          complemento?: string | null
           contato?: string
           created_at?: string
           email?: string
           id?: string
           logo_data_url?: string | null
+          logradouro?: string | null
           nome_fantasia?: string
+          numero?: string | null
           telefone?: string | null
+          uf?: string | null
           updated_at?: string
           user_id?: string
         }

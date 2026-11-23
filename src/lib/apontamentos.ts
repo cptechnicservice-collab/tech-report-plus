@@ -12,6 +12,14 @@ export type Cliente = {
   telefone: string | null;
   ativo: boolean;
   observacoes: string | null;
+  razao_social?: string | null;
+  cep?: string | null;
+  logradouro?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
+  uf?: string | null;
+  email?: string | null;
   created_at: string;
   updated_at: string;
   user_id: string | null;

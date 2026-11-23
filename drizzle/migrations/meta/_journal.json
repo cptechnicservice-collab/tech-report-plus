@@ -218,6 +218,13 @@
       "when": 1795199773654,
       "tag": "0030_account_owner_and_delegated_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795466652695,
+      "tag": "0031_add_cliente_endereco_remetente",
+      "breakpoints": true
     }
   ]
 }

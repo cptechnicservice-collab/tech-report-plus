@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { empresaPadrao, fetchEmpresa } from "@/lib/empresa";
 import { resizeImage } from "@/lib/image-resize";
 import { saveEmpresaOffline } from "@/lib/offline";
+import { buscarCep, maskCep, mergeViaCep, normalizeUf } from "@/lib/etiqueta";
 
 export const Route = createFileRoute("/_authenticated/dados-empresa")({
   head: () => ({ meta: [
@@ -25,15 +26,15 @@ export const Route = createFileRoute("/_authenticated/dados-empresa")({
   component: DadosEmpresaPage,
 });
 
-type Draft = { nome_fantasia: string; cnpj: string; email: string; contato: string; telefone: string | null; logo_data_url: string | null };
+type Draft = { nome_fantasia: string; cnpj: string; email: string; contato: string; telefone: string | null; logo_data_url: string | null; cep: string; logradouro: string; numero: string; complemento: string; bairro: string; cidade: string; uf: string; };
 
 function DadosEmpresaPage() {
   const queryClient = useQueryClient();
   const { data } = useQuery({ queryKey: ["dados-empresa"], queryFn: fetchEmpresa });
-  const [draft, setDraft] = useState<Draft>(empresaPadrao);
-  useEffect(() => { if (data) setDraft({ nome_fantasia: data.nome_fantasia, cnpj: data.cnpj, email: data.email, contato: data.contato, telefone: data.telefone, logo_data_url: data.logo_data_url }); }, [data]);
+  const [draft, setDraft] = useState<Draft>({ ...empresaPadrao, cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "" });
+  useEffect(() => { if (data) setDraft({ nome_fantasia: data.nome_fantasia, cnpj: data.cnpj, email: data.email, contato: data.contato, telefone: data.telefone, logo_data_url: data.logo_data_url, cep: data.cep ?? "", logradouro: data.logradouro ?? "", numero: data.numero ?? "", complemento: data.complemento ?? "", bairro: data.bairro ?? "", cidade: data.cidade ?? "", uf: data.uf ?? "" }); }, [data]);
   const save = useMutation({
-    mutationFn: () => saveEmpresaOffline({ id: data?.id ?? crypto.randomUUID(), ...draft }),
+    mutationFn: () => saveEmpresaOffline({ id: data?.id ?? crypto.randomUUID(), ...draft, cep: draft.cep.trim() || null, logradouro: draft.logradouro.trim() || null, numero: draft.numero.trim() || null, complemento: draft.complemento.trim() || null, bairro: draft.bairro.trim() || null, cidade: draft.cidade.trim() || null, uf: draft.uf.trim() || null }),
     onSuccess: (result) => { void queryClient.invalidateQueries({ queryKey: ["dados-empresa"] }); toast.success(result.queued ? "Dados salvos no aparelho" : "Dados da empresa salvos"); },
     onError: () => toast.error("Não foi possível salvar os dados da empresa"),
   });
@@ -41,6 +42,11 @@ function DadosEmpresaPage() {
     if (!file) return;
     try { const logo = await resizeImage(file); setDraft((current) => ({ ...current, logo_data_url: logo })); }
     catch { toast.error("Não foi possível usar essa imagem"); }
+  };
+  const onCep = (value: string) => {
+    const cep = maskCep(value);
+    setDraft((d) => ({ ...d, cep }));
+    if (cep.replace(/\D/g, "").length === 8) void buscarCep(cep).then((res) => { if (res) setDraft((d) => (d.cep === cep ? mergeViaCep(d, res) : d)); });
   };
   return (
     <PageShell title="Dados da empresa" subtitle="Identificação nos documentos" backTo="/mais">
@@ -62,6 +68,19 @@ function DadosEmpresaPage() {
         <Field id="empresa-email" label="E-mail" value={draft.email} onChange={(value) => setDraft({ ...draft, email: value })} inputMode="email" />
         <Field id="empresa-contato" label="Nome do contato" value={draft.contato} onChange={(value) => setDraft({ ...draft, contato: value })} />
         <Field id="empresa-telefone" label="Telefone (opcional)" value={draft.telefone ?? ""} onChange={(value) => setDraft({ ...draft, telefone: value || null })} inputMode="tel" />
+      </Section>
+      <Section title="Endereço do remetente">
+        <Field id="empresa-cep" label="CEP" value={draft.cep} onChange={onCep} inputMode="numeric" />
+        <Field id="empresa-logradouro" label="Logradouro" value={draft.logradouro} onChange={(value) => setDraft({ ...draft, logradouro: value })} />
+        <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2">
+          <Field id="empresa-numero" label="Número" value={draft.numero} onChange={(value) => setDraft({ ...draft, numero: value })} inputMode="numeric" />
+          <Field id="empresa-complemento" label="Complemento" value={draft.complemento} onChange={(value) => setDraft({ ...draft, complemento: value })} />
+        </div>
+        <Field id="empresa-bairro" label="Bairro" value={draft.bairro} onChange={(value) => setDraft({ ...draft, bairro: value })} />
+        <div className="grid grid-cols-[minmax(0,1fr)_5rem] gap-2">
+          <Field id="empresa-cidade" label="Cidade" value={draft.cidade} onChange={(value) => setDraft({ ...draft, cidade: value })} />
+          <Field id="empresa-uf" label="UF" value={draft.uf} onChange={(value) => setDraft({ ...draft, uf: normalizeUf(value) })} />
+        </div>
       </Section>
       <Button className="h-14 w-full rounded-xl text-base font-semibold" disabled={!draft.nome_fantasia.trim() || !draft.cnpj.trim() || !draft.email.trim() || !draft.contato.trim() || save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Salvando..." : "Salvar dados"}</Button>
     </PageShell>
