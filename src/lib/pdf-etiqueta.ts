@@ -1,7 +1,14 @@
 import type { jsPDF as JsPDF } from "jspdf";
 import {
-  A4, TAMANHOS, celula, linhasDestinatario, linhasRemetente, posicoesEtiquetas,
-  type EnderecoEtiqueta, type RemetenteEtiqueta, type TamanhoEtiqueta,
+  A4,
+  TAMANHOS,
+  celula,
+  linhasDestinatario,
+  linhasRemetente,
+  posicoesEtiquetas,
+  type EnderecoEtiqueta,
+  type RemetenteEtiqueta,
+  type TamanhoEtiqueta,
 } from "@/lib/etiqueta";
 
 const PT = 0.3528; // mm per point
@@ -10,7 +17,16 @@ const MIN_PT = 6;
 type Box = { x: number; y: number; w: number; h: number };
 
 /** Lays out one label; returns used height (mm). Draws only when `draw` is true. */
-function layout(doc: JsPDF, box: Box, dest: EnderecoEtiqueta, rem: RemetenteEtiqueta, t: TamanhoEtiqueta, s: number, semEmpresa: boolean, draw: boolean) {
+function layout(
+  doc: JsPDF,
+  box: Box,
+  dest: EnderecoEtiqueta,
+  rem: RemetenteEtiqueta,
+  t: TamanhoEtiqueta,
+  s: number,
+  semEmpresa: boolean,
+  draw: boolean,
+) {
   const M = 3;
   const inner = box.w - M * 2;
   const x = box.x + M;
@@ -75,13 +91,24 @@ function layout(doc: JsPDF, box: Box, dest: EnderecoEtiqueta, rem: RemetenteEtiq
 }
 
 /** Finds the largest scale that fits; returns {scale, semEmpresa, fits}. */
-export function ajustarEtiqueta(doc: JsPDF, box: Box, dest: EnderecoEtiqueta, rem: RemetenteEtiqueta, t: TamanhoEtiqueta) {
+export function ajustarEtiqueta(
+  doc: JsPDF,
+  box: Box,
+  dest: EnderecoEtiqueta,
+  rem: RemetenteEtiqueta,
+  t: TamanhoEtiqueta,
+) {
   const base = Math.pow(box.h / 148, 0.6);
   const variants = t === "pequena" ? [false, true] : [false];
-  let last = { scale: MIN_PT / 17, semEmpresa: variants[variants.length - 1] ?? false, fits: false };
+  let last = {
+    scale: MIN_PT / 17,
+    semEmpresa: variants[variants.length - 1] ?? false,
+    fits: false,
+  };
   for (const semEmpresa of variants) {
     for (let s = base; s >= 0.2; s -= 0.02) {
-      if (layout(doc, box, dest, rem, t, s, semEmpresa, false) <= box.h) return { scale: s, semEmpresa, fits: true };
+      if (layout(doc, box, dest, rem, t, s, semEmpresa, false) <= box.h)
+        return { scale: s, semEmpresa, fits: true };
       last = { scale: s, semEmpresa, fits: false };
     }
   }
@@ -109,11 +136,21 @@ export async function buildEtiquetaPdf(
   const t = opts.tamanho;
   const pos = posicoesEtiquetas(t, opts.quantidade, opts.inicio ?? 1);
   const c0 = celula(t, 0);
-  const fit = ajustarEtiqueta(doc, { x: c0.x + 1, y: c0.y + 1, w: c0.w - 2, h: c0.h - 2 }, dest, remetente, t);
+  const fit = ajustarEtiqueta(
+    doc,
+    { x: c0.x + 1, y: c0.y + 1, w: c0.w - 2, h: c0.h - 2 },
+    dest,
+    remetente,
+    t,
+  );
   let page = 0;
   cortes(doc, t);
   for (const p of pos) {
-    while (p.page > page) { doc.addPage("a4", "portrait"); page++; cortes(doc, t); }
+    while (p.page > page) {
+      doc.addPage("a4", "portrait");
+      page++;
+      cortes(doc, t);
+    }
     const box = { x: p.x + 1, y: p.y + 1, w: p.w - 2, h: p.h - 2 };
     doc.setDrawColor(0, 0, 0).setLineWidth(0.2).setTextColor(0, 0, 0);
     doc.rect(box.x, box.y, box.w, box.h);

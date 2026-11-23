@@ -21,7 +21,10 @@ export function maskCep(value: string) {
 }
 
 export function normalizeUf(value: string) {
-  return value.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
+  return value
+    .replace(/[^a-zA-Z]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function cidadeUf(cidade?: string | null, uf?: string | null) {
@@ -49,7 +52,10 @@ export function formatTelefone(value?: string | null) {
 
 export type TamanhoEtiqueta = "grande" | "media" | "pequena";
 
-export const TAMANHOS: Record<TamanhoEtiqueta, { label: string; descricao: string; w: number; h: number; cols: number; rows: number }> = {
+export const TAMANHOS: Record<
+  TamanhoEtiqueta,
+  { label: string; descricao: string; w: number; h: number; cols: number; rows: number }
+> = {
   grande: { label: "Grande", descricao: "10 × 14,8 cm", w: 100, h: 148, cols: 2, rows: 2 },
   media: { label: "Média", descricao: "10 × 7,4 cm", w: 100, h: 74, cols: 2, rows: 4 },
   pequena: { label: "Pequena", descricao: "7 × 5,9 cm", w: 70, h: 59, cols: 3, rows: 5 },
@@ -61,7 +67,14 @@ export function porFolha(t: TamanhoEtiqueta) {
   return TAMANHOS[t].cols * TAMANHOS[t].rows;
 }
 
-export type PosicaoEtiqueta = { page: number; slot: number; x: number; y: number; w: number; h: number };
+export type PosicaoEtiqueta = {
+  page: number;
+  slot: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
 
 /** Grid cell (0-based slot) on an A4 sheet, grid centered on the page. */
 export function celula(t: TamanhoEtiqueta, slot: number) {
@@ -72,7 +85,11 @@ export function celula(t: TamanhoEtiqueta, slot: number) {
 }
 
 /** Positions for `quantidade` labels starting at 1-based `inicio`; overflow continues on new pages. */
-export function posicoesEtiquetas(t: TamanhoEtiqueta, quantidade: number, inicio = 1): PosicaoEtiqueta[] {
+export function posicoesEtiquetas(
+  t: TamanhoEtiqueta,
+  quantidade: number,
+  inicio = 1,
+): PosicaoEtiqueta[] {
   const n = porFolha(t);
   const start = Math.min(n, Math.max(1, Math.round(inicio))) - 1;
   const qtd = Math.max(1, Math.round(quantidade));
@@ -95,7 +112,10 @@ export function linhasDestinatario(e: EnderecoEtiqueta, abreviar = false): Linha
   ].filter((linha) => linha.valor);
 }
 
-export type RemetenteEtiqueta = EnderecoEtiqueta & { contato?: string | null; email?: string | null };
+export type RemetenteEtiqueta = EnderecoEtiqueta & {
+  contato?: string | null;
+  email?: string | null;
+};
 export type LinhaRemetente = { texto: string; negrito?: boolean };
 
 export function linhasRemetente(e: RemetenteEtiqueta, incluirEmail = true): LinhaRemetente[] {
@@ -120,19 +140,32 @@ export function remetenteSemEndereco(e: EnderecoEtiqueta) {
 }
 
 export function enderecoIncompleto(e: EnderecoEtiqueta) {
-  return !clean(e.logradouro) || !clean(e.cidade) || !clean(e.uf) || clean(e.cep).replace(/\D/g, "").length !== 8;
+  return (
+    !clean(e.logradouro) ||
+    !clean(e.cidade) ||
+    !clean(e.uf) ||
+    clean(e.cep).replace(/\D/g, "").length !== 8
+  );
 }
 
-export type ViaCepResult = { logradouro?: string; bairro?: string; localidade?: string; uf?: string; erro?: boolean | string };
+export type ViaCepResult = {
+  logradouro?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+  erro?: boolean | string;
+};
 
 /** Fills only empty fields, never overwriting what the user typed. */
-export function mergeViaCep<T extends { logradouro: string; bairro: string; cidade: string; uf: string }>(current: T, data: ViaCepResult): T {
+export function mergeViaCep<
+  T extends { logradouro: string; bairro: string; cidade: string; uf: string },
+>(current: T, data: ViaCepResult): T {
   if (data.erro) return current;
   return {
     ...current,
-    logradouro: current.logradouro.trim() ? current.logradouro : data.logradouro ?? "",
-    bairro: current.bairro.trim() ? current.bairro : data.bairro ?? "",
-    cidade: current.cidade.trim() ? current.cidade : data.localidade ?? "",
+    logradouro: current.logradouro.trim() ? current.logradouro : (data.logradouro ?? ""),
+    bairro: current.bairro.trim() ? current.bairro : (data.bairro ?? ""),
+    cidade: current.cidade.trim() ? current.cidade : (data.localidade ?? ""),
     uf: current.uf.trim() ? current.uf : (data.uf ?? "").toUpperCase(),
   };
 }
@@ -143,7 +176,9 @@ export async function buscarCep(cep: string): Promise<ViaCepResult | null> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { signal: controller.signal });
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`, {
+      signal: controller.signal,
+    });
     clearTimeout(timer);
     if (!res.ok) return null;
     return (await res.json()) as ViaCepResult;

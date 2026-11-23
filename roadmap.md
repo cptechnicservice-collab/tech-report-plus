@@ -199,3 +199,11 @@
 - [x] Aplicar tokens e fontes locais, cabeçalhos, campos e folhas em todas as telas.
 - [x] Reformular Início, barra flutuante e Mais sem remover controles ou navegação.
 - [x] Conferir 147 testes, lint sem erros e prévia sem erros; navegação autenticada em 390×844, 320×812 e desktop, com teclado simulado, sem salvar registros. Nada publicado; iPhone físico não disponível.
+
+## Etiqueta de envio em folha A4
+- [x] Gerar o PDF sempre em folha A4 em pé, com várias etiquetas por folha e linhas de corte tracejadas finas.
+- [x] Três tamanhos: Grande 10 × 14,8 cm (4 por folha), Média 10 × 7,4 cm (8 por folha, padrão) e Pequena 7 × 5,9 cm (15 por folha, com rótulos curtos e sem o e-mail do remetente).
+- [x] Quantidade com botões − e +, aviso quando passa de uma folha e "Começar na posição" para aproveitar folha já usada; o último tamanho fica lembrado no aparelho.
+- [x] Remetente completo (empresa, contato, endereço, bairro, cidade–UF · CEP, telefone e e-mail) e telefone do destinatário no mesmo formato, com aviso quando o endereço do remetente está vazio.
+- [x] Texto reduzido progressivamente até caber (mínimo 6 pontos) sem cortar nada; conferido nos três tamanhos com o pior caso de endereço longo.
+- [x] Prévia no iPhone (390×844): botão "Imprimir / Compartilhar PDF" fixo na parte de baixo, sempre visível, com o resto rolável; 183 testes passaram, lint e verificação de tipos sem erros e compilação OK. Nada publicado; iPhone físico não disponível.
