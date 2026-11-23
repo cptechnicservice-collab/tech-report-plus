@@ -43,6 +43,7 @@ describe("etiqueta de envio", () => {
   it("monta remetente com nome, contato e telefone formatado", () => {
     const l = linhasRemetente({
       nome: "CP-Technic HOMAG",
+      cnpj: "46.696.388/0001-08",
       contato: "Clarel Pavan",
       telefone: "54991291187",
       email: "a@b.com",
@@ -52,6 +53,7 @@ describe("etiqueta de envio", () => {
     });
     expect(l.map((x) => x.texto)).toEqual([
       "CP-TECHNIC HOMAG",
+      "CNPJ: 46.696.388/0001-08",
       "Clarel Pavan",
       "Xaxim – SC  ·  CEP 89825-000",
       "Tel.: (54) 99129-1187",

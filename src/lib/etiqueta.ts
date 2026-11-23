@@ -99,6 +99,7 @@ export function linhasRemetente(e: RemetenteEtiqueta, incluirEmail = true): Linh
   const contato = clean(e.contato);
   return [
     { texto: nome, negrito: true },
+    { texto: clean(e.cnpj) ? `CNPJ: ${clean(e.cnpj)}` : "" },
     { texto: contato && contato.toUpperCase() !== nome ? contato : "" },
     { texto: enderecoLinha(e) },
     { texto: clean(e.bairro) },
