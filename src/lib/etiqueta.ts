@@ -38,24 +38,85 @@ function enderecoLinha(e: EnderecoEtiqueta) {
   return linha;
 }
 
-export function linhasDestinatario(e: EnderecoEtiqueta): LinhaEtiqueta[] {
+export function formatTelefone(value?: string | null) {
+  const raw = clean(value);
+  let d = raw.replace(/\D/g, "");
+  if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return raw;
+}
+
+export type TamanhoEtiqueta = "grande" | "media" | "pequena";
+
+export const TAMANHOS: Record<TamanhoEtiqueta, { label: string; descricao: string; w: number; h: number; cols: number; rows: number }> = {
+  grande: { label: "Grande", descricao: "10 × 14,8 cm", w: 100, h: 148, cols: 2, rows: 2 },
+  media: { label: "Média", descricao: "10 × 7,4 cm", w: 100, h: 74, cols: 2, rows: 4 },
+  pequena: { label: "Pequena", descricao: "7 × 5,9 cm", w: 70, h: 59, cols: 3, rows: 5 },
+};
+export const TAMANHO_PADRAO: TamanhoEtiqueta = "media";
+export const A4 = { w: 210, h: 297 };
+
+export function porFolha(t: TamanhoEtiqueta) {
+  return TAMANHOS[t].cols * TAMANHOS[t].rows;
+}
+
+export type PosicaoEtiqueta = { page: number; slot: number; x: number; y: number; w: number; h: number };
+
+/** Grid cell (0-based slot) on an A4 sheet, grid centered on the page. */
+export function celula(t: TamanhoEtiqueta, slot: number) {
+  const { w, h, cols, rows } = TAMANHOS[t];
+  const x0 = (A4.w - w * cols) / 2;
+  const y0 = (A4.h - h * rows) / 2;
+  return { x: x0 + (slot % cols) * w, y: y0 + Math.floor(slot / cols) * h, w, h };
+}
+
+/** Positions for `quantidade` labels starting at 1-based `inicio`; overflow continues on new pages. */
+export function posicoesEtiquetas(t: TamanhoEtiqueta, quantidade: number, inicio = 1): PosicaoEtiqueta[] {
+  const n = porFolha(t);
+  const start = Math.min(n, Math.max(1, Math.round(inicio))) - 1;
+  const qtd = Math.max(1, Math.round(quantidade));
+  return Array.from({ length: qtd }, (_, k) => {
+    const i = start + k;
+    const slot = i % n;
+    return { page: Math.floor(i / n), slot, ...celula(t, slot) };
+  });
+}
+
+export function linhasDestinatario(e: EnderecoEtiqueta, abreviar = false): LinhaEtiqueta[] {
   const cep = clean(e.cep) ? maskCep(clean(e.cep)) : "";
   return [
-    { rotulo: "Endereço:", valor: enderecoLinha(e) },
+    { rotulo: abreviar ? "End.:" : "Endereço:", valor: enderecoLinha(e) },
     { rotulo: "Bairro:", valor: clean(e.bairro) },
-    { rotulo: "Cidade/UF:", valor: cidadeUf(e.cidade, e.uf) },
+    { rotulo: abreviar ? "Cid/UF:" : "Cidade/UF:", valor: cidadeUf(e.cidade, e.uf) },
     { rotulo: "CEP:", valor: cep, destaque: true },
-    { rotulo: "Telefone:", valor: clean(e.telefone) },
+    { rotulo: abreviar ? "Tel.:" : "Telefone:", valor: formatTelefone(e.telefone) },
     { rotulo: "Empresa:", valor: clean(e.razao_social) },
   ].filter((linha) => linha.valor);
 }
 
-export function linhasRemetente(e: EnderecoEtiqueta): string[] {
-  const rua = [clean(e.logradouro), clean(e.numero) ? `nº ${clean(e.numero)}` : ""].filter(Boolean).join(", ");
-  const enderecoResumo = [rua, clean(e.bairro)].filter(Boolean).join(" – ");
+export type RemetenteEtiqueta = EnderecoEtiqueta & { contato?: string | null; email?: string | null };
+export type LinhaRemetente = { texto: string; negrito?: boolean };
+
+export function linhasRemetente(e: RemetenteEtiqueta, incluirEmail = true): LinhaRemetente[] {
   const cep = clean(e.cep) ? `CEP ${maskCep(clean(e.cep))}` : "";
-  const tel = clean(e.telefone) ? `Telefone: ${clean(e.telefone)}` : "";
-  return [enderecoResumo, cidadeUf(e.cidade, e.uf), cep, tel].filter(Boolean);
+  const cidCep = [cidadeUf(e.cidade, e.uf), cep].filter(Boolean).join("  ·  ");
+  const tel = formatTelefone(e.telefone);
+  const nome = clean(e.nome).toUpperCase();
+  const contato = clean(e.contato);
+  return [
+    { texto: nome, negrito: true },
+    { texto: contato && contato.toUpperCase() !== nome ? contato : "" },
+    { texto: enderecoLinha(e) },
+    { texto: clean(e.bairro) },
+    { texto: cidCep },
+    { texto: tel ? `Tel.: ${tel}` : "" },
+    { texto: incluirEmail ? clean(e.email) : "" },
+  ].filter((l) => l.texto);
+}
+
+export function remetenteSemEndereco(e: EnderecoEtiqueta) {
+  return !clean(e.logradouro) && !clean(e.cidade) && !clean(e.cep);
 }
 
 export function enderecoIncompleto(e: EnderecoEtiqueta) {
