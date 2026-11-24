@@ -16,7 +16,7 @@ export type AnexoDespesa = string | {
 
 export type DespesaRelatorio = {
   id: string;
-  tipo?: "pedagio" | "hotel" | "alimentacao" | "combustivel" | "diversos";
+  tipo?: "pedagio" | "hotel" | "alimentacao" | "combustivel" | "estacionamento" | "bagagem" | "diversos";
   descricao: string;
   data?: string;
   valor: number;

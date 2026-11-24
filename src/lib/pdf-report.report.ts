@@ -309,7 +309,9 @@ export async function generateClientReport(
     hotel: "Hotel",
     alimentacao: "Alimentação",
     combustivel: "Combustível",
-    diversos: "Gastos diversos",
+    estacionamento: "Estacionamento",
+    bagagem: "Excesso de bagagem",
+    diversos: "Outros",
   };
   const attachments = despesasRelatorio.flatMap((despesa) =>
     (despesa.anexos ?? []).map((anexo, index) => ({ despesa, anexo, index })),
