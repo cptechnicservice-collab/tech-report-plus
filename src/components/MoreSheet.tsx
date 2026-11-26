@@ -70,7 +70,7 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
       <DrawerContent
         overlayClassName="bg-foreground/35 backdrop-blur-sm"
-        className="bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] rounded-[2rem] border-border bg-background shadow-nav sm:mx-auto sm:max-w-md"
+        className="bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] overflow-hidden pb-0 rounded-[2rem] border-border bg-background shadow-nav sm:mx-auto sm:max-w-md"
       >
         <DrawerHeader className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 pb-5 pt-3 text-left">
           <BrandMark />
@@ -81,7 +81,7 @@ export function MoreSheet({ open, onOpenChange }: MoreSheetProps) {
           <DrawerClose asChild><Button type="button" variant="outline" size="icon" aria-label="Fechar mais opções" className="h-11 w-11 shrink-0 rounded-[14px]"><X className="h-5 w-5" /></Button></DrawerClose>
         </DrawerHeader>
 
-        <div className="space-y-4 px-5 pt-4">
+        <div data-vaul-no-drag className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-6 pt-4">
           <div className="grid grid-cols-2 gap-3">
             <DrawerClose asChild><Link to="/novo" search={{ data: undefined, cliente: undefined, servico: undefined, agenda: undefined, orcamento: undefined }} className="more-tile"><span className="more-icon"><CalendarPlus /></span><span>Novo apontamento</span></Link></DrawerClose>
             <DrawerClose asChild><Link to="/relatorios-salvos" className="more-tile"><span className="more-icon"><FileArchive /></span><span>Relatórios salvos</span></Link></DrawerClose>
